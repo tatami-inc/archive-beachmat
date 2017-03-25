@@ -1,0 +1,15 @@
+Package: beachmat
+Version: 0.98.0
+Date: 2017-03-25
+Title: A relaxing C++ API for all matrix types
+Author: Aaron Lun <alun@wehi.edu.au>
+Maintainer: Aaron Lun <alun@wehi.edu.au>
+Depends: R (>= 3.4)
+Suggests: Matrix, testthat
+biocViews: DataRepresentation, DataImport
+Description: Provides a consistent C++ class interface
+    for a variety of commonly used matrix types.    
+License: GPL-3
+NeedsCompilation: yes
+VignetteBuilder: knitr
+SystemRequirements: C++11
