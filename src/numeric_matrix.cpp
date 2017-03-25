@@ -51,8 +51,7 @@ double simple_numeric_matrix::get(int r, int c) const {
 
 /* Methods for a Csparse matrix. */
 
-Csparse_numeric_matrix::Csparse_numeric_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), xptr(NULL), 
-                                                                row_ptr(NULL), col_ptr(NULL), row_majored(false) {
+Csparse_numeric_matrix::Csparse_numeric_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
    
     if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming), "dgCMatrix")!=0) {
         throw std::runtime_error("matrix should be a dgCMatrix object");
@@ -94,45 +93,10 @@ Csparse_numeric_matrix::~Csparse_numeric_matrix () {
     return;
 }
 
-void Csparse_numeric_matrix::row_majorize() {
-    int i;
-    std::vector<std::pair<int, int> > reorderer(nx);
-    for (i=0; i<nx; ++i) {
-        reorderer[i].first=iptr[i];
-        reorderer[i].second=i;
-    }
-    std::sort(reorderer.begin(), reorderer.end());
-
-    std::vector<int> tmp(nx);
-    for (int col=0; col<ncol; ++col) {
-        std::fill(tmp.begin()+pptr[col], tmp.begin()+pptr[col+1], col);
-    }
-
-    iptr2.resize(nx);
-    xptr2.resize(nx);
-    for (i=0; i<nx; ++i) { 
-        const int& o=reorderer[i].second;
-        iptr2[i]=tmp[o];
-        xptr2[i]=xptr[o];
-    }
-
-    pptr2.resize(nrow+1);
-    for (i=0; i<nx; ++i) {
-        ++(pptr2[reorderer[i].first+1]);
-    }
-    for (i=1; i<=nrow; ++i) { pptr2[i]+=pptr2[i-1]; }
-
-    row_majored=true;
-    return;       
-}
-
 const double* Csparse_numeric_matrix::get_row(int r) {
-    if (!row_majored) { row_majorize(); }
-    const int& start=pptr2[r];
-    const int& end=pptr2[r+1];
     std::fill(row_ptr, row_ptr+ncol, 0);
-    for (int ix=start; ix<end; ++ix) {
-        row_ptr[iptr2[ix]]=xptr2[ix];
+    for (int col=0; col<ncol; ++col) { 
+        if (pptr[col]!=pptr[col+1]) { row_ptr[col]=get(r, col); }
     }
     return row_ptr; 
 }
@@ -150,12 +114,13 @@ const double* Csparse_numeric_matrix::get_col(int c) {
 double Csparse_numeric_matrix::get(int r, int c) const {
     const int* istart=iptr + pptr[c];
     const int* iend=iptr + pptr[c+1];
-    const int* loc=std::lower_bound(istart, iend, r);
-    if (loc==iend || *loc!=r) {
-        return 0;
-    } else {
-        return xptr[loc-iptr];
+    if (istart!=iend) { 
+        const int* loc=std::lower_bound(istart, iend, r);
+        if (loc!=iend && *loc==r) {
+            return xptr[loc-iptr];
+        }
     }
+    return 0;
 }
 
 /* Dispatch definition */

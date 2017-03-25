@@ -75,12 +75,6 @@ protected:
     const int * iptr, * pptr;
     const double * xptr;
     int nx;
-
-    void row_majorize();
-    bool row_majored;
-    std::vector<int> iptr2, pptr2;
-    std::vector<double> xptr2;
-
     double* row_ptr, * col_ptr;
 };
 
