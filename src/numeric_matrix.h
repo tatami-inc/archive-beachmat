@@ -1,4 +1,5 @@
 #include "beachmat.h"
+#include "H5Cpp.h"
 
 /* Virtual base class for numeric matrices. */
 
@@ -39,7 +40,7 @@ public:
      * @param c The column index (0-based).
      * @return Double, the value of the matrix at row 'r' and column 'c'.
      */
-    virtual double get(int, int) const=0;
+    virtual double get(int, int)=0;
 protected:
     int nrow, ncol;
 };
@@ -53,7 +54,7 @@ public:
 
     const double* get_row(int);
     const double* get_col(int);
-    double get(int, int) const;
+    double get(int, int);
 
 protected:
     const double* simple_ptr;
@@ -69,12 +70,32 @@ public:
 
     const double * get_row(int);
     const double * get_col(int);
-    double get(int, int) const;
+    double get(int, int);
     
 protected:
     const int * iptr, * pptr;
     const double * xptr;
     int nx;
+    double* row_ptr, * col_ptr;
+};
+
+/* HDF5Matrix */
+
+class HDF5_numeric_matrix : public numeric_matrix {
+public:
+    HDF5_numeric_matrix(SEXP);
+    ~HDF5_numeric_matrix();
+
+    const double * get_row(int);
+    const double * get_col(int);
+    double get(int, int);
+
+protected:
+    H5::H5File hfile;
+    H5::DataSet hdata;
+    H5::DataSpace hspace, rowspace, colspace, onespace;
+    
+    hsize_t offset[2], rows_out[2], cols_out[2], one_out[2];
     double* row_ptr, * col_ptr;
 };
 

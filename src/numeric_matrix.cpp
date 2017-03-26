@@ -45,7 +45,7 @@ const double* simple_numeric_matrix::get_col(int c) {
     return simple_ptr + c*nrow;
 }
 
-double simple_numeric_matrix::get(int r, int c) const {
+double simple_numeric_matrix::get(int r, int c) {
     return simple_ptr[r + c * nrow];
 }
 
@@ -111,7 +111,7 @@ const double* Csparse_numeric_matrix::get_col(int c) {
     return col_ptr;
 }
 
-double Csparse_numeric_matrix::get(int r, int c) const {
+double Csparse_numeric_matrix::get(int r, int c) {
     const int* istart=iptr + pptr[c];
     const int* iend=iptr + pptr[c+1];
     if (istart!=iend) { 
@@ -123,6 +123,106 @@ double Csparse_numeric_matrix::get(int r, int c) const {
     return 0;
 }
 
+/* Methods for a HDF5 matrix. */
+
+HDF5_numeric_matrix::HDF5_numeric_matrix(SEXP incoming) : row_ptr(NULL), col_ptr(NULL) {
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming), "HDF5Matrix")!=0) {
+        throw std::runtime_error("matrix should be a HDF5Matrix object");
+    }
+    SEXP h5_seed=R_do_slot(incoming, install("seed")); 
+
+    fill_dims(nrow, ncol, R_do_slot(h5_seed, install("dim")));
+    SEXP filename=R_do_slot(h5_seed, install("file"));
+    if (!isString(filename) || LENGTH(filename)!=1) { 
+        throw std::runtime_error("'file' should be a string");
+    }
+    const char* fname=CHAR(STRING_ELT(filename, 0));
+    SEXP dataname=R_do_slot(h5_seed, install("name"));
+    if (!isString(dataname) || LENGTH(dataname)!=1) { 
+        throw std::runtime_error("'name' should be a string");
+    }
+    const char* dataset=CHAR(STRING_ELT(dataname, 0));
+    SEXP firstval=R_do_slot(h5_seed, install("first_val"));
+    if (!isReal(firstval)) { 
+        throw std::runtime_error("'first_val' should be double-precision");
+    }
+    
+    // Setting up the HDF5 accessors.
+    hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);
+    hdata = hfile.openDataSet(H5std_string(dataset));
+    if (hdata.getTypeClass()!=H5T_FLOAT) { 
+        throw std::runtime_error("data type in HDF5 file is not a float");
+    }
+    hspace = hdata.getSpace();
+    if (hspace.getSimpleExtentNdims()!=2) {
+        throw std::runtime_error("data in HDF5 file is not a two-dimensional array");
+    }
+    hsize_t dims_out[2];
+    hspace.getSimpleExtentDims( dims_out, NULL);
+    if (dims_out[1]!=nrow || dims_out[0]!=ncol) { 
+        throw std::runtime_error("dimensions in HDF5 file do not equal dimensions in HDF5Matrix");
+    }
+
+    offset[0]=0;
+    offset[1]=0;
+
+    rows_out[0]=ncol;
+    rows_out[1]=1;
+    rowspace=H5::DataSpace(2, rows_out);
+    rowspace.selectHyperslab( H5S_SELECT_SET, rows_out, offset);
+
+    cols_out[0]=1;
+    cols_out[1]=nrow;
+    colspace=H5::DataSpace(2, cols_out);
+    colspace.selectHyperslab( H5S_SELECT_SET, cols_out, offset);
+
+    one_out[0]=1;
+    one_out[1]=1;
+    onespace=H5::DataSpace(2, one_out);
+    onespace.selectHyperslab( H5S_SELECT_SET, one_out, offset);
+
+    try {
+        col_ptr=new double[nrow];
+        row_ptr=new double[ncol];
+    } catch (std::exception& e) {
+        delete [] col_ptr;
+        delete [] row_ptr;
+        throw; 
+    }
+    return;
+}
+
+HDF5_numeric_matrix::~HDF5_numeric_matrix( ){ 
+    delete [] col_ptr;
+    delete [] row_ptr;
+    return;
+}
+
+const double * HDF5_numeric_matrix::get_row(int r) { 
+    offset[0] = 0;
+    offset[1] = r;
+    hspace.selectHyperslab( H5S_SELECT_SET, rows_out, offset);
+    hdata.read(row_ptr, H5::PredType::NATIVE_DOUBLE, rowspace, hspace);
+    return row_ptr;
+} 
+
+const double * HDF5_numeric_matrix::get_col(int c) { 
+    offset[0] = c;
+    offset[1] = 0;
+    hspace.selectHyperslab( H5S_SELECT_SET, cols_out, offset);
+    hdata.read(col_ptr, H5::PredType::NATIVE_DOUBLE, colspace, hspace);
+    return col_ptr; 
+}
+
+double HDF5_numeric_matrix::get(int r, int c) { 
+    offset[0]=c;
+    offset[1]=r;
+    hspace.selectHyperslab( H5S_SELECT_SET, one_out, offset);
+    double out;
+    hdata.read(&out, H5::PredType::NATIVE_DOUBLE, onespace, hspace);
+    return out; 
+}
+
 /* Dispatch definition */
 
 std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP incoming) { 
@@ -130,6 +230,8 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP incoming) {
         const char* ctype=get_class(incoming);
         if (std::strcmp(ctype, "dgCMatrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new Csparse_numeric_matrix(incoming));
+        } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
+            return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
         }
     } else {
         return std::shared_ptr<numeric_matrix>(new simple_numeric_matrix(incoming));

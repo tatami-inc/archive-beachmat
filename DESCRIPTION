@@ -12,4 +12,4 @@ Description: Provides a consistent C++ class interface
 License: GPL-3
 NeedsCompilation: yes
 VignetteBuilder: knitr
-SystemRequirements: C++11
+SystemRequirements: C++11, hdf5
