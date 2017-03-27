@@ -5,6 +5,4 @@
 
 const char* get_class(SEXP);
 
-void fill_dims(int&, int&, SEXP);
-
 #endif
