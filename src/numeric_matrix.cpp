@@ -45,7 +45,7 @@ double simple_numeric_matrix::get(int r, int c) {
 
 dense_numeric_matrix::dense_numeric_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), row_ptr(NULL) { 
     SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a numeric dgeMatrix should be double-precision"); }
+    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dgeMatrix should be double-precision"); }
     dense_ptr=REAL(x);
 
     try {
@@ -78,7 +78,7 @@ double dense_numeric_matrix::get(int r, int c) {
 
 Csparse_numeric_matrix::Csparse_numeric_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
     SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a numeric dgCMatrix should be double-precision"); }
+    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dgCMatrix should be double-precision"); }
     xptr=REAL(x);
 
     try {
@@ -125,7 +125,7 @@ double Csparse_numeric_matrix::get(int r, int c) {
 
 Tsparse_numeric_matrix::Tsparse_numeric_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
     SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a numeric dgTMatrix should be double-precision"); }
+    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dgTMatrix should be double-precision"); }
     xptr=REAL(x);
 
     try {
