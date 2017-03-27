@@ -228,10 +228,11 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP incoming) {
         } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
         }
-    } else {
-        return std::shared_ptr<numeric_matrix>(new simple_numeric_matrix(incoming));
-    }
-    throw std::runtime_error("unsupported data type for numeric_matrix");
+        std::stringstream err;
+        err << "unsupported class '" << ctype << "' for numeric_matrix";
+        throw std::runtime_error(err.str().c_str());
+    } 
+    return std::shared_ptr<numeric_matrix>(new simple_numeric_matrix(incoming));
 }
 
 

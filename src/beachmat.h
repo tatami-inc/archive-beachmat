@@ -11,6 +11,7 @@
 #include <cstring>
 #include <memory>
 #include <stdexcept>
+#include <sstream>
 
 extern "C" {
 
