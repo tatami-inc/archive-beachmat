@@ -17,6 +17,10 @@ extern "C" {
 
 SEXP test_numeric_access(SEXP, SEXP);
 
+SEXP test_integer_access(SEXP, SEXP);
+
+SEXP test_logical_access(SEXP, SEXP);
+
 }
 
 #endif

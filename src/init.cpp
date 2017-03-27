@@ -5,6 +5,8 @@ extern "C" {
 
 static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_numeric_access, 2),
+    REGISTER(test_integer_access, 2),
+    REGISTER(test_logical_access, 2),
     {NULL, NULL, 0}
 };
 
