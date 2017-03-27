@@ -81,10 +81,25 @@ Csparse_matrix::Csparse_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), nx(0) {
     if (nx!=LENGTH(i)) { throw std::runtime_error("'x' and 'i' slots in a dgCMatrix should have the same length"); }
     if (ncol+1!=LENGTH(p)) { throw std::runtime_error("length of 'p' slot in a dgCMatrix should be equal to 'ncol+1'"); }
     if (pptr[ncol]!=nx || pptr[0]!=0) { throw std::runtime_error("first and last elements of 'p' should be 0 and 'length(x)', respectively"); }
-    for (int i=1; i<=ncol; ++i) {
-        if (pptr[i] < pptr[i-1]) { throw std::runtime_error("'p' is not sorted"); }
+
+    // Checking all the indices.
+    int px, ix;
+    for (px=1; px<=ncol; ++px) {
+        if (pptr[px] < pptr[px-1]) { throw std::runtime_error("'p' is not sorted"); }
     }
-    
+    for (px=0; px<ncol; ++px) { 
+        for (ix=pptr[px]+1; ix<pptr[px+1]; ++ix) {
+            if (iptr[ix]<iptr[ix-1]) { 
+                throw std::runtime_error("'i' in each column of a dgCMatrix should be sorted");
+            }
+        }
+    }
+    for (ix=0; ix<nx; ++ix) {
+        if (iptr[ix]<0 || iptr[ix]>=nrow) {
+            throw std::runtime_error("'i' indices out of range for dgCMatrix");
+        }
+    }
+
     return;
 }
 
@@ -95,6 +110,93 @@ int Csparse_matrix::get_index(int r, int c) const {
     const int* loc=std::lower_bound(iptr + pptr[c], iend, r);
     if (loc!=iend && *loc==r) { 
         return loc - iptr;
+    } else {
+        return nx;
+    }
+}
+
+/* Methods for dgTMatrix. */
+
+Tsparse_matrix::Tsparse_matrix(SEXP incoming) : iptr(NULL), jptr(NULL), nx(0), order(NULL), pptr(NULL), iptr2(NULL) {
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming), "dgTMatrix")!=0) {
+        throw std::runtime_error("matrix should be a dgTMatrix object");
+    }
+    
+    SEXP dimslot = install("Dim");
+    if (!R_has_slot(incoming, dimslot)) { throw std::runtime_error("no 'Dim' slot in the dgTMatrix object"); }
+    fill_dims(R_do_slot(incoming, dimslot));
+
+    SEXP islot = install("i");
+    if (!R_has_slot(incoming, islot)) { throw std::runtime_error("no 'i' slot in the dgTMatrix object"); }
+    SEXP i=R_do_slot(incoming, islot);
+    if (!isInteger(i)) { throw std::runtime_error("'i' slot in a dgTMatrix should be integer"); }
+    iptr=INTEGER(i);
+
+    SEXP jslot = install("j");
+    if (!R_has_slot(incoming, jslot)) { throw std::runtime_error("no 'p' slot in the dgTMatrix object"); }
+    SEXP j=R_do_slot(incoming, jslot);
+    if (!isInteger(j)) { throw std::runtime_error("'j' slot in a dgTMatrix should be integer"); }
+    jptr=INTEGER(j);
+
+    SEXP xslot = install("x");
+    if (!R_has_slot(incoming, xslot)) { throw std::runtime_error("no 'x' slot in the dgTMatrix object"); }
+    SEXP x=R_do_slot(incoming, xslot);
+    nx=LENGTH(x);
+
+    if (nx!=LENGTH(i) || LENGTH(j)!=nx) { throw std::runtime_error("'x', 'i' and 'j' slots in a dgTMatrix should have the same length"); }
+    for (int i=0; i<nx; ++i) {
+        if (iptr[i] < 0 || iptr[i]>=nrow) { throw std::runtime_error("'i' slot of a dgTMatrix should contain elements in [0, nrow)"); }
+        if (jptr[i] < 0 || jptr[i]>=ncol) { throw std::runtime_error("'j' slot of a dgTMatrix should contain elements in [0, ncol)"); }
+    }
+   
+    try {
+        // Adding column-major indexing as in dgCMatrix.   
+        int ix;
+        order=new int[nx];
+        for (ix=0; ix<nx; ++ix) {
+            order[ix]=ix;
+        }
+        index_orderer<int> jorder(jptr);
+        std::sort(order, order+nx, jorder);
+
+        pptr=new int[ncol+1];
+        std::fill(pptr, pptr+ncol+1, 0);
+        for (ix=0; ix<nx; ++ix) {
+            ++(pptr[jptr[ix]+1]);
+        }
+        for (ix=1; ix<=ncol; ++ix){ 
+            pptr[ix]+=pptr[ix-1];
+        }
+
+        index_orderer<int> iorder(iptr);
+        for (int px=0; px<ncol; ++px) { 
+            std::sort(order + pptr[px], order + pptr[px+1], iorder);
+        }
+
+        iptr2=new int[nx];
+        for (ix=0; ix<nx; ++ix) {
+            iptr2[ix]=iptr[order[ix]];
+        }
+    } catch (std::exception& e) {
+        delete [] order;
+        delete [] pptr;
+        delete [] iptr2;
+    }
+    return;
+}
+
+Tsparse_matrix::~Tsparse_matrix() {
+    delete [] order;
+    delete [] pptr;
+    delete [] iptr2;
+    return;
+} 
+
+int Tsparse_matrix::get_index(int r, int c) const {
+    int* iend=iptr2 + pptr[c+1];
+    const int* loc=std::lower_bound(iptr2 + pptr[c], iend, r);
+    if (loc!=iend && *loc==r) { 
+        return order[loc - iptr2];
     } else {
         return nx;
     }

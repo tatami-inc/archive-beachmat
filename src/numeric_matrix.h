@@ -78,6 +78,22 @@ protected:
     double* row_ptr, * col_ptr;
 };
 
+/* dgTMatrix */
+
+class Tsparse_numeric_matrix : public Tsparse_matrix, public numeric_matrix {
+public:    
+    Tsparse_numeric_matrix(SEXP);
+    ~Tsparse_numeric_matrix();
+
+    const double * get_row(int);
+    const double * get_col(int);
+    double get(int, int);
+    
+protected:
+    const double * xptr;
+    double* row_ptr, * col_ptr;
+};
+
 /* HDF5Matrix */
 
 class HDF5_numeric_matrix : public HDF5_matrix, public numeric_matrix {

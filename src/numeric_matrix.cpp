@@ -122,6 +122,53 @@ double Csparse_numeric_matrix::get(int r, int c) {
     return (index!=nx ? xptr[index] : 0);
 }
 
+/* Methods for a Tsparse matrix. */
+
+Tsparse_numeric_matrix::Tsparse_numeric_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
+    SEXP x=R_do_slot(incoming, install("x"));
+    if (!isReal(x)) { throw std::runtime_error("'x' slot in a numeric dgTMatrix should be double-precision"); }
+    xptr=REAL(x);
+
+    try {
+        col_ptr=new double[nrow];
+        row_ptr=new double[ncol];
+    } catch (std::exception& e) {
+        delete [] col_ptr;
+        delete [] row_ptr;
+        throw; 
+    }
+    return;
+}
+
+Tsparse_numeric_matrix::~Tsparse_numeric_matrix () {
+    delete [] col_ptr;
+    delete [] row_ptr;
+    return;
+}
+
+const double* Tsparse_numeric_matrix::get_row(int r) {
+    std::fill(row_ptr, row_ptr+ncol, 0);
+    for (int col=0; col<ncol; ++col) { 
+        if (pptr[col]!=pptr[col+1]) { row_ptr[col]=get(r, col); }
+    }
+    return row_ptr; 
+}
+
+const double* Tsparse_numeric_matrix::get_col(int c) {
+    const int& start=pptr[c];
+    const int& end=pptr[c+1];
+    std::fill(col_ptr, col_ptr+nrow, 0);
+    for (int ix=start; ix<end; ++ix) {
+        col_ptr[iptr2[ix]]=xptr[order[ix]];
+    }
+    return col_ptr;
+}
+
+double Tsparse_numeric_matrix::get(int r, int c) {
+    const int index=get_index(r, c);
+    return (index!=nx ? xptr[index] : 0);
+}
+
 /* Methods for a HDF5 matrix. */
 
 HDF5_numeric_matrix::HDF5_numeric_matrix(SEXP incoming) : HDF5_matrix(incoming), row_ptr(NULL), col_ptr(NULL) {
@@ -172,10 +219,12 @@ double HDF5_numeric_matrix::get(int r, int c) {
 std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP incoming) { 
     if (IS_S4_OBJECT(incoming)) {
         const char* ctype=get_class(incoming);
-        if (std::strcmp(ctype, "dgCMatrix")==0) { 
-            return std::shared_ptr<numeric_matrix>(new Csparse_numeric_matrix(incoming));
-        } else if (std::strcmp(ctype, "dgeMatrix")==0) { 
+        if (std::strcmp(ctype, "dgeMatrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new dense_numeric_matrix(incoming));
+        } else if (std::strcmp(ctype, "dgCMatrix")==0) { 
+            return std::shared_ptr<numeric_matrix>(new Csparse_numeric_matrix(incoming));
+        } else if (std::strcmp(ctype, "dgTMatrix")==0) {
+            return std::shared_ptr<numeric_matrix>(new Tsparse_numeric_matrix(incoming));
         } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
         }

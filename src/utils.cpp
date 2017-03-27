@@ -8,4 +8,3 @@ const char* get_class(SEXP incoming) {
     return CHAR(STRING_ELT(ctype, 0));
 }
 
-

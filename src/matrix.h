@@ -61,6 +61,19 @@ protected:
     int get_index(int, int) const;   
 };
 
+/* A virtual dgTMatrix class */
+
+class Tsparse_matrix : public virtual any_matrix {
+public:
+    Tsparse_matrix(SEXP);
+    ~Tsparse_matrix();   
+protected:
+    const int * iptr, * jptr;
+    int nx;
+    int* order, *pptr, *iptr2;
+    int get_index(int, int) const;   
+};
+
 /* A virtual HDF5Matrix class */
 
 class HDF5_matrix : public virtual any_matrix {
