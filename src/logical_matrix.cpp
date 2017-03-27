@@ -44,8 +44,8 @@ int simple_logical_matrix::get(int r, int c) {
 /* Methods for a dense Matrix. */
 
 dense_logical_matrix::dense_logical_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), row_ptr(NULL) { 
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isLogical(x)) { throw std::runtime_error("'x' slot in a lgeMatrix should be logical"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     dense_ptr=LOGICAL(x);
 
     try {
@@ -77,8 +77,8 @@ int dense_logical_matrix::get(int r, int c) {
 /* Methods for a Csparse matrix. */
 
 Csparse_logical_matrix::Csparse_logical_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isLogical(x)) { throw std::runtime_error("'x' slot in a lgCMatrix should be logical"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     xptr=LOGICAL(x);
 
     try {
@@ -124,8 +124,8 @@ int Csparse_logical_matrix::get(int r, int c) {
 /* Methods for a Tsparse matrix. */
 
 Tsparse_logical_matrix::Tsparse_logical_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isLogical(x)) { throw std::runtime_error("'x' slot in a lgTMatrix should be logical"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     xptr=LOGICAL(x);
 
     try {
@@ -171,10 +171,10 @@ int Tsparse_logical_matrix::get(int r, int c) {
 /* Methods for a HDF5 matrix. */
 
 HDF5_logical_matrix::HDF5_logical_matrix(SEXP incoming) : HDF5_matrix(incoming), row_ptr(NULL), col_ptr(NULL) {
-    SEXP h5_seed=R_do_slot(incoming, install("seed")); 
-    SEXP firstval=R_do_slot(h5_seed, install("first_val"));
+    SEXP h5_seed=get_safe_slot(incoming, "seed"); 
+    SEXP firstval=get_safe_slot(h5_seed, "first_val");
     if (!isLogical(firstval)) { 
-        throw std::runtime_error("'first_val' should be logical");
+        throw_custom_error("'first_val' slot in a ", get_class(h5_seed), " object should be logical");
     }
     if (hdata.getTypeClass()!=H5T_INTEGER) { 
         throw std::runtime_error("data type in HDF5 file is not integer");

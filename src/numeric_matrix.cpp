@@ -44,8 +44,8 @@ double simple_numeric_matrix::get(int r, int c) {
 /* Methods for a dense Matrix. */
 
 dense_numeric_matrix::dense_numeric_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), row_ptr(NULL) { 
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dgeMatrix should be double-precision"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isReal(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be double-precision"); }
     dense_ptr=REAL(x);
 
     try {
@@ -77,8 +77,8 @@ double dense_numeric_matrix::get(int r, int c) {
 /* Methods for a Csparse matrix. */
 
 Csparse_numeric_matrix::Csparse_numeric_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dgCMatrix should be double-precision"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isReal(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be double-precision"); }
     xptr=REAL(x);
 
     try {
@@ -124,8 +124,8 @@ double Csparse_numeric_matrix::get(int r, int c) {
 /* Methods for a Tsparse matrix. */
 
 Tsparse_numeric_matrix::Tsparse_numeric_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dgTMatrix should be double-precision"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isReal(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be double-precision"); }
     xptr=REAL(x);
 
     try {
@@ -171,8 +171,8 @@ double Tsparse_numeric_matrix::get(int r, int c) {
 /* Methods for a Psymm matrix. */
 
 Psymm_numeric_matrix::Psymm_numeric_matrix(SEXP incoming) : Psymm_matrix(incoming), xptr(NULL), out_ptr(NULL) {
-    SEXP x=R_do_slot(incoming, install("x"));
-    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dspMatrix should be double-precision"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isReal(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be double-precision"); }
     xptr=REAL(x);
 
     try {
@@ -219,10 +219,10 @@ double Psymm_numeric_matrix::get(int r, int c) {
 /* Methods for a HDF5 matrix. */
 
 HDF5_numeric_matrix::HDF5_numeric_matrix(SEXP incoming) : HDF5_matrix(incoming), row_ptr(NULL), col_ptr(NULL) {
-    SEXP h5_seed=R_do_slot(incoming, install("seed")); 
-    SEXP firstval=R_do_slot(h5_seed, install("first_val"));
+    SEXP h5_seed=get_safe_slot(incoming, "seed"); 
+    SEXP firstval=get_safe_slot(h5_seed, "first_val");
     if (!isReal(firstval)) { 
-        throw std::runtime_error("'first_val' should be double-precision");
+        throw_custom_error("'first_val' slot in a ", get_class(h5_seed), " object should be double-precision");
     }
     if (hdata.getTypeClass()!=H5T_FLOAT) { 
         throw std::runtime_error("data type in HDF5 file is not floating-point");

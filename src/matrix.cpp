@@ -34,17 +34,10 @@ int simple_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual *geMatrix. */
 
-SEXP get_safe_slot(SEXP incoming, const char* slotname) {
-    SEXP dimslot = install(slotname);
-    if (!R_has_slot(incoming, dimslot)) { 
-        std::stringstream err;
-        err << "no '" << slotname << "' slot in the " << get_class(incoming) << " object";
-        throw std::runtime_error(err.str().c_str()); 
-    }
-    return R_do_slot(incoming, dimslot);
-}
-
 dense_matrix::dense_matrix (SEXP incoming) {
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "geMatrix")!=0) {
+        throw std::runtime_error("matrix should be a *geMatrix object");
+    }
     fill_dims(get_safe_slot(incoming, "Dim"));
     return;
 }
@@ -55,48 +48,43 @@ int dense_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual *gCMatrix. */
 
-void throw_custom_error(const char* left, const char* classname, const char* right) {
-    std::stringstream err;
-    err << left << classname << right;
-    throw std::runtime_error(err.str().c_str());
-}
-
 Csparse_matrix::Csparse_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), nx(0) {
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "gCMatrix")!=0) {
+    const char* ctype=get_class(incoming);
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "gCMatrix")!=0) {
         throw std::runtime_error("matrix should be a *gCMatrix object");
     }
     
     fill_dims(get_safe_slot(incoming, "Dim"));
 
     SEXP i=get_safe_slot(incoming, "i");
-    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", get_class(incoming), " object should be integer"); }
+    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", ctype, " object should be integer"); }
     iptr=INTEGER(i);
 
     SEXP p=get_safe_slot(incoming, "p");
-    if (!isInteger(p)) { throw_custom_error("'p' slot in a ", get_class(incoming), " object should be integer"); }
+    if (!isInteger(p)) { throw_custom_error("'p' slot in a ", ctype, " object should be integer"); }
     pptr=INTEGER(p);
 
     nx=LENGTH(get_safe_slot(incoming, "x"));
-    if (nx!=LENGTH(i)) { throw_custom_error("'x' and 'i' slots in a ", get_class(incoming), " object should have the same length"); }
-    if (ncol+1!=LENGTH(p)) { throw_custom_error("length of 'p' slot in a ", get_class(incoming), " object should be equal to 'ncol+1'"); }
-    if (pptr[0]!=0) { throw_custom_error("first element of 'p' in a ", get_class(incoming), " object should be 0"); }
-    if (pptr[ncol]!=nx) { throw_custom_error("last element of 'p' in a ", get_class(incoming), " object should be 'length(x)'"); }
+    if (nx!=LENGTH(i)) { throw_custom_error("'x' and 'i' slots in a ", ctype, " object should have the same length"); }
+    if (ncol+1!=LENGTH(p)) { throw_custom_error("length of 'p' slot in a ", ctype, " object should be equal to 'ncol+1'"); }
+    if (pptr[0]!=0) { throw_custom_error("first element of 'p' in a ", ctype, " object should be 0"); }
+    if (pptr[ncol]!=nx) { throw_custom_error("last element of 'p' in a ", ctype, " object should be 'length(x)'"); }
 
     // Checking all the indices.
     int px, ix;
     for (px=1; px<=ncol; ++px) {
-        if (pptr[px] < pptr[px-1]) { throw_custom_error("'p' in a ", get_class(incoming), " object should be sorted"); }
+        if (pptr[px] < pptr[px-1]) { throw_custom_error("'p' in a ", ctype, " object should be sorted"); }
     }
     for (px=0; px<ncol; ++px) { 
         for (ix=pptr[px]+1; ix<pptr[px+1]; ++ix) {
             if (iptr[ix]<iptr[ix-1]) { 
-                throw_custom_error("'i' in each column of a ", get_class(incoming), " object should be sorted");
+                throw_custom_error("'i' in each column of a ", ctype, " object should be sorted");
             }
         }
     }
     for (ix=0; ix<nx; ++ix) {
         if (iptr[ix]<0 || iptr[ix]>=nrow) {
-            throw_custom_error("'i' slot in a ", get_class(incoming), " object should contain elements in [0, nrow)");
+            throw_custom_error("'i' slot in a ", ctype, " object should contain elements in [0, nrow)");
         }
     }
 
@@ -118,25 +106,26 @@ int Csparse_matrix::get_index(int r, int c) const {
 /* Methods for the virtual *gTMatrix. */
 
 Tsparse_matrix::Tsparse_matrix(SEXP incoming) : iptr(NULL), jptr(NULL), nx(0), order(NULL), pptr(NULL), iptr2(NULL) {
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "gTMatrix")!=0) {
+    const char* ctype=get_class(incoming);
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "gTMatrix")!=0) {
         throw std::runtime_error("matrix should be a *gTMatrix object");
     }
     
     fill_dims(get_safe_slot(incoming, "Dim"));
 
     SEXP i=get_safe_slot(incoming, "i");
-    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", get_class(incoming), " object should be integer"); }
+    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", ctype, " object should be integer"); }
     iptr=INTEGER(i);
 
     SEXP j=get_safe_slot(incoming, "j");
-    if (!isInteger(i)) { throw_custom_error("'j' slot in a ", get_class(incoming), " object should be integer"); }
+    if (!isInteger(i)) { throw_custom_error("'j' slot in a ", ctype, " object should be integer"); }
     jptr=INTEGER(j);
 
     nx=LENGTH(get_safe_slot(incoming, "x"));
-    if (nx!=LENGTH(i) || LENGTH(j)!=nx) { throw_custom_error("'x', 'i' and 'j' slots in a ", get_class(incoming), " object should have the same length"); }
+    if (nx!=LENGTH(i) || LENGTH(j)!=nx) { throw_custom_error("'x', 'i' and 'j' slots in a ", ctype, " object should have the same length"); }
     for (int i=0; i<nx; ++i) {
-        if (iptr[i] < 0 || iptr[i]>=nrow) { throw_custom_error("'i' slot of a ", get_class(incoming), " object should contain elements in [0, nrow)"); }
-        if (jptr[i] < 0 || jptr[i]>=ncol) { throw_custom_error("'j' slot of a ", get_class(incoming), " object should contain elements in [0, ncol)"); }
+        if (iptr[i] < 0 || iptr[i]>=nrow) { throw_custom_error("'i' slot of a ", ctype, " object should contain elements in [0, nrow)"); }
+        if (jptr[i] < 0 || jptr[i]>=ncol) { throw_custom_error("'j' slot of a ", ctype, " object should contain elements in [0, ncol)"); }
     }
    
     try {
@@ -195,15 +184,16 @@ int Tsparse_matrix::get_index(int r, int c) const {
 /* Methods for the virtual *spMatrix. */
 
 Psymm_matrix::Psymm_matrix(SEXP incoming) : upper(true) {
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "spMatrix")!=0) {
+    const char* ctype=get_class(incoming);
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "spMatrix")!=0) {
         throw std::runtime_error("matrix should be a *spMatrix object");
     }
     
     fill_dims(get_safe_slot(incoming, "Dim"));
-    if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", get_class(incoming), "object"); }
+    if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", ctype, "object"); }
     
     SEXP ul=get_safe_slot(incoming, "uplo");
-    if (!isString(ul) || LENGTH(ul)!=1) { throw_custom_error("'uplo' slot in a ", get_class(incoming), " object should be a string"); }
+    if (!isString(ul) || LENGTH(ul)!=1) { throw_custom_error("'uplo' slot in a ", ctype, " object should be a string"); }
     switch (*(CHAR(STRING_ELT(ul, 0)))) {
         case 'U':
             upper=true;
@@ -212,7 +202,7 @@ Psymm_matrix::Psymm_matrix(SEXP incoming) : upper(true) {
             upper=false;
             break;
         default:
-            throw_custom_error("'uplo' slot in a ", get_class(incoming), " object should be either 'U' or 'L'");
+            throw_custom_error("'uplo' slot in a ", ctype, " object should be either 'U' or 'L'");
     }
     return;
 }
@@ -238,31 +228,27 @@ int Psymm_matrix::get_index(int r, int c) const {
 /* Methods for the virtual HDF5Matrix. */
 
 HDF5_matrix::HDF5_matrix(SEXP incoming) {
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming), "HDF5Matrix")!=0) {
+    const char* ctype=get_class(incoming);
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype, "HDF5Matrix")!=0) {
         throw std::runtime_error("matrix should be a HDF5Matrix object");
     }
 
-    SEXP seedslot=install("seed");
-    if (!R_has_slot(incoming, seedslot)) { throw std::runtime_error("no 'seed' slot in the HDF5Matrix object"); }
-    SEXP h5_seed=R_do_slot(incoming, seedslot);
-    if (!IS_S4_OBJECT(h5_seed) || std::strcmp(get_class(h5_seed), "HDF5ArraySeed")!=0) {
-        throw std::runtime_error("'seed' should be a HDF5ArraySeed object");
+    SEXP h5_seed=get_safe_slot(incoming, "seed");
+    const char *stype=get_class(h5_seed);
+    if (!IS_S4_OBJECT(h5_seed) || std::strcmp(stype, "HDF5ArraySeed")!=0) {
+        throw_custom_error("'seed' slot in a ", ctype, " object should be a HDF5ArraySeed object");
     }
     fill_dims(getAttrib(h5_seed, R_DimSymbol));
 
-    SEXP fileslot=install("file");
-    if (!R_has_slot(h5_seed, fileslot)) { throw std::runtime_error("no 'file' slot in the HDF5ArraySeed object"); }
-    SEXP filename=R_do_slot(h5_seed, fileslot);
+    SEXP filename=get_safe_slot(h5_seed, "file");
     if (!isString(filename) || LENGTH(filename)!=1) { 
-        throw std::runtime_error("'file' should be a string");
+        throw_custom_error("'file' slot in a ", stype, " object should be a string");
     }
     const char* fname=CHAR(STRING_ELT(filename, 0));
 
-    SEXP nameslot=install("name");
-    if (!R_has_slot(h5_seed, nameslot)) { throw std::runtime_error("no 'name' slot in the HDF5ArraySeed object"); }
-    SEXP dataname=R_do_slot(h5_seed, nameslot);
+    SEXP dataname=get_safe_slot(h5_seed, "name");
     if (!isString(dataname) || LENGTH(dataname)!=1) { 
-        throw std::runtime_error("'name' should be a string");
+        throw_custom_error("'name' slot in a ", stype, " object should be a string");
     }
     const char* dataset=CHAR(STRING_ELT(dataname, 0));
     
