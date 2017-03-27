@@ -74,6 +74,17 @@ protected:
     int get_index(int, int) const;   
 };
 
+/* A virtual *spMatrix class */
+
+class Psymm_matrix : public virtual any_matrix {
+public:
+    Psymm_matrix(SEXP);
+    ~Psymm_matrix();
+protected:
+    bool upper;
+    int get_index(int, int) const;
+};
+
 /* A virtual HDF5Matrix class */
 
 class HDF5_matrix : public virtual any_matrix {

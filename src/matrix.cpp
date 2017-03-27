@@ -192,6 +192,49 @@ int Tsparse_matrix::get_index(int r, int c) const {
     }
 }
 
+/* Methods for the virtual *spMatrix. */
+
+Psymm_matrix::Psymm_matrix(SEXP incoming) : upper(true) {
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "spMatrix")!=0) {
+        throw std::runtime_error("matrix should be a *spMatrix object");
+    }
+    
+    fill_dims(get_safe_slot(incoming, "Dim"));
+    if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", get_class(incoming), "object"); }
+    
+    SEXP ul=get_safe_slot(incoming, "uplo");
+    if (!isString(ul) || LENGTH(ul)!=1) { throw_custom_error("'uplo' slot in a ", get_class(incoming), " object should be a string"); }
+    switch (*(CHAR(STRING_ELT(ul, 0)))) {
+        case 'U':
+            upper=true;
+            break;
+        case 'L':
+            upper=false;
+            break;
+        default:
+            throw_custom_error("'uplo' slot in a ", get_class(incoming), " object should be either 'U' or 'L'");
+    }
+    return;
+}
+
+Psymm_matrix::~Psymm_matrix() {}
+
+int Psymm_matrix::get_index(int r, int c) const {
+    if (upper) {
+        if (c > r) { 
+            return (c*(c+1))/2 + r;            
+        } else {
+            return (r*(r+1))/2 + c;            
+        }
+    } else {
+        if (r > c) { 
+            return nrow * c - (c * (c - 1))/2 + r - c;
+        } else {
+            return nrow * r - (r * (r - 1))/2 + c - r;
+        }
+    }
+}
+
 /* Methods for the virtual HDF5Matrix. */
 
 HDF5_matrix::HDF5_matrix(SEXP incoming) {
@@ -242,17 +285,17 @@ HDF5_matrix::HDF5_matrix(SEXP incoming) {
     rows_out[0]=ncol;
     rows_out[1]=1;
     rowspace=H5::DataSpace(2, rows_out);
-    rowspace.selectHyperslab( H5S_SELECT_SET, rows_out, offset);
+    rowspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
 
     cols_out[0]=1;
     cols_out[1]=nrow;
     colspace=H5::DataSpace(2, cols_out);
-    colspace.selectHyperslab( H5S_SELECT_SET, cols_out, offset);
+    colspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
 
     one_out[0]=1;
     one_out[1]=1;
     onespace=H5::DataSpace(2, one_out);
-    onespace.selectHyperslab( H5S_SELECT_SET, one_out, offset);
+    onespace.selectHyperslab(H5S_SELECT_SET, one_out, offset);
 
     return;
 }

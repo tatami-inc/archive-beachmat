@@ -168,6 +168,54 @@ double Tsparse_numeric_matrix::get(int r, int c) {
     return (index!=nx ? xptr[index] : 0);
 }
 
+/* Methods for a Psymm matrix. */
+
+Psymm_numeric_matrix::Psymm_numeric_matrix(SEXP incoming) : Psymm_matrix(incoming), xptr(NULL), out_ptr(NULL) {
+    SEXP x=R_do_slot(incoming, install("x"));
+    if (!isReal(x)) { throw std::runtime_error("'x' slot in a dspMatrix should be double-precision"); }
+    xptr=REAL(x);
+
+    try {
+        out_ptr=new double[nrow];
+    } catch (std::exception& e) {
+        delete [] out_ptr;
+        throw; 
+    }
+    return;
+}
+
+Psymm_numeric_matrix::~Psymm_numeric_matrix () {
+    delete [] out_ptr;
+    return;
+}
+
+const double* Psymm_numeric_matrix::get_col (int c) {
+    if (upper) {
+        int start=(c*(c+1))/2;
+        std::copy(xptr+start, xptr+start+c, out_ptr);
+        for (int i=c; i<ncol; ++i) {
+            out_ptr[i]=xptr[start+c];
+            start+=i+1;
+        }
+    } else {
+        int start=0;
+        for (int i=0; i<c; ++i) {
+            out_ptr[i]=xptr[c-i + start];
+            start+=nrow-i;
+        }
+        std::copy(xptr+start, xptr+start+nrow-c, out_ptr+c);
+    }
+    return out_ptr;
+}
+
+const double* Psymm_numeric_matrix::get_row (int r) {
+    return get_col(r);
+}
+
+double Psymm_numeric_matrix::get(int r, int c) {
+    return xptr[get_index(r, c)];
+}
+
 /* Methods for a HDF5 matrix. */
 
 HDF5_numeric_matrix::HDF5_numeric_matrix(SEXP incoming) : HDF5_matrix(incoming), row_ptr(NULL), col_ptr(NULL) {
@@ -227,6 +275,8 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP incoming) {
             return std::shared_ptr<numeric_matrix>(new Csparse_numeric_matrix(incoming));
         } else if (std::strcmp(ctype, "dgTMatrix")==0) {
             return std::shared_ptr<numeric_matrix>(new Tsparse_numeric_matrix(incoming));
+        } else if (std::strcmp(ctype, "dspMatrix")==0) {
+            return std::shared_ptr<numeric_matrix>(new Psymm_numeric_matrix(incoming));
         } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
         }
