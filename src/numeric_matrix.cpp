@@ -42,6 +42,39 @@ double simple_numeric_matrix::get(int r, int c) {
     return simple_ptr[get_index(r, c)];
 }
 
+/* Methods for a dense Matrix. */
+
+dense_numeric_matrix::dense_numeric_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), row_ptr(NULL) { 
+    SEXP x=R_do_slot(incoming, install("x"));
+    if (!isReal(x)) { throw std::runtime_error("'x' slot in a numeric dgeMatrix should be double-precision"); }
+    dense_ptr=REAL(x);
+
+    try {
+        row_ptr=new double[ncol];
+    } catch (std::exception& e) {
+        delete [] row_ptr;
+        throw; 
+    }
+    return;
+}
+
+dense_numeric_matrix::~dense_numeric_matrix() {
+    delete [] row_ptr;
+}
+
+const double* dense_numeric_matrix::get_row(int r) {
+    for (int col=0; col<ncol; ++col) { row_ptr[col]=get(r, col); }
+    return row_ptr; 
+}
+
+const double* dense_numeric_matrix::get_col(int c) {
+    return dense_ptr + c*nrow;
+}
+
+double dense_numeric_matrix::get(int r, int c) {
+    return dense_ptr[get_index(r, c)];
+}
+
 /* Methods for a Csparse matrix. */
 
 Csparse_numeric_matrix::Csparse_numeric_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
@@ -141,6 +174,8 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP incoming) {
         const char* ctype=get_class(incoming);
         if (std::strcmp(ctype, "dgCMatrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new Csparse_numeric_matrix(incoming));
+        } else if (std::strcmp(ctype, "dgeMatrix")==0) { 
+            return std::shared_ptr<numeric_matrix>(new dense_numeric_matrix(incoming));
         } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
             return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
         }

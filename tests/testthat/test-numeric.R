@@ -19,12 +19,31 @@ expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, test.mat, 1
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, test.mat, 2L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, test.mat, 3L))
 
+# Testing dense matrices:
+
+set.seed(13579)
+library(Matrix)
+test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10)
+A <- Matrix(test.mat)
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
+
+test.mat <- matrix(as.double(rpois(150, lambda=5)), 5, 30)
+A <- Matrix(test.mat)
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
+
+test.mat <- matrix(as.double(rpois(150, lambda=5)), 30, 5)
+A <- Matrix(test.mat)
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
+expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
+
 # Testing sparse matrices:
 
-library(beachmat); library(testthat);
-
 set.seed(23456)
-library(Matrix)
 A <- rsparsematrix(nrow=15, 10, density=0.1)
 test.mat <- as.matrix(A)
 dimnames(test.mat) <- NULL
@@ -89,7 +108,4 @@ A <- as(test.mat, "HDF5Array")
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
-
-
 

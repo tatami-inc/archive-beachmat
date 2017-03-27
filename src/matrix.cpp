@@ -23,12 +23,32 @@ void any_matrix::fill_dims(SEXP dims) {
 
 simple_matrix::simple_matrix(SEXP incoming) {
     fill_dims(getAttrib(incoming, R_DimSymbol));
+    if (LENGTH(incoming)!=nrow*ncol) { throw std::runtime_error("length of matrix is inconsistent with its dimensions"); }
     return;
 }
 
 simple_matrix::~simple_matrix() {}
 
 int simple_matrix::get_index(int r, int c) const { return r + c*nrow; }
+
+/* Methods for the virtual dgeMatrix. */
+
+dense_matrix::dense_matrix (SEXP incoming) {
+    SEXP dimslot = install("Dim");
+    if (!R_has_slot(incoming, dimslot)) { throw std::runtime_error("no 'Dim' slot in the dgeMatrix object"); }
+    fill_dims(R_do_slot(incoming, dimslot));
+
+    SEXP xslot = install("x");
+    if (!R_has_slot(incoming, xslot)) { throw std::runtime_error("no 'x' slot in the dgeMatrix object"); }
+    SEXP x=R_do_slot(incoming, xslot);
+    if (LENGTH(x)!=nrow*ncol) { throw std::runtime_error("length of 'x' is not consistent with dgeMatrix dimensions"); }
+
+    return;
+}
+
+dense_matrix::~dense_matrix() {}
+
+int dense_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual dgCMatrix. */
 
@@ -37,16 +57,27 @@ Csparse_matrix::Csparse_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), nx(0) {
         throw std::runtime_error("matrix should be a dgCMatrix object");
     }
     
-    fill_dims(R_do_slot(incoming, install("Dim")));
-    SEXP i=R_do_slot(incoming, install("i"));
+    SEXP dimslot = install("Dim");
+    if (!R_has_slot(incoming, dimslot)) { throw std::runtime_error("no 'Dim' slot in the dgCMatrix object"); }
+    fill_dims(R_do_slot(incoming, dimslot));
+
+    SEXP islot = install("i");
+    if (!R_has_slot(incoming, islot)) { throw std::runtime_error("no 'i' slot in the dgCMatrix object"); }
+    SEXP i=R_do_slot(incoming, islot);
     if (!isInteger(i)) { throw std::runtime_error("'i' slot in a dgCMatrix should be integer"); }
     iptr=INTEGER(i);
-    SEXP p=R_do_slot(incoming, install("p"));
+
+    SEXP pslot = install("p");
+    if (!R_has_slot(incoming, pslot)) { throw std::runtime_error("no 'p' slot in the dgCMatrix object"); }
+    SEXP p=R_do_slot(incoming, pslot);
     if (!isInteger(p)) { throw std::runtime_error("'p' slot in a dgCMatrix should be integer"); }
     pptr=INTEGER(p);
 
-    SEXP x=R_do_slot(incoming, install("x"));
+    SEXP xslot = install("x");
+    if (!R_has_slot(incoming, xslot)) { throw std::runtime_error("no 'x' slot in the dgCMatrix object"); }
+    SEXP x=R_do_slot(incoming, xslot);
     nx=LENGTH(x);
+
     if (nx!=LENGTH(i)) { throw std::runtime_error("'x' and 'i' slots in a dgCMatrix should have the same length"); }
     if (ncol+1!=LENGTH(p)) { throw std::runtime_error("length of 'p' slot in a dgCMatrix should be equal to 'ncol+1'"); }
     if (pptr[ncol]!=nx || pptr[0]!=0) { throw std::runtime_error("first and last elements of 'p' should be 0 and 'length(x)', respectively"); }
@@ -75,15 +106,26 @@ HDF5_matrix::HDF5_matrix(SEXP incoming) {
     if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming), "HDF5Matrix")!=0) {
         throw std::runtime_error("matrix should be a HDF5Matrix object");
     }
-    SEXP h5_seed=R_do_slot(incoming, install("seed")); 
 
-    fill_dims(R_do_slot(h5_seed, install("dim")));
-    SEXP filename=R_do_slot(h5_seed, install("file"));
+    SEXP seedslot=install("seed");
+    if (!R_has_slot(incoming, seedslot)) { throw std::runtime_error("no 'seed' slot in the HDF5Matrix object"); }
+    SEXP h5_seed=R_do_slot(incoming, seedslot);
+    if (!IS_S4_OBJECT(h5_seed) || std::strcmp(get_class(h5_seed), "HDF5ArraySeed")!=0) {
+        throw std::runtime_error("'seed' should be a HDF5ArraySeed object");
+    }
+    fill_dims(getAttrib(h5_seed, R_DimSymbol));
+
+    SEXP fileslot=install("file");
+    if (!R_has_slot(h5_seed, fileslot)) { throw std::runtime_error("no 'file' slot in the HDF5ArraySeed object"); }
+    SEXP filename=R_do_slot(h5_seed, fileslot);
     if (!isString(filename) || LENGTH(filename)!=1) { 
         throw std::runtime_error("'file' should be a string");
     }
     const char* fname=CHAR(STRING_ELT(filename, 0));
-    SEXP dataname=R_do_slot(h5_seed, install("name"));
+
+    SEXP nameslot=install("name");
+    if (!R_has_slot(h5_seed, nameslot)) { throw std::runtime_error("no 'name' slot in the HDF5ArraySeed object"); }
+    SEXP dataname=R_do_slot(h5_seed, nameslot);
     if (!isString(dataname) || LENGTH(dataname)!=1) { 
         throw std::runtime_error("'name' should be a string");
     }
@@ -100,7 +142,7 @@ HDF5_matrix::HDF5_matrix(SEXP incoming) {
         throw std::runtime_error("data in HDF5 file is not a two-dimensional array");
     }
     hsize_t dims_out[2];
-    hspace.getSimpleExtentDims( dims_out, NULL);
+    hspace.getSimpleExtentDims(dims_out, NULL);
     if (dims_out[1]!=nrow || dims_out[0]!=ncol) { 
         throw std::runtime_error("dimensions in HDF5 file do not equal dimensions in HDF5Matrix");
     }

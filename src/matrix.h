@@ -39,6 +39,16 @@ protected:
     int get_index(int, int) const;   
 }; 
 
+/* A virtual dgeMatrix class */
+
+class dense_matrix : public virtual any_matrix {
+public:
+    dense_matrix(SEXP);
+    ~dense_matrix();
+protected:
+    int get_index(int, int) const;   
+};
+
 /* A virtual dgCMatrix class */
 
 class Csparse_matrix : public virtual any_matrix {

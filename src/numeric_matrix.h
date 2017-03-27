@@ -46,6 +46,22 @@ protected:
     double * row_ptr;
 };
 
+/* dgeMatrix */
+
+class dense_numeric_matrix : public dense_matrix, public numeric_matrix {
+public:    
+    dense_numeric_matrix(SEXP);
+    ~dense_numeric_matrix();
+
+    const double* get_row(int);
+    const double* get_col(int);
+    double get(int, int);
+
+protected:
+    const double* dense_ptr;
+    double * row_ptr;
+};
+
 /* dgCMatrix */
 
 class Csparse_numeric_matrix : public Csparse_matrix, public numeric_matrix {
