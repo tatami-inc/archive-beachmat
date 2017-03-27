@@ -1,5 +1,4 @@
 #include "numeric_matrix.h"
-#include "utils.h"
 
 /* Methods for the base class. */
 
@@ -177,7 +176,10 @@ HDF5_numeric_matrix::HDF5_numeric_matrix(SEXP incoming) : HDF5_matrix(incoming),
     if (!isReal(firstval)) { 
         throw std::runtime_error("'first_val' should be double-precision");
     }
-    
+    if (hdata.getTypeClass()!=H5T_FLOAT) { 
+        throw std::runtime_error("data type in HDF5 file is not floating-point");
+    }
+
     try {
         col_ptr=new double[nrow];
         row_ptr=new double[ncol];

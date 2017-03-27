@@ -236,9 +236,6 @@ HDF5_matrix::HDF5_matrix(SEXP incoming) {
     // Setting up the HDF5 accessors.
     hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);
     hdata = hfile.openDataSet(H5std_string(dataset));
-    if (hdata.getTypeClass()!=H5T_FLOAT) { 
-        throw std::runtime_error("data type in HDF5 file is not a float");
-    }
     hspace = hdata.getSpace();
     if (hspace.getSimpleExtentNdims()!=2) {
         throw std::runtime_error("data in HDF5 file is not a two-dimensional array");
