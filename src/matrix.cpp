@@ -16,6 +16,7 @@ void any_matrix::fill_dims(SEXP dims) {
     }
     nrow=INTEGER(dims)[0];
     ncol=INTEGER(dims)[1];
+    if (nrow<0 || ncol<0) { throw std::runtime_error("dimensions should be non-negative"); }
     return;
 }
 
@@ -33,16 +34,18 @@ int simple_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual *geMatrix. */
 
+SEXP get_safe_slot(SEXP incoming, const char* slotname) {
+    SEXP dimslot = install(slotname);
+    if (!R_has_slot(incoming, dimslot)) { 
+        std::stringstream err;
+        err << "no '" << slotname << "' slot in the " << get_class(incoming) << " object";
+        throw std::runtime_error(err.str().c_str()); 
+    }
+    return R_do_slot(incoming, dimslot);
+}
+
 dense_matrix::dense_matrix (SEXP incoming) {
-    SEXP dimslot = install("Dim");
-    if (!R_has_slot(incoming, dimslot)) { throw std::runtime_error("no 'Dim' slot in the *geMatrix object"); }
-    fill_dims(R_do_slot(incoming, dimslot));
-
-    SEXP xslot = install("x");
-    if (!R_has_slot(incoming, xslot)) { throw std::runtime_error("no 'x' slot in the *geMatrix object"); }
-    SEXP x=R_do_slot(incoming, xslot);
-    if (LENGTH(x)!=nrow*ncol) { throw std::runtime_error("length of 'x' is not consistent with *geMatrix dimensions"); }
-
+    fill_dims(get_safe_slot(incoming, "Dim"));
     return;
 }
 
@@ -52,51 +55,48 @@ int dense_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual *gCMatrix. */
 
+void throw_custom_error(const char* left, const char* classname, const char* right) {
+    std::stringstream err;
+    err << left << classname << right;
+    throw std::runtime_error(err.str().c_str());
+}
+
 Csparse_matrix::Csparse_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), nx(0) {
     if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "gCMatrix")!=0) {
         throw std::runtime_error("matrix should be a *gCMatrix object");
     }
     
-    SEXP dimslot = install("Dim");
-    if (!R_has_slot(incoming, dimslot)) { throw std::runtime_error("no 'Dim' slot in the *gCMatrix object"); }
-    fill_dims(R_do_slot(incoming, dimslot));
+    fill_dims(get_safe_slot(incoming, "Dim"));
 
-    SEXP islot = install("i");
-    if (!R_has_slot(incoming, islot)) { throw std::runtime_error("no 'i' slot in the *gCMatrix object"); }
-    SEXP i=R_do_slot(incoming, islot);
-    if (!isInteger(i)) { throw std::runtime_error("'i' slot in a *gCMatrix should be integer"); }
+    SEXP i=get_safe_slot(incoming, "i");
+    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", get_class(incoming), " object should be integer"); }
     iptr=INTEGER(i);
 
-    SEXP pslot = install("p");
-    if (!R_has_slot(incoming, pslot)) { throw std::runtime_error("no 'p' slot in the *gCMatrix object"); }
-    SEXP p=R_do_slot(incoming, pslot);
-    if (!isInteger(p)) { throw std::runtime_error("'p' slot in a *gCMatrix should be integer"); }
+    SEXP p=get_safe_slot(incoming, "p");
+    if (!isInteger(p)) { throw_custom_error("'p' slot in a ", get_class(incoming), " object should be integer"); }
     pptr=INTEGER(p);
 
-    SEXP xslot = install("x");
-    if (!R_has_slot(incoming, xslot)) { throw std::runtime_error("no 'x' slot in the *gCMatrix object"); }
-    SEXP x=R_do_slot(incoming, xslot);
-    nx=LENGTH(x);
-
-    if (nx!=LENGTH(i)) { throw std::runtime_error("'x' and 'i' slots in a *gCMatrix should have the same length"); }
-    if (ncol+1!=LENGTH(p)) { throw std::runtime_error("length of 'p' slot in a *gCMatrix should be equal to 'ncol+1'"); }
-    if (pptr[ncol]!=nx || pptr[0]!=0) { throw std::runtime_error("first and last elements of 'p' should be 0 and 'length(x)', respectively"); }
+    nx=LENGTH(get_safe_slot(incoming, "x"));
+    if (nx!=LENGTH(i)) { throw_custom_error("'x' and 'i' slots in a ", get_class(incoming), " object should have the same length"); }
+    if (ncol+1!=LENGTH(p)) { throw_custom_error("length of 'p' slot in a ", get_class(incoming), " object should be equal to 'ncol+1'"); }
+    if (pptr[0]!=0) { throw_custom_error("first element of 'p' in a ", get_class(incoming), " object should be 0"); }
+    if (pptr[ncol]!=nx) { throw_custom_error("last element of 'p' in a ", get_class(incoming), " object should be 'length(x)'"); }
 
     // Checking all the indices.
     int px, ix;
     for (px=1; px<=ncol; ++px) {
-        if (pptr[px] < pptr[px-1]) { throw std::runtime_error("'p' is not sorted"); }
+        if (pptr[px] < pptr[px-1]) { throw_custom_error("'p' in a ", get_class(incoming), " object should be sorted"); }
     }
     for (px=0; px<ncol; ++px) { 
         for (ix=pptr[px]+1; ix<pptr[px+1]; ++ix) {
             if (iptr[ix]<iptr[ix-1]) { 
-                throw std::runtime_error("'i' in each column of a *gCMatrix should be sorted");
+                throw_custom_error("'i' in each column of a ", get_class(incoming), " object should be sorted");
             }
         }
     }
     for (ix=0; ix<nx; ++ix) {
         if (iptr[ix]<0 || iptr[ix]>=nrow) {
-            throw std::runtime_error("'i' indices out of range for *gCMatrix");
+            throw_custom_error("'i' slot in a ", get_class(incoming), " object should contain elements in [0, nrow)");
         }
     }
 
@@ -122,35 +122,25 @@ Tsparse_matrix::Tsparse_matrix(SEXP incoming) : iptr(NULL), jptr(NULL), nx(0), o
         throw std::runtime_error("matrix should be a *gTMatrix object");
     }
     
-    SEXP dimslot = install("Dim");
-    if (!R_has_slot(incoming, dimslot)) { throw std::runtime_error("no 'Dim' slot in the *gTMatrix object"); }
-    fill_dims(R_do_slot(incoming, dimslot));
+    fill_dims(get_safe_slot(incoming, "Dim"));
 
-    SEXP islot = install("i");
-    if (!R_has_slot(incoming, islot)) { throw std::runtime_error("no 'i' slot in the *gTMatrix object"); }
-    SEXP i=R_do_slot(incoming, islot);
-    if (!isInteger(i)) { throw std::runtime_error("'i' slot in a *gTMatrix should be integer"); }
+    SEXP i=get_safe_slot(incoming, "i");
+    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", get_class(incoming), " object should be integer"); }
     iptr=INTEGER(i);
 
-    SEXP jslot = install("j");
-    if (!R_has_slot(incoming, jslot)) { throw std::runtime_error("no 'p' slot in the *gTMatrix object"); }
-    SEXP j=R_do_slot(incoming, jslot);
-    if (!isInteger(j)) { throw std::runtime_error("'j' slot in a *gTMatrix should be integer"); }
+    SEXP j=get_safe_slot(incoming, "j");
+    if (!isInteger(i)) { throw_custom_error("'j' slot in a ", get_class(incoming), " object should be integer"); }
     jptr=INTEGER(j);
 
-    SEXP xslot = install("x");
-    if (!R_has_slot(incoming, xslot)) { throw std::runtime_error("no 'x' slot in the *gTMatrix object"); }
-    SEXP x=R_do_slot(incoming, xslot);
-    nx=LENGTH(x);
-
-    if (nx!=LENGTH(i) || LENGTH(j)!=nx) { throw std::runtime_error("'x', 'i' and 'j' slots in a *gTMatrix should have the same length"); }
+    nx=LENGTH(get_safe_slot(incoming, "x"));
+    if (nx!=LENGTH(i) || LENGTH(j)!=nx) { throw_custom_error("'x', 'i' and 'j' slots in a ", get_class(incoming), " object should have the same length"); }
     for (int i=0; i<nx; ++i) {
-        if (iptr[i] < 0 || iptr[i]>=nrow) { throw std::runtime_error("'i' slot of a *gTMatrix should contain elements in [0, nrow)"); }
-        if (jptr[i] < 0 || jptr[i]>=ncol) { throw std::runtime_error("'j' slot of a *gTMatrix should contain elements in [0, ncol)"); }
+        if (iptr[i] < 0 || iptr[i]>=nrow) { throw_custom_error("'i' slot of a ", get_class(incoming), " object should contain elements in [0, nrow)"); }
+        if (jptr[i] < 0 || jptr[i]>=ncol) { throw_custom_error("'j' slot of a ", get_class(incoming), " object should contain elements in [0, ncol)"); }
     }
    
     try {
-        // Adding column-major indexing as in *gCMatrix.   
+        // Adding column-major indexing, mimicking *gCMatrix for rapid column-access. 
         int ix;
         order=new int[nx];
         for (ix=0; ix<nx; ++ix) {

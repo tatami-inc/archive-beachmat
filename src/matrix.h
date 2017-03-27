@@ -39,7 +39,7 @@ protected:
     int get_index(int, int) const;   
 }; 
 
-/* A virtual dgeMatrix class */
+/* A virtual *geMatrix class */
 
 class dense_matrix : public virtual any_matrix {
 public:
@@ -49,7 +49,7 @@ protected:
     int get_index(int, int) const;   
 };
 
-/* A virtual dgCMatrix class */
+/* A virtual *gCMatrix class */
 
 class Csparse_matrix : public virtual any_matrix {
 public:
@@ -61,7 +61,7 @@ protected:
     int get_index(int, int) const;   
 };
 
-/* A virtual dgTMatrix class */
+/* A virtual *gTMatrix class */
 
 class Tsparse_matrix : public virtual any_matrix {
 public:
