@@ -1,0 +1,137 @@
+<!--
+%\VignetteIndexEntry{A C++ API for R matrix objects}
+%\VignettePackage{BiocStyle}
+%\VignetteEngine{knitr::knitr}
+-->
+
+```{r, echo=FALSE, results="hide", message=FALSE}
+require(knitr)
+opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r style, echo=FALSE, results='asis'}
+BiocStyle::markdown()
+```
+
+```{r setup, echo=FALSE, message=FALSE}
+library(cydar)
+register(SerialParam())
+set.seed(100)
+```
+
+# A common C++ API for all types of R matrices
+Package: `r Rpackage("beachmat")` <br />
+Author: Aaron Lun (alun@wehi.edu.au) <br />
+Compilation date: `r Sys.Date()`
+
+# Introduction
+
+This package provides a C++ API for extraction of data in a variety of R matrix types.
+The aim is to facilitate data processing in R packages using C++ extensions to handle the matrices.
+This is especially pertinent when the exact type of matrix is unknown.
+
+# Overview of the API
+
+## Linking to the package
+
+We will assume that readers have a working knowledge of R's C-level API.
+See https://cran.r-project.org/doc/manuals/r-release/R-exts.html for details.
+We also assume that readers are familiar with C++.
+
+<!--
+Need to add some linking instructions here.
+-->
+
+## An example with a numeric matrix
+
+The use of the API is demonstr
+We include the relevant header file for a numeric matrix (in this case, `numeric_matrix.h`):
+
+```
+#include "numeric_matrix.h"
+```
+
+A double-precision matrix object `dmat` is handled in C++ by passing the `SEXP` struct from `.Call` to `create_numeric_matrix`:
+
+```
+std::shared_dptr<numeric_matrix> dptr=create_numeric_matrix(dmat);
+```
+
+This creates a shared pointer that points to an object of the `numeric_matrix` virtual class.
+The exact class depends on the type of matrix in `dmat`, though the behaviour of the user-level functions are not affected by this detail.
+(Note that this requires C++11 to work.)
+
+The available methods for this object are:
+
+- `dptr->get_nrow()` returns an integer number of rows (`nrow`).
+- `dptr->get_ncol()` returns an integer number of columns (`ncol`).
+- `dptr->get_row(r)` returns a constant pointer to an array of doubles of length equal to `ncol`, containing values at row `r`.
+- `dptr->get_col(c)` returns a constant pointer to an array of doubles of length equal to `nrow`, containing values at column `c`.
+- `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
+
+In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
+Zero-based indexing is used, as is standard for most C/C++ applications.
+
+## Other matrix types
+
+Logical and integer matrices are also supported, by including the following header files:
+
+```
+#include "logical_matrix.h"
+#include "integer_matrix.h"
+```
+
+The creation function changes correspondingly, for logical matrix `lmat` and integer matrix `imat`:
+
+```
+std::shared_ptr<logical_matrix> lptr=create_logical_matrix(lmat);
+std::shared_ptr<integer_matrix> iptr=create_integer_matrix(imat);
+```
+
+Here, the `get_row` and `get_col` methods return pointers to integer arrays, while `get` returns an integer.
+
+## Important developer information 
+
+__NOTE:__ A pointer returned by `get_row` is not guaranteed to be valid after another call to `get_row`.
+The same applies for pointers returned by `get_col` after another call to `get_col`.
+This is because these pointers refer to internal arrays within each instance of the `*_matrix` class, which are overwritten upon repeated calls to the above methods.
+
+```
+const double* x=dptr->get_row(0);
+x[0]; // First entry of first row, okay.
+const double* y=dptr->get_row(1);
+x[0]; // Not guaranteed to be unchanged!
+```
+
+If the values need to be stored, copy the values from the returned pointer into your own chunk of memory.
+
+```
+const double* x=dptr->get_row(0);
+std::copy(x, x+dptr->get_ncol(), z); // Assuming you have some pointer z.
+const double* y=dptr->get_row(1);
+z[0]; // First entry of first row, okay.
+```
+
+For this reason, the current API is unlikely to be safe if there are multiple shared pointers to the same `*_matrix` instance (e.g., with multiple threads).
+
+__NOTE:__ The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
+These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
+See the error-handling mechanism in `r CRANpkg("Rcpp")` for an example of how to deal with these exceptions.
+
+# Supported matrix types
+
+The following matrix classes are supported:
+
+- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dgTMatrix`, `dspMatrix`, `HDF5Matrix`
+- integer: `matrix`, `HDF5Matrix`
+- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lgTMatrix`, `lspMatrix`, `HDF5Matrix`
+
+Additional classes can be added on a need-to-use basis.
+As a general rule, if it can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
+Please contact the maintainers if you have a class that you would like to be supported.
+
+# Session information
+
+```{r}
+sessionInfo()
+```
