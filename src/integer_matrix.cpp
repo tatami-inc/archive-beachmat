@@ -45,11 +45,6 @@ HDF5_integer_matrix::HDF5_integer_matrix(SEXP incoming) : HDF5_matrix(incoming),
     if (hdata.getTypeClass()!=H5T_INTEGER) { 
         throw std::runtime_error("data type in HDF5 file is not integer");
     }
-
-    col_data.resize(nrow);
-    col_ptr=col_data.data();
-    row_data.resize(ncol);
-    row_ptr=row_data.data();
     return;
 }
 
