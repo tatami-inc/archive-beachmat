@@ -128,51 +128,44 @@ Tsparse_matrix::Tsparse_matrix(SEXP incoming) : iptr(NULL), jptr(NULL), nx(0), o
         if (jptr[i] < 0 || jptr[i]>=ncol) { throw_custom_error("'j' slot of a ", ctype, " object should contain elements in [0, ncol)"); }
     }
    
-    try {
-        // Adding column-major indexing, mimicking *gCMatrix for rapid column-access. 
-        int ix;
-        order=new int[nx];
-        for (ix=0; ix<nx; ++ix) {
-            order[ix]=ix;
-        }
-        index_orderer<int> jorder(jptr);
-        std::sort(order, order+nx, jorder);
-
-        pptr=new int[ncol+1];
-        std::fill(pptr, pptr+ncol+1, 0);
-        for (ix=0; ix<nx; ++ix) {
-            ++(pptr[jptr[ix]+1]);
-        }
-        for (ix=1; ix<=ncol; ++ix){ 
-            pptr[ix]+=pptr[ix-1];
-        }
-
-        index_orderer<int> iorder(iptr);
-        for (int px=0; px<ncol; ++px) { 
-            std::sort(order + pptr[px], order + pptr[px+1], iorder);
-        }
-
-        iptr2=new int[nx];
-        for (ix=0; ix<nx; ++ix) {
-            iptr2[ix]=iptr[order[ix]];
-        }
-    } catch (std::exception& e) {
-        delete [] order;
-        delete [] pptr;
-        delete [] iptr2;
+    // Adding column-major indexing, mimicking *gCMatrix for rapid column-access. 
+    ovec.resize(nx);
+    int ix;
+    for (ix=0; ix<nx; ++ix) {
+        ovec[ix]=ix;
     }
+    index_orderer<int> jorder(jptr);
+    std::vector<int>::iterator optr=ovec.begin();
+    std::sort(optr, ovec.end(), jorder);
+    
+    pvec.resize(ncol+1);
+    for (ix=0; ix<nx; ++ix) {
+        ++(pvec[jptr[ix]+1]);
+    }
+    for (ix=1; ix<=ncol; ++ix){ 
+        pvec[ix]+=pvec[ix-1];
+    }
+
+    index_orderer<int> iorder(iptr);
+    for (int px=0; px<ncol; ++px) { 
+        std::sort(optr + pvec[px], optr + pvec[px+1], iorder);
+    }
+
+    ivec.resize(nx);
+    for (ix=0; ix<nx; ++ix) {
+        ivec[ix]=iptr[ovec[ix]];
+    }
+
+    order=ovec.data();
+    pptr=pvec.data();
+    iptr2=ivec.data();
     return;
 }
 
-Tsparse_matrix::~Tsparse_matrix() {
-    delete [] order;
-    delete [] pptr;
-    delete [] iptr2;
-    return;
-} 
+Tsparse_matrix::~Tsparse_matrix() {} 
 
 int Tsparse_matrix::get_index(int r, int c) const {
-    int* iend=iptr2 + pptr[c+1];
+    const int* iend=iptr2 + pptr[c+1];
     const int* loc=std::lower_bound(iptr2 + pptr[c], iend, r);
     if (loc!=iend && *loc==r) { 
         return order[loc - iptr2];

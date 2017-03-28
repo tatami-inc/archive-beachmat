@@ -91,7 +91,9 @@ public:
 protected:
     const int * iptr, * jptr;
     int nx;
-    int* order, *pptr, *iptr2;
+
+    std::vector<int> ovec, pvec, ivec;
+    const int* order, *pptr, *iptr2;
     int get_index(int, int) const;   
 
     template<typename T>

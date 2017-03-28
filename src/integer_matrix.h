@@ -43,7 +43,8 @@ public:
 
 protected:
     const int* simple_ptr;
-    int * row_ptr;
+    std::vector<int> row_data;
+    int* row_ptr;
 };
 
 /* HDF5Matrix */
@@ -58,6 +59,7 @@ public:
     int get(int, int);
 
 protected:
+    std::vector<int> row_data, col_data;
     int* row_ptr, * col_ptr;
 };
 

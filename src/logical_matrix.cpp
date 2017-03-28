@@ -8,25 +8,17 @@ logical_matrix::~logical_matrix() {}
 
 /* Methods for a simple matrix. */
 
-simple_logical_matrix::simple_logical_matrix(SEXP incoming) : simple_matrix(incoming), simple_ptr(NULL), row_ptr(NULL) {
+simple_logical_matrix::simple_logical_matrix(SEXP incoming) : simple_matrix(incoming), simple_ptr(NULL), 
+        row_data(ncol), row_ptr(row_data.data()) {
+
     if (!isLogical(incoming)) { 
         throw std::runtime_error("matrix should be logical");
     }
     simple_ptr=LOGICAL(incoming);
-
-    try {
-        row_ptr=new int[ncol];
-    } catch (std::exception& e) {
-        delete [] row_ptr;
-        throw; 
-    }
     return;
 }
 
-simple_logical_matrix::~simple_logical_matrix () {
-    delete [] row_ptr;
-    return;
-}
+simple_logical_matrix::~simple_logical_matrix () {}
 
 const int* simple_logical_matrix::get_row(int r) {
     return get_row_inside<int>(simple_ptr, r, row_ptr); 
@@ -42,23 +34,16 @@ int simple_logical_matrix::get(int r, int c) {
 
 /* Methods for a dense Matrix. */
 
-dense_logical_matrix::dense_logical_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), row_ptr(NULL) { 
+dense_logical_matrix::dense_logical_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), 
+            row_data(ncol), row_ptr(row_data.data()) {
+
     SEXP x=get_safe_slot(incoming, "x");
     if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     dense_ptr=LOGICAL(x);
-
-    try {
-        row_ptr=new int[ncol];
-    } catch (std::exception& e) {
-        delete [] row_ptr;
-        throw; 
-    }
     return;
 }
 
-dense_logical_matrix::~dense_logical_matrix() {
-    delete [] row_ptr;
-}
+dense_logical_matrix::~dense_logical_matrix() {}
 
 const int* dense_logical_matrix::get_row(int r) {
     return get_row_inside<int>(dense_ptr, r, row_ptr); 
@@ -74,27 +59,16 @@ int dense_logical_matrix::get(int r, int c) {
 
 /* Methods for a Csparse matrix. */
 
-Csparse_logical_matrix::Csparse_logical_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
+Csparse_logical_matrix::Csparse_logical_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), 
+        row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
+    
     SEXP x=get_safe_slot(incoming, "x");
     if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     xptr=LOGICAL(x);
-
-    try {
-        col_ptr=new int[nrow];
-        row_ptr=new int[ncol];
-    } catch (std::exception& e) {
-        delete [] col_ptr;
-        delete [] row_ptr;
-        throw; 
-    }
     return;
 }
 
-Csparse_logical_matrix::~Csparse_logical_matrix () {
-    delete [] col_ptr;
-    delete [] row_ptr;
-    return;
-}
+Csparse_logical_matrix::~Csparse_logical_matrix () {}
 
 const int* Csparse_logical_matrix::get_row(int r) {
     return get_row_inside<int>(xptr, r, row_ptr, 0);
@@ -110,27 +84,16 @@ int Csparse_logical_matrix::get(int r, int c) {
 
 /* Methods for a Tsparse matrix. */
 
-Tsparse_logical_matrix::Tsparse_logical_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), row_ptr(NULL), col_ptr(NULL) {
+Tsparse_logical_matrix::Tsparse_logical_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), 
+        row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
+
     SEXP x=get_safe_slot(incoming, "x");
     if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     xptr=LOGICAL(x);
-
-    try {
-        col_ptr=new int[nrow];
-        row_ptr=new int[ncol];
-    } catch (std::exception& e) {
-        delete [] col_ptr;
-        delete [] row_ptr;
-        throw; 
-    }
     return;
 }
 
-Tsparse_logical_matrix::~Tsparse_logical_matrix () {
-    delete [] col_ptr;
-    delete [] row_ptr;
-    return;
-}
+Tsparse_logical_matrix::~Tsparse_logical_matrix () {}
 
 const int* Tsparse_logical_matrix::get_row(int r) {
     return get_row_inside<int>(xptr, r, row_ptr, 0);
@@ -146,24 +109,16 @@ int Tsparse_logical_matrix::get(int r, int c) {
 
 /* Methods for a Psymm matrix. */
 
-Psymm_logical_matrix::Psymm_logical_matrix(SEXP incoming) : Psymm_matrix(incoming), xptr(NULL), out_ptr(NULL) {
+Psymm_logical_matrix::Psymm_logical_matrix(SEXP incoming) : Psymm_matrix(incoming), xptr(NULL), 
+        out_data(nrow), out_ptr(out_data.data()) {
+
     SEXP x=get_safe_slot(incoming, "x");
     if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
     xptr=LOGICAL(x);
-
-    try {
-        out_ptr=new int[nrow];
-    } catch (std::exception& e) {
-        delete [] out_ptr;
-        throw; 
-    }
     return;
 }
 
-Psymm_logical_matrix::~Psymm_logical_matrix () {
-    delete [] out_ptr;
-    return;
-}
+Psymm_logical_matrix::~Psymm_logical_matrix () {}
 
 const int* Psymm_logical_matrix::get_col (int c) {
     return get_rowcol_inside<int>(xptr, c, out_ptr);
@@ -179,7 +134,9 @@ int Psymm_logical_matrix::get(int r, int c) {
 
 /* Methods for a HDF5 matrix. */
 
-HDF5_logical_matrix::HDF5_logical_matrix(SEXP incoming) : HDF5_matrix(incoming), row_ptr(NULL), col_ptr(NULL) {
+HDF5_logical_matrix::HDF5_logical_matrix(SEXP incoming) : HDF5_matrix(incoming), 
+        row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
+
     SEXP h5_seed=get_safe_slot(incoming, "seed"); 
     SEXP firstval=get_safe_slot(h5_seed, "first_val");
     if (!isLogical(firstval)) { 
@@ -188,23 +145,10 @@ HDF5_logical_matrix::HDF5_logical_matrix(SEXP incoming) : HDF5_matrix(incoming),
     if (hdata.getTypeClass()!=H5T_INTEGER) { 
         throw std::runtime_error("data type in HDF5 file is not integer");
     }
-
-    try {
-        col_ptr=new int[nrow];
-        row_ptr=new int[ncol];
-    } catch (std::exception& e) {
-        delete [] col_ptr;
-        delete [] row_ptr;
-        throw; 
-    }
     return;
 }
 
-HDF5_logical_matrix::~HDF5_logical_matrix( ){ 
-    delete [] col_ptr;
-    delete [] row_ptr;
-    return;
-}
+HDF5_logical_matrix::~HDF5_logical_matrix() {}
 
 const int * HDF5_logical_matrix::get_row(int r) { 
     return get_row_inside<int>(r, row_ptr, H5::PredType::NATIVE_INT32);

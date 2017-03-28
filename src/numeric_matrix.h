@@ -43,6 +43,7 @@ public:
 
 protected:
     const double* simple_ptr;
+    std::vector<double> row_data;
     double * row_ptr;
 };
 
@@ -59,6 +60,7 @@ public:
 
 protected:
     const double* dense_ptr;
+    std::vector<double> row_data;
     double * row_ptr;
 };
 
@@ -75,6 +77,7 @@ public:
     
 protected:
     const double * xptr;
+    std::vector<double> row_data, col_data;
     double* row_ptr, * col_ptr;
 };
 
@@ -91,6 +94,7 @@ public:
     
 protected:
     const double * xptr;
+    std::vector<double> row_data, col_data;
     double* row_ptr, * col_ptr;
 };
 
@@ -107,6 +111,7 @@ public:
     
 protected:
     const double * xptr;
+    std::vector<double> out_data;
     double* out_ptr;
 };
 
@@ -122,6 +127,7 @@ public:
     double get(int, int);
 
 protected:
+    std::vector<double> row_data, col_data;
     double* row_ptr, * col_ptr;
 };
 
