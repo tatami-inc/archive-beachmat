@@ -40,7 +40,7 @@ HDF5_integer_matrix::HDF5_integer_matrix(SEXP incoming) : HDF5_matrix(incoming),
     SEXP h5_seed=R_do_slot(incoming, install("seed")); 
     SEXP firstval=R_do_slot(h5_seed, install("first_val"));
     if (!isInteger(firstval)) { 
-        throw std::runtime_error("'first_val' should be integer");
+        throw_custom_error("'first_val' slot in a ", get_class(h5_seed), " object should be integer");
     }
     if (hdata.getTypeClass()!=H5T_INTEGER) { 
         throw std::runtime_error("data type in HDF5 file is not integer");

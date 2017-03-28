@@ -35,10 +35,14 @@ int simple_matrix::get_index(int r, int c) const { return r + c*nrow; }
 /* Methods for the virtual *geMatrix. */
 
 dense_matrix::dense_matrix (SEXP incoming) {
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(get_class(incoming)+1, "geMatrix")!=0) {
+    const char* ctype=get_class(incoming);
+    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "geMatrix")!=0) {
         throw std::runtime_error("matrix should be a *geMatrix object");
     }
     fill_dims(get_safe_slot(incoming, "Dim"));
+    if (LENGTH(get_safe_slot(incoming, "x"))!=nrow*ncol) { 
+        throw_custom_error("length of 'x' in a ", ctype, " object is inconsistent with its dimensions"); 
+    }
     return;
 }
 
@@ -73,7 +77,7 @@ Csparse_matrix::Csparse_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), nx(0) {
     // Checking all the indices.
     int px, ix;
     for (px=1; px<=ncol; ++px) {
-        if (pptr[px] < pptr[px-1]) { throw_custom_error("'p' in a ", ctype, " object should be sorted"); }
+        if (pptr[px] < pptr[px-1]) { throw_custom_error("'p' slot in a ", ctype, " object should be sorted"); }
     }
     for (px=0; px<ncol; ++px) { 
         for (ix=pptr[px]+1; ix<pptr[px+1]; ++ix) {
@@ -183,9 +187,9 @@ Psymm_matrix::Psymm_matrix(SEXP incoming) : upper(true) {
     }
     
     fill_dims(get_safe_slot(incoming, "Dim"));
-    if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", ctype, "object"); }
+    if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", ctype, " object"); }
     SEXP x=get_safe_slot(incoming, "x");
-    if ((nrow*(nrow+1))/2!=LENGTH(x)) { throw_custom_error("length of 'x' for ", ctype, " object is inconsistent with its dimensions"); }
+    if ((nrow*(nrow+1))/2!=LENGTH(x)) { throw_custom_error("length of 'x' in a ", ctype, " object is inconsistent with its dimensions"); }
     
     SEXP ul=get_safe_slot(incoming, "uplo");
     if (!isString(ul) || LENGTH(ul)!=1) { throw_custom_error("'uplo' slot in a ", ctype, " object should be a string"); }
@@ -257,7 +261,7 @@ HDF5_matrix::HDF5_matrix(SEXP incoming) {
     hsize_t dims_out[2];
     hspace.getSimpleExtentDims(dims_out, NULL);
     if (dims_out[1]!=nrow || dims_out[0]!=ncol) { 
-        throw std::runtime_error("dimensions in HDF5 file do not equal dimensions in HDF5Matrix");
+        throw_custom_error("dimensions in HDF5 file do not equal dimensions in the ", ctype, " object");
     }
 
     offset[0]=0;
