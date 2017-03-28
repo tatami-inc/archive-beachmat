@@ -20,16 +20,15 @@ Compilation date: `r Sys.Date()`
 
 # Introduction
 
-This package provides a C++ API for extraction of data in a variety of R matrix types.
-The aim is to facilitate data processing in R packages using C++ extensions to handle the matrices.
-This is especially pertinent when the exact type of matrix is unknown.
+This package provides a C++ API for handling a variety of R matrix types.
+The aim is to abstract the specific type of matrix when writing C++ extensions to R packages, thus simplifying the processing of data stored in matrices or matrix-like objects.
+Currently the API supports base matrices, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array)` package.
 
 # Overview of the API
 
 ## Linking to the package
 
-We will assume that readers have a working knowledge of R's C-level API.
-See https://cran.r-project.org/doc/manuals/r-release/R-exts.html for details.
+We will assume that readers have a working knowledge of R's C-level API - see https://cran.r-project.org/doc/manuals/r-release/R-exts.html for details.
 We also assume that readers are familiar with C++.
 
 <!--
@@ -64,7 +63,7 @@ The available methods for this object are:
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 
 In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
-Zero-based indexing is used, as is standard for most C/C++ applications.
+Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
 
 ## Other matrix types
 
@@ -107,6 +106,7 @@ z[0]; // First entry of first row, okay.
 ```
 
 For this reason, the current API is unlikely to be safe if there are multiple shared pointers to the same `*_matrix` instance (e.g., with multiple threads).
+In such cases, users should instead create new shared pointers by copying the `*_matrix` instance via `std::make_shared`.
 
 __NOTE:__ The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
