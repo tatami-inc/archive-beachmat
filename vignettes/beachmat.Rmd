@@ -22,7 +22,8 @@ Compilation date: `r Sys.Date()`
 
 This package provides a C++ API for handling a variety of R matrix types.
 The aim is to abstract the specific type of matrix when writing C++ extensions to R packages, thus simplifying the processing of data stored in matrices or matrix-like objects.
-Currently the API supports base matrices, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array)` package.
+Currently, the API supports double-precision, integer and logical matrices.
+Supported classes include base `matrix` objects, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array)` package.
 
 # Overview of the API
 
@@ -37,8 +38,8 @@ Need to add some linking instructions here.
 
 ## An example with a numeric matrix
 
-The use of the API is demonstr
-We include the relevant header file for a numeric matrix (in this case, `numeric_matrix.h`):
+We demonstrate the use of the API for  numeric matrices.
+First, we include the relevant header file (in this case, `numeric_matrix.h`):
 
 ```
 #include "numeric_matrix.h"
