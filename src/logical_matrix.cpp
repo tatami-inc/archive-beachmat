@@ -29,12 +29,11 @@ simple_logical_matrix::~simple_logical_matrix () {
 }
 
 const int* simple_logical_matrix::get_row(int r) {
-    for (int col=0; col<ncol; ++col) { row_ptr[col]=get(r, col); }
-    return row_ptr; 
+    return get_row_inside<int>(simple_ptr, r, row_ptr); 
 }
 
 const int* simple_logical_matrix::get_col(int c) {
-    return simple_ptr + c*nrow;
+    return get_col_inside<int>(simple_ptr, c);
 }
 
 int simple_logical_matrix::get(int r, int c) {
@@ -62,12 +61,11 @@ dense_logical_matrix::~dense_logical_matrix() {
 }
 
 const int* dense_logical_matrix::get_row(int r) {
-    for (int col=0; col<ncol; ++col) { row_ptr[col]=get(r, col); }
-    return row_ptr; 
+    return get_row_inside<int>(dense_ptr, r, row_ptr); 
 }
 
 const int* dense_logical_matrix::get_col(int c) {
-    return dense_ptr + c*nrow;
+    return get_col_inside<int>(dense_ptr, c);
 }
 
 int dense_logical_matrix::get(int r, int c) {
@@ -99,26 +97,15 @@ Csparse_logical_matrix::~Csparse_logical_matrix () {
 }
 
 const int* Csparse_logical_matrix::get_row(int r) {
-    std::fill(row_ptr, row_ptr+ncol, 0);
-    for (int col=0; col<ncol; ++col) { 
-        if (pptr[col]!=pptr[col+1]) { row_ptr[col]=get(r, col); }
-    }
-    return row_ptr; 
+    return get_row_inside<int>(xptr, r, row_ptr, 0);
 }
 
 const int* Csparse_logical_matrix::get_col(int c) {
-    const int& start=pptr[c];
-    const int& end=pptr[c+1];
-    std::fill(col_ptr, col_ptr+nrow, 0);
-    for (int ix=start; ix<end; ++ix) {
-        col_ptr[iptr[ix]]=xptr[ix];
-    }
-    return col_ptr;
+    return get_col_inside<int>(xptr, c, col_ptr, 0);
 }
 
 int Csparse_logical_matrix::get(int r, int c) {
-    const int index=get_index(r, c);
-    return (index!=nx ? xptr[index] : 0);
+    return get_one_inside<int>(xptr, r, c, 0);
 }
 
 /* Methods for a Tsparse matrix. */
@@ -146,26 +133,48 @@ Tsparse_logical_matrix::~Tsparse_logical_matrix () {
 }
 
 const int* Tsparse_logical_matrix::get_row(int r) {
-    std::fill(row_ptr, row_ptr+ncol, 0);
-    for (int col=0; col<ncol; ++col) { 
-        if (pptr[col]!=pptr[col+1]) { row_ptr[col]=get(r, col); }
-    }
-    return row_ptr; 
+    return get_row_inside<int>(xptr, r, row_ptr, 0);
 }
 
 const int* Tsparse_logical_matrix::get_col(int c) {
-    const int& start=pptr[c];
-    const int& end=pptr[c+1];
-    std::fill(col_ptr, col_ptr+nrow, 0);
-    for (int ix=start; ix<end; ++ix) {
-        col_ptr[iptr2[ix]]=xptr[order[ix]];
-    }
-    return col_ptr;
+    return get_col_inside<int>(xptr, c, col_ptr, 0);
 }
 
 int Tsparse_logical_matrix::get(int r, int c) {
-    const int index=get_index(r, c);
-    return (index!=nx ? xptr[index] : 0);
+    return get_one_inside<int>(xptr, r, c, 0);
+}
+
+/* Methods for a Psymm matrix. */
+
+Psymm_logical_matrix::Psymm_logical_matrix(SEXP incoming) : Psymm_matrix(incoming), xptr(NULL), out_ptr(NULL) {
+    SEXP x=get_safe_slot(incoming, "x");
+    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
+    xptr=LOGICAL(x);
+
+    try {
+        out_ptr=new int[nrow];
+    } catch (std::exception& e) {
+        delete [] out_ptr;
+        throw; 
+    }
+    return;
+}
+
+Psymm_logical_matrix::~Psymm_logical_matrix () {
+    delete [] out_ptr;
+    return;
+}
+
+const int* Psymm_logical_matrix::get_col (int c) {
+    return get_rowcol_inside<int>(xptr, c, out_ptr);
+}
+
+const int* Psymm_logical_matrix::get_row (int r) {
+    return get_rowcol_inside<int>(xptr, r, out_ptr);
+}
+
+int Psymm_logical_matrix::get(int r, int c) {
+    return xptr[get_index(r, c)];
 }
 
 /* Methods for a HDF5 matrix. */
@@ -198,22 +207,15 @@ HDF5_logical_matrix::~HDF5_logical_matrix( ){
 }
 
 const int * HDF5_logical_matrix::get_row(int r) { 
-    set_row(r);
-    hdata.read(row_ptr, H5::PredType::NATIVE_INT32, rowspace, hspace);
-    return row_ptr;
+    return get_row_inside<int>(r, row_ptr, H5::PredType::NATIVE_INT32);
 } 
 
 const int * HDF5_logical_matrix::get_col(int c) { 
-    set_col(c);
-    hdata.read(col_ptr, H5::PredType::NATIVE_INT32, colspace, hspace);
-    return col_ptr; 
+    return get_col_inside<int>(c, col_ptr, H5::PredType::NATIVE_INT32);
 }
 
 int HDF5_logical_matrix::get(int r, int c) { 
-    set_one(r, c);
-    int out;
-    hdata.read(&out, H5::PredType::NATIVE_INT32, onespace, hspace);
-    return out; 
+    return get_one_inside<int>(r, c, H5::PredType::NATIVE_INT32);
 }
 
 /* Dispatch definition */
@@ -227,6 +229,8 @@ std::shared_ptr<logical_matrix> create_logical_matrix(SEXP incoming) {
             return std::shared_ptr<logical_matrix>(new Csparse_logical_matrix(incoming));
         } else if (std::strcmp(ctype, "lgTMatrix")==0) {
             return std::shared_ptr<logical_matrix>(new Tsparse_logical_matrix(incoming));
+        } else if (std::strcmp(ctype, "lspMatrix")==0) {
+            return std::shared_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
         } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
             return std::shared_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
         }
@@ -236,4 +240,5 @@ std::shared_ptr<logical_matrix> create_logical_matrix(SEXP incoming) {
     } 
     return std::shared_ptr<logical_matrix>(new simple_logical_matrix(incoming));
 }
+
 

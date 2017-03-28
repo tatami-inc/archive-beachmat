@@ -29,12 +29,11 @@ simple_numeric_matrix::~simple_numeric_matrix () {
 }
 
 const double* simple_numeric_matrix::get_row(int r) {
-    for (int col=0; col<ncol; ++col) { row_ptr[col]=get(r, col); }
-    return row_ptr; 
+    return get_row_inside<double>(simple_ptr, r, row_ptr); 
 }
 
 const double* simple_numeric_matrix::get_col(int c) {
-    return simple_ptr + c*nrow;
+    return get_col_inside<double>(simple_ptr, c);
 }
 
 double simple_numeric_matrix::get(int r, int c) {
@@ -62,12 +61,11 @@ dense_numeric_matrix::~dense_numeric_matrix() {
 }
 
 const double* dense_numeric_matrix::get_row(int r) {
-    for (int col=0; col<ncol; ++col) { row_ptr[col]=get(r, col); }
-    return row_ptr; 
+    return get_row_inside<double>(dense_ptr, r, row_ptr); 
 }
 
 const double* dense_numeric_matrix::get_col(int c) {
-    return dense_ptr + c*nrow;
+    return get_col_inside<double>(dense_ptr, c);
 }
 
 double dense_numeric_matrix::get(int r, int c) {
@@ -99,26 +97,15 @@ Csparse_numeric_matrix::~Csparse_numeric_matrix () {
 }
 
 const double* Csparse_numeric_matrix::get_row(int r) {
-    std::fill(row_ptr, row_ptr+ncol, 0);
-    for (int col=0; col<ncol; ++col) { 
-        if (pptr[col]!=pptr[col+1]) { row_ptr[col]=get(r, col); }
-    }
-    return row_ptr; 
+    return get_row_inside<double>(xptr, r, row_ptr, 0);
 }
 
 const double* Csparse_numeric_matrix::get_col(int c) {
-    const int& start=pptr[c];
-    const int& end=pptr[c+1];
-    std::fill(col_ptr, col_ptr+nrow, 0);
-    for (int ix=start; ix<end; ++ix) {
-        col_ptr[iptr[ix]]=xptr[ix];
-    }
-    return col_ptr;
+    return get_col_inside<double>(xptr, c, col_ptr, 0);
 }
 
 double Csparse_numeric_matrix::get(int r, int c) {
-    const int index=get_index(r, c);
-    return (index!=nx ? xptr[index] : 0);
+    return get_one_inside<double>(xptr, r, c, 0);
 }
 
 /* Methods for a Tsparse matrix. */
@@ -146,26 +133,15 @@ Tsparse_numeric_matrix::~Tsparse_numeric_matrix () {
 }
 
 const double* Tsparse_numeric_matrix::get_row(int r) {
-    std::fill(row_ptr, row_ptr+ncol, 0);
-    for (int col=0; col<ncol; ++col) { 
-        if (pptr[col]!=pptr[col+1]) { row_ptr[col]=get(r, col); }
-    }
-    return row_ptr; 
+    return get_row_inside<double>(xptr, r, row_ptr, 0);
 }
 
 const double* Tsparse_numeric_matrix::get_col(int c) {
-    const int& start=pptr[c];
-    const int& end=pptr[c+1];
-    std::fill(col_ptr, col_ptr+nrow, 0);
-    for (int ix=start; ix<end; ++ix) {
-        col_ptr[iptr2[ix]]=xptr[order[ix]];
-    }
-    return col_ptr;
+    return get_col_inside<double>(xptr, c, col_ptr, 0);
 }
 
 double Tsparse_numeric_matrix::get(int r, int c) {
-    const int index=get_index(r, c);
-    return (index!=nx ? xptr[index] : 0);
+    return get_one_inside<double>(xptr, r, c, 0);
 }
 
 /* Methods for a Psymm matrix. */
@@ -190,26 +166,11 @@ Psymm_numeric_matrix::~Psymm_numeric_matrix () {
 }
 
 const double* Psymm_numeric_matrix::get_col (int c) {
-    if (upper) {
-        int start=(c*(c+1))/2;
-        std::copy(xptr+start, xptr+start+c, out_ptr);
-        for (int i=c; i<ncol; ++i) {
-            out_ptr[i]=xptr[start+c];
-            start+=i+1;
-        }
-    } else {
-        int start=0;
-        for (int i=0; i<c; ++i) {
-            out_ptr[i]=xptr[c-i + start];
-            start+=nrow-i;
-        }
-        std::copy(xptr+start, xptr+start+nrow-c, out_ptr+c);
-    }
-    return out_ptr;
+    return get_rowcol_inside<double>(xptr, c, out_ptr);
 }
 
 const double* Psymm_numeric_matrix::get_row (int r) {
-    return get_col(r);
+    return get_rowcol_inside<double>(xptr, r, out_ptr);
 }
 
 double Psymm_numeric_matrix::get(int r, int c) {
@@ -246,22 +207,15 @@ HDF5_numeric_matrix::~HDF5_numeric_matrix( ){
 }
 
 const double * HDF5_numeric_matrix::get_row(int r) { 
-    set_row(r);
-    hdata.read(row_ptr, H5::PredType::NATIVE_DOUBLE, rowspace, hspace);
-    return row_ptr;
+    return get_row_inside<double>(r, row_ptr, H5::PredType::NATIVE_DOUBLE);
 } 
 
 const double * HDF5_numeric_matrix::get_col(int c) { 
-    set_col(c);
-    hdata.read(col_ptr, H5::PredType::NATIVE_DOUBLE, colspace, hspace);
-    return col_ptr; 
+    return get_col_inside<double>(c, col_ptr, H5::PredType::NATIVE_DOUBLE);
 }
 
 double HDF5_numeric_matrix::get(int r, int c) { 
-    set_one(r, c);
-    double out;
-    hdata.read(&out, H5::PredType::NATIVE_DOUBLE, onespace, hspace);
-    return out; 
+    return get_one_inside<double>(r, c, H5::PredType::NATIVE_DOUBLE);
 }
 
 /* Dispatch definition */

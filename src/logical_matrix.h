@@ -46,7 +46,7 @@ protected:
     int * row_ptr;
 };
 
-/* dgeMatrix */
+/* lgeMatrix */
 
 class dense_logical_matrix : public dense_matrix, public logical_matrix {
 public:    
@@ -62,7 +62,7 @@ protected:
     int * row_ptr;
 };
 
-/* dgCMatrix */
+/* lgCMatrix */
 
 class Csparse_logical_matrix : public Csparse_matrix, public logical_matrix {
 public:    
@@ -78,7 +78,7 @@ protected:
     int* row_ptr, * col_ptr;
 };
 
-/* dgTMatrix */
+/* lgTMatrix */
 
 class Tsparse_logical_matrix : public Tsparse_matrix, public logical_matrix {
 public:    
@@ -92,6 +92,22 @@ public:
 protected:
     const int * xptr;
     int* row_ptr, * col_ptr;
+};
+
+/* lspMatrix */
+
+class Psymm_logical_matrix : public Psymm_matrix, public logical_matrix {
+public:    
+    Psymm_logical_matrix(SEXP);
+    ~Psymm_logical_matrix();
+    
+    const int * get_row(int);
+    const int * get_col(int);
+    int get(int, int);
+    
+protected:
+    const int * xptr;
+    int* out_ptr;
 };
 
 /* HDF5Matrix */

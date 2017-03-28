@@ -29,12 +29,11 @@ simple_integer_matrix::~simple_integer_matrix () {
 }
 
 const int* simple_integer_matrix::get_row(int r) {
-    for (int col=0; col<ncol; ++col) { row_ptr[col]=get(r, col); }
-    return row_ptr; 
+    return get_row_inside<int>(simple_ptr, r, row_ptr);
 }
 
 const int* simple_integer_matrix::get_col(int c) {
-    return simple_ptr + c*nrow;
+    return get_col_inside<int>(simple_ptr, c);
 }
 
 int simple_integer_matrix::get(int r, int c) {
@@ -71,22 +70,15 @@ HDF5_integer_matrix::~HDF5_integer_matrix( ){
 }
 
 const int * HDF5_integer_matrix::get_row(int r) { 
-    set_row(r);
-    hdata.read(row_ptr, H5::PredType::NATIVE_INT32, rowspace, hspace);
-    return row_ptr;
+    return get_row_inside<int>(r, row_ptr, H5::PredType::NATIVE_INT32);
 } 
 
 const int * HDF5_integer_matrix::get_col(int c) { 
-    set_col(c);
-    hdata.read(col_ptr, H5::PredType::NATIVE_INT32, colspace, hspace);
-    return col_ptr; 
+    return get_col_inside<int>(c, col_ptr, H5::PredType::NATIVE_INT32);
 }
 
 int HDF5_integer_matrix::get(int r, int c) { 
-    set_one(r, c);
-    int out;
-    hdata.read(&out, H5::PredType::NATIVE_INT32, onespace, hspace);
-    return out; 
+    return get_one_inside<int>(r, c, H5::PredType::NATIVE_INT32);
 }
 
 /* Dispatch definition */

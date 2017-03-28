@@ -37,6 +37,12 @@ public:
    ~simple_matrix();
 protected:
     int get_index(int, int) const;   
+
+    template<typename T>
+    const T* get_row_inside(const T*, int, T*);
+
+    template<typename T>
+    const T* get_col_inside(const T*, int);
 }; 
 
 /* A virtual *geMatrix class */
@@ -47,6 +53,12 @@ public:
     ~dense_matrix();
 protected:
     int get_index(int, int) const;   
+
+    template<typename T>
+    const T* get_row_inside(const T*, int, T*);
+
+    template<typename T>
+    const T* get_col_inside(const T*, int);
 };
 
 /* A virtual *gCMatrix class */
@@ -59,6 +71,15 @@ protected:
     const int * iptr, * pptr;
     int nx;
     int get_index(int, int) const;   
+
+    template<typename T>
+    const T* get_row_inside(const T*, int, T*, T);
+
+    template<typename T>
+    const T* get_col_inside(const T*, int, T*, T);
+
+    template<typename T>
+    T get_one_inside(const T*, int, int, T);
 };
 
 /* A virtual *gTMatrix class */
@@ -72,6 +93,15 @@ protected:
     int nx;
     int* order, *pptr, *iptr2;
     int get_index(int, int) const;   
+
+    template<typename T>
+    const T* get_row_inside(const T*, int, T*, T);
+
+    template<typename T>
+    const T* get_col_inside(const T*, int, T*, T);
+
+    template<typename T>
+    T get_one_inside(const T*, int, int, T);
 };
 
 /* A virtual *spMatrix class */
@@ -83,6 +113,9 @@ public:
 protected:
     bool upper;
     int get_index(int, int) const;
+    
+    template<typename T>
+    const T* get_rowcol_inside (const T*, int, T*);
 };
 
 /* A virtual HDF5Matrix class */
@@ -100,6 +133,17 @@ protected:
     void set_row(int);
     void set_col(int);
     void set_one(int, int);
+
+    template<typename T>
+    const T* get_row_inside(int, T*, const H5::PredType&);
+
+    template<typename T>
+    const T* get_col_inside(int, T*, const H5::PredType&);
+
+    template<typename T>
+    T get_one_inside(int r, int c, const H5::PredType&);
 };
+
+#include "template_methods.h"
 
 #endif

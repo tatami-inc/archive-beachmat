@@ -191,6 +191,8 @@ Psymm_matrix::Psymm_matrix(SEXP incoming) : upper(true) {
     
     fill_dims(get_safe_slot(incoming, "Dim"));
     if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", ctype, "object"); }
+    SEXP x=get_safe_slot(incoming, "x");
+    if ((nrow*(nrow+1))/2!=LENGTH(x)) { throw_custom_error("length of 'x' for ", ctype, " object is inconsistent with its dimensions"); }
     
     SEXP ul=get_safe_slot(incoming, "uplo");
     if (!isString(ul) || LENGTH(ul)!=1) { throw_custom_error("'uplo' slot in a ", ctype, " object should be a string"); }
