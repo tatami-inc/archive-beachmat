@@ -13,12 +13,6 @@ opts_chunk$set(error=FALSE, message=FALSE, warning=FALSE)
 BiocStyle::markdown()
 ```
 
-```{r setup, echo=FALSE, message=FALSE}
-library(cydar)
-register(SerialParam())
-set.seed(100)
-```
-
 # A common C++ API for all types of R matrices
 Package: `r Rpackage("beachmat")` <br />
 Author: Aaron Lun (alun@wehi.edu.au) <br />
@@ -65,8 +59,8 @@ The available methods for this object are:
 
 - `dptr->get_nrow()` returns an integer number of rows (`nrow`).
 - `dptr->get_ncol()` returns an integer number of columns (`ncol`).
-- `dptr->get_row(r)` returns a constant pointer to an array of doubles of length equal to `ncol`, containing values at row `r`.
-- `dptr->get_col(c)` returns a constant pointer to an array of doubles of length equal to `nrow`, containing values at column `c`.
+- `dptr->get_row(r)` returns a constant pointer to an array of doubles of length `ncol`, containing values at row `r`.
+- `dptr->get_col(c)` returns a constant pointer to an array of doubles of length `nrow`, containing values at column `c`.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 
 In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
@@ -127,8 +121,8 @@ The following matrix classes are supported:
 - logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lgTMatrix`, `lspMatrix`, `HDF5Matrix`
 
 Additional classes can be added on a need-to-use basis.
-As a general rule, if it can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
-Please contact the maintainers if you have a class that you would like to be supported.
+As a general rule, if a matrix-like object can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
+Please contact the maintainers if you have a class that you would like to see supported.
 
 # Session information
 
