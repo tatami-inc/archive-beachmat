@@ -23,7 +23,7 @@ Compilation date: `r Sys.Date()`
 This package provides a C++ API for handling a variety of R matrix types.
 The aim is to abstract the specific type of matrix when writing C++ extensions to R packages, thus simplifying the processing of data stored in matrices or matrix-like objects.
 Currently, the API supports double-precision, integer and logical matrices.
-Supported classes include base `matrix` objects, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array)` package.
+Supported classes include base `matrix` objects, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array")` package.
 
 # Overview of the API
 
@@ -117,9 +117,9 @@ See the error-handling mechanism in `r CRANpkg("Rcpp")` for an example of how to
 
 The following matrix classes are supported:
 
-- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dgTMatrix`, `dspMatrix`, `HDF5Matrix`
+- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dspMatrix`, `HDF5Matrix`
 - integer: `matrix`, `HDF5Matrix`
-- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lgTMatrix`, `lspMatrix`, `HDF5Matrix`
+- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lspMatrix`, `HDF5Matrix`
 
 Additional classes can be added on a need-to-use basis.
 As a general rule, if a matrix-like object can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
