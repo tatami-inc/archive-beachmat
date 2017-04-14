@@ -86,50 +86,23 @@ expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
 
-# Testing sparse matrices (dgTMatrix):
+# Testing dense symmetric matrices (lspMatrix):
 
-set.seed(24680)
-A <- as(rsparsematrix(nrow=15, 10, density=0.1)!=0, "lgTMatrix")
+set.seed(45678)
+A <- pack(forceSymmetric(matrix(rbinom(100, 1, 0.5)==0, 10, 10)))
 test.mat <- as.matrix(A)
 dimnames(test.mat) <- NULL
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
 
-A <- as(rsparsematrix(nrow=15, 10, density=0.2)!=0, "lgTMatrix")
+A <- pack(forceSymmetric(matrix(rbinom(400, 1, 0.5)==0, 20, 20), "L"))
 test.mat <- as.matrix(A)
 dimnames(test.mat) <- NULL
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
 
-A <- as(rsparsematrix(nrow=30, 5, density=0.1)!=0, "lgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=30, 5, density=0.2)!=0, "lgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=5, 30, density=0.1)!=0, "lgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=5, 30, density=0.2)!=0, "lgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_logical_access, A, 3L))
 
 # Testing HDF5 matrices:
 

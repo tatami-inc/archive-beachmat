@@ -86,54 +86,7 @@ expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
 
-# Testing sparse matrices (dgTMatrix):
-
-set.seed(24680)
-A <- as(rsparsematrix(nrow=15, 10, density=0.1), "dgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=15, 10, density=0.2), "dgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=30, 5, density=0.1), "dgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=30, 5, density=0.2), "dgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=5, 30, density=0.1), "dgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
-A <- as(rsparsematrix(nrow=5, 30, density=0.2), "dgTMatrix")
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachmat:::cxx_test_numeric_access, A, 3L))
-
 # Testing dense symmetric matrices (dspMatrix):
-
-library(beachmat); library(testthat); library(Matrix)
 
 set.seed(45678)
 A <- pack(forceSymmetric(matrix(as.double(rpois(100, lambda=5)), 10, 10)))
