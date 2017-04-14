@@ -55,34 +55,6 @@ T Csparse_matrix::get_one_inside(const T* in, int r, int c, T zero) {
     return (index!=nx ? in[index] : zero);
 }
 
-/* Tsparse templated methods */
-
-template<typename T>
-const T* Tsparse_matrix::get_row_inside(const T* in, int r, T* out, T zero) {
-    std::fill(out, out+ncol, zero);
-    for (int col=0; col<ncol; ++col) {
-        if (pptr[col]!=pptr[col+1]) { out[col]=get_one_inside(in, r, col, zero); }
-    }
-    return out;
-}
-
-template<typename T>
-const T* Tsparse_matrix::get_col_inside(const T* in, int c, T* out, T zero) {
-    const int& start=pptr[c];
-    const int& end=pptr[c+1];
-    std::fill(out, out+nrow, zero);
-    for (int ix=start; ix<end; ++ix) {
-        out[iptr2[ix]]=in[order[ix]];
-    }
-    return out;
-}
-
-template<typename T>
-T Tsparse_matrix::get_one_inside(const T* in, int r, int c, T zero) {
-    const int index=get_index(r, c);
-    return (index!=nx ? in[index] : zero);
-}
-
 /* Psymm templated methods */
 
 template<typename T>

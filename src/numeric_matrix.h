@@ -34,7 +34,7 @@ public:
 
 class simple_numeric_matrix : public simple_matrix, public numeric_matrix {
 public:    
-    simple_numeric_matrix(SEXP);
+    simple_numeric_matrix(const Rcpp::RObject&);
     ~simple_numeric_matrix();
 
     const double* get_row(int);
@@ -51,7 +51,7 @@ protected:
 
 class dense_numeric_matrix : public dense_matrix, public numeric_matrix {
 public:    
-    dense_numeric_matrix(SEXP);
+    dense_numeric_matrix(const Rcpp::RObject&);
     ~dense_numeric_matrix();
 
     const double* get_row(int);
@@ -68,25 +68,8 @@ protected:
 
 class Csparse_numeric_matrix : public Csparse_matrix, public numeric_matrix {
 public:    
-    Csparse_numeric_matrix(SEXP);
+    Csparse_numeric_matrix(const Rcpp::RObject&);
     ~Csparse_numeric_matrix();
-
-    const double * get_row(int);
-    const double * get_col(int);
-    double get(int, int);
-    
-protected:
-    const double * xptr;
-    std::vector<double> row_data, col_data;
-    double* row_ptr, * col_ptr;
-};
-
-/* dgTMatrix */
-
-class Tsparse_numeric_matrix : public Tsparse_matrix, public numeric_matrix {
-public:    
-    Tsparse_numeric_matrix(SEXP);
-    ~Tsparse_numeric_matrix();
 
     const double * get_row(int);
     const double * get_col(int);
@@ -102,7 +85,7 @@ protected:
 
 class Psymm_numeric_matrix : public Psymm_matrix, public numeric_matrix {
 public:    
-    Psymm_numeric_matrix(SEXP);
+    Psymm_numeric_matrix(const Rcpp::RObject&);
     ~Psymm_numeric_matrix();
 
     const double * get_row(int);
@@ -119,7 +102,7 @@ protected:
 
 class HDF5_numeric_matrix : public HDF5_matrix, public numeric_matrix {
 public:
-    HDF5_numeric_matrix(SEXP);
+    HDF5_numeric_matrix(const Rcpp::RObject&);
     ~HDF5_numeric_matrix();
 
     const double * get_row(int);
@@ -133,6 +116,6 @@ protected:
 
 /* Dispatcher */
 
-std::shared_ptr<numeric_matrix> create_numeric_matrix(SEXP);
+std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
 
 

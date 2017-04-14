@@ -26,16 +26,17 @@ public:
 
 protected:
     int nrow, ncol;
-    void fill_dims(SEXP);
+    void fill_dims(const Rcpp::RObject&);
 };
 
 /* A virtual simple matrix class */
 
 class simple_matrix : public virtual any_matrix {
 public:   
-   simple_matrix(SEXP);
+   simple_matrix(const Rcpp::RObject&);
    ~simple_matrix();
 protected:
+    Rcpp::RObject obj;
     int get_index(int, int) const;   
 
     template<typename T>
@@ -49,9 +50,10 @@ protected:
 
 class dense_matrix : public virtual any_matrix {
 public:
-    dense_matrix(SEXP);
+    dense_matrix(const Rcpp::RObject&);
     ~dense_matrix();
 protected:
+    Rcpp::RObject obj_x;
     int get_index(int, int) const;   
 
     template<typename T>
@@ -65,35 +67,12 @@ protected:
 
 class Csparse_matrix : public virtual any_matrix {
 public:
-    Csparse_matrix(SEXP);
+    Csparse_matrix(const Rcpp::RObject&);
     ~Csparse_matrix();   
 protected:
+    Rcpp::RObject obj_i, obj_p, obj_x;
     const int * iptr, * pptr;
     int nx;
-    int get_index(int, int) const;   
-
-    template<typename T>
-    const T* get_row_inside(const T*, int, T*, T);
-
-    template<typename T>
-    const T* get_col_inside(const T*, int, T*, T);
-
-    template<typename T>
-    T get_one_inside(const T*, int, int, T);
-};
-
-/* A virtual *gTMatrix class */
-
-class Tsparse_matrix : public virtual any_matrix {
-public:
-    Tsparse_matrix(SEXP);
-    ~Tsparse_matrix();   
-protected:
-    const int * iptr, * jptr;
-    int nx;
-
-    std::vector<int> ovec, pvec, ivec;
-    const int* order, *pptr, *iptr2;
     int get_index(int, int) const;   
 
     template<typename T>
@@ -113,6 +92,7 @@ public:
     Psymm_matrix(SEXP);
     ~Psymm_matrix();
 protected:
+    Rcpp::RObject obj_x;
     bool upper;
     int get_index(int, int) const;
     
@@ -124,7 +104,7 @@ protected:
 
 class HDF5_matrix : public virtual any_matrix {
 public:
-    HDF5_matrix(SEXP);
+    HDF5_matrix(const Rcpp::RObject&);
     ~HDF5_matrix();
 protected:
     H5::H5File hfile;

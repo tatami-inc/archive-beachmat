@@ -8,13 +8,13 @@ integer_matrix::~integer_matrix() {}
 
 /* Methods for a simple matrix. */
 
-simple_integer_matrix::simple_integer_matrix(SEXP incoming) : simple_matrix(incoming), simple_ptr(NULL), 
+simple_integer_matrix::simple_integer_matrix(const Rcpp::RObject& incoming) : simple_matrix(incoming), simple_ptr(NULL), 
         row_data(ncol), row_ptr(row_data.data()) { 
 
-    if (!isInteger(incoming)) { 
+    if (obj.sexp_type()!=INTSXP) { 
         throw std::runtime_error("matrix should be integer");
     }
-    simple_ptr=INTEGER(incoming);
+    simple_ptr=INTEGER(obj.get__());
     return;
 }
 
@@ -34,12 +34,12 @@ int simple_integer_matrix::get(int r, int c) {
 
 /* Methods for a HDF5 matrix. */
 
-HDF5_integer_matrix::HDF5_integer_matrix(SEXP incoming) : HDF5_matrix(incoming), 
+HDF5_integer_matrix::HDF5_integer_matrix(const Rcpp::RObject& incoming) : HDF5_matrix(incoming), 
         row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
 
-    SEXP h5_seed=R_do_slot(incoming, install("seed")); 
-    SEXP firstval=R_do_slot(h5_seed, install("first_val"));
-    if (!isInteger(firstval)) { 
+    const Rcpp::RObject& h5_seed=incoming.slot("seed");
+    const Rcpp::RObject& firstval=get_safe_slot(h5_seed, "first_val");
+    if (firstval.sexp_type()!=INTSXP) {
         throw_custom_error("'first_val' slot in a ", get_class(h5_seed), " object should be integer");
     }
     if (hdata.getTypeClass()!=H5T_INTEGER) { 
@@ -64,10 +64,10 @@ int HDF5_integer_matrix::get(int r, int c) {
 
 /* Dispatch definition */
 
-std::shared_ptr<integer_matrix> create_integer_matrix(SEXP incoming) { 
-    if (IS_S4_OBJECT(incoming)) {
-        const char* ctype=get_class(incoming);
-        if (std::strcmp(ctype, "HDF5Matrix")==0) { 
+std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incoming) { 
+    if (incoming.isS4()) { 
+        std::string ctype=get_class(incoming);
+        if (ctype=="HDF5Matrix") { 
             return std::shared_ptr<integer_matrix>(new HDF5_integer_matrix(incoming));
         }
         std::stringstream err;

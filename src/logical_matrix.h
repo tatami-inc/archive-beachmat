@@ -34,7 +34,7 @@ public:
 
 class simple_logical_matrix : public simple_matrix, public logical_matrix {
 public:    
-    simple_logical_matrix(SEXP);
+    simple_logical_matrix(const Rcpp::RObject&);
     ~simple_logical_matrix();
 
     const int* get_row(int);
@@ -51,7 +51,7 @@ protected:
 
 class dense_logical_matrix : public dense_matrix, public logical_matrix {
 public:    
-    dense_logical_matrix(SEXP);
+    dense_logical_matrix(const Rcpp::RObject&);
     ~dense_logical_matrix();
 
     const int* get_row(int);
@@ -68,25 +68,8 @@ protected:
 
 class Csparse_logical_matrix : public Csparse_matrix, public logical_matrix {
 public:    
-    Csparse_logical_matrix(SEXP);
+    Csparse_logical_matrix(const Rcpp::RObject&);
     ~Csparse_logical_matrix();
-
-    const int * get_row(int);
-    const int * get_col(int);
-    int get(int, int);
-    
-protected:
-    const int * xptr;
-    std::vector<int> row_data, col_data;
-    int* row_ptr, * col_ptr;
-};
-
-/* lgTMatrix */
-
-class Tsparse_logical_matrix : public Tsparse_matrix, public logical_matrix {
-public:    
-    Tsparse_logical_matrix(SEXP);
-    ~Tsparse_logical_matrix();
 
     const int * get_row(int);
     const int * get_col(int);
@@ -102,7 +85,7 @@ protected:
 
 class Psymm_logical_matrix : public Psymm_matrix, public logical_matrix {
 public:    
-    Psymm_logical_matrix(SEXP);
+    Psymm_logical_matrix(const Rcpp::RObject&);
     ~Psymm_logical_matrix();
     
     const int * get_row(int);
@@ -119,7 +102,7 @@ protected:
 
 class HDF5_logical_matrix : public HDF5_matrix, public logical_matrix {
 public:
-    HDF5_logical_matrix(SEXP);
+    HDF5_logical_matrix(const Rcpp::RObject&);
     ~HDF5_logical_matrix();
 
     const int * get_row(int);
@@ -133,6 +116,6 @@ protected:
 
 /* Dispatcher */
 
-std::shared_ptr<logical_matrix> create_logical_matrix(SEXP);
+std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject&);
 
 

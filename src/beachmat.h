@@ -3,11 +3,12 @@
 
 #include <vector>
 #include <algorithm>
-#include <cstring>
+#include <string>
 #include <memory>
 #include <stdexcept>
 #include <sstream>
 
+#include "Rcpp.h"
 #include "R.h"
 #include "Rinternals.h"
 #include "R_ext/Rdynload.h"
@@ -22,5 +23,6 @@ SEXP test_integer_access(SEXP, SEXP);
 SEXP test_logical_access(SEXP, SEXP);
 
 }
+
 
 #endif

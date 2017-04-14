@@ -1,24 +1,29 @@
 #include "utils.h"
 
-const char* get_class(SEXP incoming) {
-    SEXP ctype=getAttrib(incoming, R_ClassSymbol);
-    if (!isString(ctype) || LENGTH(ctype)!=1) {
-        throw std::runtime_error("class definition should be a string");
+std::string make_to_string(const Rcpp::RObject& str) {
+    if (str.sexp_type()!=STRSXP || Rf_length(str.get__())!=1) {
+        throw std::runtime_error("input RObject should contain a single string");
     }
-    return CHAR(STRING_ELT(ctype, 0));
+    return Rcpp::as<std::vector<std::string> >(str).front();
 }
 
-SEXP get_safe_slot(SEXP incoming, const char* slotname) {
-    SEXP dimslot = install(slotname);
-    if (!R_has_slot(incoming, dimslot)) { 
+std::string get_class(const Rcpp::RObject& incoming) {
+    if (!incoming.isObject()) {
+        throw std::runtime_error("object has no class attribute");
+    }
+    return make_to_string(incoming.attr("class"));
+}
+
+Rcpp::RObject get_safe_slot(const Rcpp::RObject& incoming, const std::string& slotname) {
+    if (!incoming.hasSlot(slotname)) { 
         std::stringstream err;
         err << "no '" << slotname << "' slot in the " << get_class(incoming) << " object";
         throw std::runtime_error(err.str().c_str()); 
     }
-    return R_do_slot(incoming, dimslot);
+    return incoming.slot(slotname);
 }
 
-void throw_custom_error(const char* left, const char* classname, const char* right) {
+void throw_custom_error(const std::string& left, const std::string& classname, const std::string& right) {
     std::stringstream err;
     err << left << classname << right;
     throw std::runtime_error(err.str().c_str());

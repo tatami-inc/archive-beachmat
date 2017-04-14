@@ -1,13 +1,13 @@
 #include "numeric_matrix.h"
-#include "logical_matrix.h"
 #include "integer_matrix.h"
+#include "logical_matrix.h"
 
 template <typename M, typename T> 
-void fill_up (M& ptr, T* optr, SEXP mode) {
-    if (!isInteger(mode) || LENGTH(mode)!=1) {
+void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
+    if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
-    const int Mode=asInteger(mode);
+    const int Mode=mode[0];
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
 
@@ -41,63 +41,42 @@ void fill_up (M& ptr, T* optr, SEXP mode) {
     return;
 }
 
-extern "C" {
-
-SEXP test_numeric_access (SEXP in, SEXP mode) try {
+SEXP test_numeric_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
     auto ptr=create_numeric_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
-    SEXP output=PROTECT(allocMatrix(REALSXP, nrows, ncols));
-    try { 
-        double * optr=REAL(output);
-        fill_up(ptr, optr, mode);
-    } catch (std::exception& e) {
-        UNPROTECT(1);
-        throw;
-    }
 
-    UNPROTECT(1);
+    Rcpp::NumericMatrix output(nrows, ncols);
+    double* optr=REAL(output.get__());
+    fill_up(ptr, optr, mode);
     return output;
-} catch (std::exception& e) {
-    return mkString(e.what());
+    END_RCPP
 }
 
-SEXP test_integer_access (SEXP in, SEXP mode) try {
+SEXP test_integer_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
     auto ptr=create_integer_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
-    SEXP output=PROTECT(allocMatrix(INTSXP, nrows, ncols));
-    try { 
-        int* optr=INTEGER(output);
-        fill_up(ptr, optr, mode);
-    } catch (std::exception& e) {
-        UNPROTECT(1);
-        throw;
-    }
 
-    UNPROTECT(1);
+    Rcpp::IntegerMatrix output(nrows, ncols);
+    int* optr=INTEGER(output.get__());
+    fill_up(ptr, optr, mode);
     return output;
-} catch (std::exception& e) {
-    return mkString(e.what());
+    END_RCPP
 }
 
-SEXP test_logical_access (SEXP in, SEXP mode) try {
+SEXP test_logical_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
     auto ptr=create_logical_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
-    SEXP output=PROTECT(allocMatrix(LGLSXP, nrows, ncols));
-    try { 
-        int* optr=LOGICAL(output);
-        fill_up(ptr, optr, mode);
-    } catch (std::exception& e) {
-        UNPROTECT(1);
-        throw;
-    }
 
-    UNPROTECT(1);
+    Rcpp::LogicalMatrix output(nrows, ncols);
+    int* optr=INTEGER(output.get__());
+    fill_up(ptr, optr, mode);
     return output;
-} catch (std::exception& e) {
-    return mkString(e.what());
+    END_RCPP
 }
 
-}

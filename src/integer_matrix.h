@@ -34,7 +34,7 @@ public:
 
 class simple_integer_matrix : public simple_matrix, public integer_matrix {
 public:    
-    simple_integer_matrix(SEXP);
+    simple_integer_matrix(const Rcpp::RObject&);
     ~simple_integer_matrix();
 
     const int* get_row(int);
@@ -51,7 +51,7 @@ protected:
 
 class HDF5_integer_matrix : public HDF5_matrix, public integer_matrix {
 public:
-    HDF5_integer_matrix(SEXP);
+    HDF5_integer_matrix(const Rcpp::RObject&);
     ~HDF5_integer_matrix();
 
     const int * get_row(int);
@@ -65,6 +65,6 @@ protected:
 
 /* Dispatcher */
 
-std::shared_ptr<integer_matrix> create_integer_matrix(SEXP);
+std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);
 
 

@@ -10,21 +10,34 @@ int any_matrix::get_nrow() const { return nrow; }
 
 int any_matrix::get_ncol() const { return ncol; }
 
-void any_matrix::fill_dims(SEXP dims) {
-    if (!isInteger(dims) || LENGTH(dims)!=2) { 
+void any_matrix::fill_dims(const Rcpp::RObject& dims) {
+    if (dims.sexp_type()!=INTSXP || Rf_length(dims.get__())!=2) { 
         throw std::runtime_error("matrix dimensions should be an integer vector of length 2");
     }
-    nrow=INTEGER(dims)[0];
-    ncol=INTEGER(dims)[1];
+    Rcpp::IntegerVector d(dims);
+    nrow=d[0];
+    ncol=d[1];
     if (nrow<0 || ncol<0) { throw std::runtime_error("dimensions should be non-negative"); }
     return;
 }
 
+/* If any class has pointers as data members, the data that each pointer points to should be 
+ * contained within a RObject that is also a member of the class. This ensures that the 
+ * data is PROTECTed for the lifetime of the class instance. Otherwise, one could imagine 
+ * a situation where the class is instantiated from an RObject; the RObject is destroyed;
+ * and garbage collection occurs, such that the pointers in the class instance are invalid.
+ */
+
 /* Methods for the virtual simple matrix. */
 
-simple_matrix::simple_matrix(SEXP incoming) {
-    fill_dims(getAttrib(incoming, R_DimSymbol));
-    if (LENGTH(incoming)!=nrow*ncol) { throw std::runtime_error("length of matrix is inconsistent with its dimensions"); }
+simple_matrix::simple_matrix(const Rcpp::RObject& incoming) : obj(incoming) {
+    if (!obj.hasAttribute("dim")) { 
+        throw std::runtime_error("matrix object should have 'dim' attribute"); 
+    }
+    fill_dims(obj.attr("dim"));
+    if (Rf_length(obj.get__())!=nrow*ncol) { 
+        throw std::runtime_error("length of matrix is inconsistent with its dimensions"); 
+    }
     return;
 }
 
@@ -34,13 +47,19 @@ int simple_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual *geMatrix. */
 
-dense_matrix::dense_matrix (SEXP incoming) {
-    const char* ctype=get_class(incoming);
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "geMatrix")!=0) {
-        throw std::runtime_error("matrix should be a *geMatrix object");
+std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& expected) {
+    std::string mattype=get_class(mat);
+    if (!mat.isS4() || mattype.empty() || mattype.substr(1)!=expected) {
+        throw_custom_error("matrix should be a *", expected, " object");
     }
-    fill_dims(get_safe_slot(incoming, "Dim"));
-    if (LENGTH(get_safe_slot(incoming, "x"))!=nrow*ncol) { 
+    return mattype;
+}
+
+dense_matrix::dense_matrix (const Rcpp::RObject& incoming) {
+    std::string ctype=check_Matrix_class(incoming, "geMatrix");
+    fill_dims(incoming.attr("Dim"));
+    obj_x=get_safe_slot(incoming, "x"); 
+    if (Rf_length(obj_x.get__())!=nrow*ncol) { 
         throw_custom_error("length of 'x' in a ", ctype, " object is inconsistent with its dimensions"); 
     }
     return;
@@ -52,25 +71,22 @@ int dense_matrix::get_index(int r, int c) const { return r + c*nrow; }
 
 /* Methods for the virtual *gCMatrix. */
 
-Csparse_matrix::Csparse_matrix(SEXP incoming) : iptr(NULL), pptr(NULL), nx(0) {
-    const char* ctype=get_class(incoming);
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "gCMatrix")!=0) {
-        throw std::runtime_error("matrix should be a *gCMatrix object");
-    }
-    
+Csparse_matrix::Csparse_matrix(const Rcpp::RObject& incoming) : iptr(NULL), pptr(NULL), nx(0) {
+    std::string ctype=check_Matrix_class(incoming, "gCMatrix");  
     fill_dims(get_safe_slot(incoming, "Dim"));
 
-    SEXP i=get_safe_slot(incoming, "i");
-    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", ctype, " object should be integer"); }
-    iptr=INTEGER(i);
+    obj_i=get_safe_slot(incoming, "i");
+    if (obj_i.sexp_type()!=INTSXP) { throw_custom_error("'i' slot in a ", ctype, " object should be integer"); }
+    iptr=INTEGER(obj_i.get__());
 
-    SEXP p=get_safe_slot(incoming, "p");
-    if (!isInteger(p)) { throw_custom_error("'p' slot in a ", ctype, " object should be integer"); }
-    pptr=INTEGER(p);
+    obj_p=get_safe_slot(incoming, "p");
+    if (obj_p.sexp_type()!=INTSXP) { throw_custom_error("'p' slot in a ", ctype, " object should be integer"); }
+    pptr=INTEGER(obj_p.get__());
 
-    nx=LENGTH(get_safe_slot(incoming, "x"));
-    if (nx!=LENGTH(i)) { throw_custom_error("'x' and 'i' slots in a ", ctype, " object should have the same length"); }
-    if (ncol+1!=LENGTH(p)) { throw_custom_error("length of 'p' slot in a ", ctype, " object should be equal to 'ncol+1'"); }
+    obj_x=get_safe_slot(incoming, "x");
+    nx=Rf_length(obj_x.get__());
+    if (nx!=Rf_length(obj_i.get__())) { throw_custom_error("'x' and 'i' slots in a ", ctype, " object should have the same length"); }
+    if (ncol+1!=Rf_length(obj_p.get__())) { throw_custom_error("length of 'p' slot in a ", ctype, " object should be equal to 'ncol+1'"); }
     if (pptr[0]!=0) { throw_custom_error("first element of 'p' in a ", ctype, " object should be 0"); }
     if (pptr[ncol]!=nx) { throw_custom_error("last element of 'p' in a ", ctype, " object should be 'length(x)'"); }
 
@@ -107,93 +123,26 @@ int Csparse_matrix::get_index(int r, int c) const {
     }
 }
 
-/* Methods for the virtual *gTMatrix. */
-
-Tsparse_matrix::Tsparse_matrix(SEXP incoming) : iptr(NULL), jptr(NULL), nx(0), order(NULL), pptr(NULL), iptr2(NULL) {
-    const char* ctype=get_class(incoming);
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "gTMatrix")!=0) {
-        throw std::runtime_error("matrix should be a *gTMatrix object");
-    }
-    
-    fill_dims(get_safe_slot(incoming, "Dim"));
-
-    SEXP i=get_safe_slot(incoming, "i");
-    if (!isInteger(i)) { throw_custom_error("'i' slot in a ", ctype, " object should be integer"); }
-    iptr=INTEGER(i);
-
-    SEXP j=get_safe_slot(incoming, "j");
-    if (!isInteger(i)) { throw_custom_error("'j' slot in a ", ctype, " object should be integer"); }
-    jptr=INTEGER(j);
-
-    nx=LENGTH(get_safe_slot(incoming, "x"));
-    if (nx!=LENGTH(i) || LENGTH(j)!=nx) { throw_custom_error("'x', 'i' and 'j' slots in a ", ctype, " object should have the same length"); }
-    for (int i=0; i<nx; ++i) {
-        if (iptr[i] < 0 || iptr[i]>=nrow) { throw_custom_error("'i' slot of a ", ctype, " object should contain elements in [0, nrow)"); }
-        if (jptr[i] < 0 || jptr[i]>=ncol) { throw_custom_error("'j' slot of a ", ctype, " object should contain elements in [0, ncol)"); }
-    }
-   
-    // Adding column-major indexing, mimicking *gCMatrix for rapid column-access. 
-    ovec.resize(nx);
-    int ix;
-    for (ix=0; ix<nx; ++ix) {
-        ovec[ix]=ix;
-    }
-    index_orderer<int> jorder(jptr);
-    std::vector<int>::iterator optr=ovec.begin();
-    std::sort(optr, ovec.end(), jorder);
-    
-    pvec.resize(ncol+1);
-    for (ix=0; ix<nx; ++ix) {
-        ++(pvec[jptr[ix]+1]);
-    }
-    for (ix=1; ix<=ncol; ++ix){ 
-        pvec[ix]+=pvec[ix-1];
-    }
-
-    index_orderer<int> iorder(iptr);
-    for (int px=0; px<ncol; ++px) { 
-        std::sort(optr + pvec[px], optr + pvec[px+1], iorder);
-    }
-
-    ivec.resize(nx);
-    for (ix=0; ix<nx; ++ix) {
-        ivec[ix]=iptr[ovec[ix]];
-    }
-
-    order=ovec.data();
-    pptr=pvec.data();
-    iptr2=ivec.data();
-    return;
-}
-
-Tsparse_matrix::~Tsparse_matrix() {} 
-
-int Tsparse_matrix::get_index(int r, int c) const {
-    const int* iend=iptr2 + pptr[c+1];
-    const int* loc=std::lower_bound(iptr2 + pptr[c], iend, r);
-    if (loc!=iend && *loc==r) { 
-        return order[loc - iptr2];
-    } else {
-        return nx;
-    }
-}
-
 /* Methods for the virtual *spMatrix. */
 
 Psymm_matrix::Psymm_matrix(SEXP incoming) : upper(true) {
-    const char* ctype=get_class(incoming);
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype+1, "spMatrix")!=0) {
-        throw std::runtime_error("matrix should be a *spMatrix object");
-    }
-    
+    std::string ctype=check_Matrix_class(incoming, "spMatrix");  
     fill_dims(get_safe_slot(incoming, "Dim"));
     if (nrow!=ncol) { throw_custom_error("'nrow' and 'ncol' should be equal for a ", ctype, " object"); }
-    SEXP x=get_safe_slot(incoming, "x");
-    if ((nrow*(nrow+1))/2!=LENGTH(x)) { throw_custom_error("length of 'x' in a ", ctype, " object is inconsistent with its dimensions"); }
+
+    obj_x=get_safe_slot(incoming, "x");
+    if ((nrow*(nrow+1))/2!=Rf_length(obj_x.get__())) { throw_custom_error("length of 'x' in a ", ctype, " object is inconsistent with its dimensions"); }
     
-    SEXP ul=get_safe_slot(incoming, "uplo");
-    if (!isString(ul) || LENGTH(ul)!=1) { throw_custom_error("'uplo' slot in a ", ctype, " object should be a string"); }
-    switch (*(CHAR(STRING_ELT(ul, 0)))) {
+    Rcpp::RObject ul=get_safe_slot(incoming, "uplo");
+    std::string uplo;
+    try {
+        uplo=make_to_string(ul);
+        if (uplo.length()!=1) { throw; }
+    } catch (...) { 
+        throw_custom_error("'uplo' slot in a ", ctype, " object should be a string of length 1"); 
+    }
+
+    switch (uplo[0]) { 
         case 'U':
             upper=true;
             break;
@@ -226,30 +175,36 @@ int Psymm_matrix::get_index(int r, int c) const {
 
 /* Methods for the virtual HDF5Matrix. */
 
-HDF5_matrix::HDF5_matrix(SEXP incoming) {
-    const char* ctype=get_class(incoming);
-    if (!IS_S4_OBJECT(incoming) || std::strcmp(ctype, "HDF5Matrix")!=0) {
+HDF5_matrix::HDF5_matrix(const Rcpp::RObject& incoming) {
+    std::string ctype=get_class(incoming);
+    if (!incoming.isS4() || ctype!="HDF5Matrix") {
         throw std::runtime_error("matrix should be a HDF5Matrix object");
     }
 
-    SEXP h5_seed=get_safe_slot(incoming, "seed");
-    const char *stype=get_class(h5_seed);
-    if (!IS_S4_OBJECT(h5_seed) || std::strcmp(stype, "HDF5ArraySeed")!=0) {
+    const Rcpp::RObject& h5_seed=get_safe_slot(incoming, "seed");
+    std::string stype=get_class(h5_seed);
+    if (!h5_seed.isS4() || stype!="HDF5ArraySeed") {
         throw_custom_error("'seed' slot in a ", ctype, " object should be a HDF5ArraySeed object");
     }
-    fill_dims(getAttrib(h5_seed, R_DimSymbol));
 
-    SEXP filename=get_safe_slot(h5_seed, "file");
-    if (!isString(filename) || LENGTH(filename)!=1) { 
+    if (!h5_seed.hasAttribute("dim")) { 
+        throw_custom_error("", stype, " object should have 'dim' attribute"); 
+    }
+    fill_dims(h5_seed.attr("dim"));
+
+    std::string fname;
+    try {
+        fname=make_to_string(get_safe_slot(h5_seed, "file"));
+    } catch (...) { 
         throw_custom_error("'file' slot in a ", stype, " object should be a string");
     }
-    const char* fname=CHAR(STRING_ELT(filename, 0));
 
-    SEXP dataname=get_safe_slot(h5_seed, "name");
-    if (!isString(dataname) || LENGTH(dataname)!=1) { 
+    std::string dataset;
+    try {
+        dataset=make_to_string(get_safe_slot(h5_seed, "name"));
+    } catch (...) { 
         throw_custom_error("'name' slot in a ", stype, " object should be a string");
     }
-    const char* dataset=CHAR(STRING_ELT(dataname, 0));
     
     // Setting up the HDF5 accessors.
     hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);

@@ -3,11 +3,13 @@
 
 #include "beachmat.h"
 
-const char* get_class(SEXP);
+std::string make_to_string(const Rcpp::RObject&);
 
-SEXP get_safe_slot(SEXP, const char*);
+std::string get_class(const Rcpp::RObject&);
 
-void throw_custom_error(const char*, const char*, const char*);
+Rcpp::RObject get_safe_slot(const Rcpp::RObject&, const std::string&);
+
+void throw_custom_error(const std::string&, const std::string&, const std::string&);
 
 template <class T>
 struct index_orderer { 

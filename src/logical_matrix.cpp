@@ -8,13 +8,13 @@ logical_matrix::~logical_matrix() {}
 
 /* Methods for a simple matrix. */
 
-simple_logical_matrix::simple_logical_matrix(SEXP incoming) : simple_matrix(incoming), simple_ptr(NULL), 
+simple_logical_matrix::simple_logical_matrix(const Rcpp::RObject& incoming) : simple_matrix(incoming), simple_ptr(NULL), 
         row_data(ncol), row_ptr(row_data.data()) {
 
-    if (!isLogical(incoming)) { 
+    if (obj.sexp_type()!=LGLSXP) {
         throw std::runtime_error("matrix should be logical");
     }
-    simple_ptr=LOGICAL(incoming);
+    simple_ptr=LOGICAL(obj.get__());
     return;
 }
 
@@ -34,12 +34,17 @@ int simple_logical_matrix::get(int r, int c) {
 
 /* Methods for a dense Matrix. */
 
-dense_logical_matrix::dense_logical_matrix(SEXP incoming) : dense_matrix(incoming), dense_ptr(NULL), 
+const int* check_Matrix_logical(const Rcpp::RObject& x, const Rcpp::RObject& incoming) { 
+    if (x.sexp_type()!=LGLSXP) { 
+        throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); 
+    }
+    return LOGICAL(x.get__());
+}
+
+dense_logical_matrix::dense_logical_matrix(const Rcpp::RObject& incoming) : dense_matrix(incoming), dense_ptr(NULL), 
             row_data(ncol), row_ptr(row_data.data()) {
 
-    SEXP x=get_safe_slot(incoming, "x");
-    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
-    dense_ptr=LOGICAL(x);
+    dense_ptr=check_Matrix_logical(obj_x, incoming);
     return;
 }
 
@@ -59,12 +64,10 @@ int dense_logical_matrix::get(int r, int c) {
 
 /* Methods for a Csparse matrix. */
 
-Csparse_logical_matrix::Csparse_logical_matrix(SEXP incoming) : Csparse_matrix(incoming), xptr(NULL), 
+Csparse_logical_matrix::Csparse_logical_matrix(const Rcpp::RObject& incoming) : Csparse_matrix(incoming), xptr(NULL), 
         row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
     
-    SEXP x=get_safe_slot(incoming, "x");
-    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
-    xptr=LOGICAL(x);
+    xptr=check_Matrix_logical(obj_x, incoming);
     return;
 }
 
@@ -82,39 +85,12 @@ int Csparse_logical_matrix::get(int r, int c) {
     return get_one_inside<int>(xptr, r, c, 0);
 }
 
-/* Methods for a Tsparse matrix. */
-
-Tsparse_logical_matrix::Tsparse_logical_matrix(SEXP incoming) : Tsparse_matrix(incoming), xptr(NULL), 
-        row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
-
-    SEXP x=get_safe_slot(incoming, "x");
-    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
-    xptr=LOGICAL(x);
-    return;
-}
-
-Tsparse_logical_matrix::~Tsparse_logical_matrix () {}
-
-const int* Tsparse_logical_matrix::get_row(int r) {
-    return get_row_inside<int>(xptr, r, row_ptr, 0);
-}
-
-const int* Tsparse_logical_matrix::get_col(int c) {
-    return get_col_inside<int>(xptr, c, col_ptr, 0);
-}
-
-int Tsparse_logical_matrix::get(int r, int c) {
-    return get_one_inside<int>(xptr, r, c, 0);
-}
-
 /* Methods for a Psymm matrix. */
 
-Psymm_logical_matrix::Psymm_logical_matrix(SEXP incoming) : Psymm_matrix(incoming), xptr(NULL), 
+Psymm_logical_matrix::Psymm_logical_matrix(const Rcpp::RObject& incoming) : Psymm_matrix(incoming), xptr(NULL), 
         out_data(nrow), out_ptr(out_data.data()) {
 
-    SEXP x=get_safe_slot(incoming, "x");
-    if (!isLogical(x)) { throw_custom_error("'x' slot in a ", get_class(incoming), " object should be logical"); }
-    xptr=LOGICAL(x);
+    xptr=check_Matrix_logical(obj_x, incoming);
     return;
 }
 
@@ -134,12 +110,12 @@ int Psymm_logical_matrix::get(int r, int c) {
 
 /* Methods for a HDF5 matrix. */
 
-HDF5_logical_matrix::HDF5_logical_matrix(SEXP incoming) : HDF5_matrix(incoming), 
+HDF5_logical_matrix::HDF5_logical_matrix(const Rcpp::RObject& incoming) : HDF5_matrix(incoming), 
         row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
 
-    SEXP h5_seed=get_safe_slot(incoming, "seed"); 
-    SEXP firstval=get_safe_slot(h5_seed, "first_val");
-    if (!isLogical(firstval)) { 
+    const Rcpp::RObject& h5_seed=incoming.slot("seed");
+    const Rcpp::RObject& firstval=get_safe_slot(h5_seed, "first_val");
+    if (firstval.sexp_type()!=LGLSXP) { 
         throw_custom_error("'first_val' slot in a ", get_class(h5_seed), " object should be logical");
     }
     if (hdata.getTypeClass()!=H5T_INTEGER) { 
@@ -164,23 +140,21 @@ int HDF5_logical_matrix::get(int r, int c) {
 
 /* Dispatch definition */
 
-std::shared_ptr<logical_matrix> create_logical_matrix(SEXP incoming) { 
-    if (IS_S4_OBJECT(incoming)) {
-        const char* ctype=get_class(incoming);
-        if (std::strcmp(ctype, "lgeMatrix")==0) { 
+std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incoming) { 
+    if (incoming.isS4()) {
+        std::string ctype=get_class(incoming);
+        if (ctype=="lgeMatrix") { 
             return std::shared_ptr<logical_matrix>(new dense_logical_matrix(incoming));
-        } else if (std::strcmp(ctype, "lgCMatrix")==0) { 
+        } else if (ctype=="lgCMatrix") { 
             return std::shared_ptr<logical_matrix>(new Csparse_logical_matrix(incoming));
-        } else if (std::strcmp(ctype, "lgTMatrix")==0) {
-            return std::shared_ptr<logical_matrix>(new Tsparse_logical_matrix(incoming));
-        } else if (std::strcmp(ctype, "lspMatrix")==0) {
+        } else if (ctype=="lgTMatrix") {
+            throw std::runtime_error("lgTMatrix not supported, convert to lgCMatrix");
+        } else if (ctype=="lspMatrix") {
             return std::shared_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
-        } else if (std::strcmp(ctype, "HDF5Matrix")==0) { 
+        } else if (ctype=="HDF5Matrix") { 
             return std::shared_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
         }
-        std::stringstream err;
-        err << "unsupported class '" << ctype << "' for logical_matrix";
-        throw std::runtime_error(err.str().c_str());
+        throw_custom_error("unsupported class '", ctype, "' for logical_matrix");
     } 
     return std::shared_ptr<logical_matrix>(new simple_logical_matrix(incoming));
 }
