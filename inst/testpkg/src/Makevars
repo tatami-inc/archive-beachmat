@@ -1,0 +1,3 @@
+BEACHLIB_LIBS=`echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave`
+PKG_LIBS=$(BEACHLIB_LIBS)
