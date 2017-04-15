@@ -20,25 +20,97 @@ Compilation date: `r Sys.Date()`
 
 # Introduction
 
-This package provides a C++ API for handling a variety of R matrix types.
+The _beachmat_ package provides a C++ API for handling a variety of R matrix types.
 The aim is to abstract the specific type of matrix when writing C++ extensions to R packages, thus simplifying the processing of data stored in matrices or matrix-like objects.
 Currently, the API supports double-precision, integer and logical matrices.
 Supported classes include base `matrix` objects, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array")` package.
 
+
+# Linking to the package
+
+## Prerequisites
+
+The _beachmat_ package currently has several dependencies:
+
+- The build system should support the C++11 standard.
+- The system should have the HDF5 libraries installed (see https://support.hdfgroup.org/HDF5/).
+Currently, we are not particularly smart about detecting non-default installation locations.
+This should hopefully be rectified in the future.
+- `r CRANpkg("Rcpp")` should be installed.
+
+Note that most of the following instructions are ripped from the `r Biocpkg("Rhtslib")` vignette.
+
+## Link to the library
+
+To link successfully to the _beachmat_ library, a package must include *both* a `src/Makevars.win` *and* `src/Makevars` file.  
+
+**Note**: the contents of `src/Makevars.win` and `src/Makevars` are almost identical, but not quite. 
+Be careful of the differences.
+
+Create a `src/Makevars.win` file with the following lines:
+
+```
+BEACHLIB_LIBS=$(shell echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave)
+PKG_LIBS=$(BEACHLIB_LIBS)
+```
+
+... and a `src/Makevars` file with the following lines:
+
+```
+BEACHLIB_LIBS=`echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave`
+PKG_LIBS=$(BEACHLIB_LIBS)
+```
+
+The statement for each platfrom modifies the `$PKG_LIBS` variable. 
+If your package needs to add to the `$PKG_LIBS` variable, do so by adding to the `PKG_LIBS=$(RHTSLIB_LIBS)` line.
+For example:
+
+```
+PKG_LIBS=$(RHTSLIB_LIBS) -L/path/to/foolib -lfoo
+```
+
+## Find headers
+
+In order for the C/C++ compiler to find the _beachmat_ package headers during installation, add `beachmat` and `Rcpp` to the `LinkingTo` field of the `DESCRIPTION` file:
+
+```
+LinkingTo: Rcpp, beachmat
+``` 
+
+Note that as of R 3.0.2 `LinkingTo` values can include version specifications, e.g., `LinkingTo: Rhtslib (>= 0.99.10)`.
+    
+In C or C++ code files, use standard techniques, e.g., `#include "numeric_matrix.h"` (see below for more details). 
+Header files are available for perusal at the following location (enter in an R session):
+
+```{R headers}
+system.file(package="beachmat", "include")
+```
+
+## Initializing `r CRANpkg("Rcpp")`
+
+One final task is to ensure that `r CRANpkg("Rcpp")` is initialized when your package is loaded.
+This requires addition of `Rcpp` to the `Imports` field of the `DESCRIPTION` file:
+
+```
+Imports: Rcpp
+```
+
+... and a corresponding  `importFrom` specification in the `NAMESPACE` file:
+
+```
+importFrom(Rcpp, sourceRcpp)
+```
+ 
+(The exact function to be imported doesn't matter, as long as the namespace is loaded.)
+Check out the `r CRANpkg("Rcpp")` documentation for more details.
+
 # Overview of the API
-
-## Linking to the package
-
-We will assume that readers have a working knowledge of R's C-level API - see https://cran.r-project.org/doc/manuals/r-release/R-exts.html for details.
-We also assume that readers are familiar with C++.
-
-<!--
-Need to add some linking instructions here.
--->
 
 ## An example with a numeric matrix
 
-We demonstrate the use of the API for  numeric matrices.
+We demonstrate the use of the API for numeric matrices.
 First, we include the relevant header file (in this case, `numeric_matrix.h`):
 
 ```
