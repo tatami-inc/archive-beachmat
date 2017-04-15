@@ -1,4 +1,5 @@
-PKG_LIBS=-lhdf5_cpp
+PKG_CPPFLAGS=@PKG_CPPFLAGS@
+PKG_LIBS=@PKG_LIBS@
 
 .PHONY: all libbeach
 
@@ -14,4 +15,4 @@ libbeach: $(SHLIB)
 shlib-clean: clean
 
 clean: 
-	rm libbeach.*
+	rm -f libbeach.*
