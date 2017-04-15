@@ -8,12 +8,7 @@ libbeach: $(SHLIB)
 	mkdir -p "${R_PACKAGE_DIR}/include"
 	cp *.h "${R_PACKAGE_DIR}/include"
 	ar rc libbeach.a *.o
-
-	R_CXX1XSTD=$$("${R_HOME}/bin/R" CMD config CXX1XSTD); \
-	  R_SHLIB_CXXLD=$$("${R_HOME}/bin/R" CMD config SHLIB_CXXLD); \
-	  R_SHLIB_CXXLDFLAGS=$$("${R_HOME}/bin/R" CMD config SHLIB_CXXLDFLAGS); \
-	  R_SHLIB_CFLAGS=$$("${R_HOME}/bin/R" CMD config SHLIB_CFLAGS); \
-	  $${R_SHLIB_CXXLD} $${R_CXX1XSTD} $${R_SHLIB_CXXLDFLAGS} $${R_SHLIB_CFLAGS} -o libbeach.so *.o ${PKG_LIBS}
+	mv $< libbeach.so
 	cp libbeach.* "${R_PACKAGE_DIR}/libs"
 
 shlib-clean: clean

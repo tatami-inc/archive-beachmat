@@ -41,6 +41,8 @@ void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
     return;
 }
 
+extern "C" { 
+
 SEXP test_numeric_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=create_numeric_matrix(in);
@@ -78,5 +80,28 @@ SEXP test_logical_access (SEXP in, SEXP mode) {
     fill_up(ptr, optr, mode);
     return output;
     END_RCPP
+}
+
+}
+
+#include "R_ext/Rdynload.h"
+#include "R_ext/Visibility.h"
+#define REGISTER(x, i) {#x, (DL_FUNC) &x, i}
+
+extern "C" {
+
+static const R_CallMethodDef all_call_entries[] = {
+    REGISTER(test_numeric_access, 2),
+    REGISTER(test_integer_access, 2),
+    REGISTER(test_logical_access, 2),
+    {NULL, NULL, 0}
+};
+
+void attribute_visible R_init_beachtest(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, all_call_entries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
+    R_forceSymbols(dll, TRUE);
+}
+
 }
 
