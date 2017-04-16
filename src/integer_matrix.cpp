@@ -34,6 +34,8 @@ int simple_integer_matrix::get(int r, int c) {
 
 /* Methods for a HDF5 matrix. */
 
+#ifdef BEACHMAT_USE_HDF5
+
 HDF5_integer_matrix::HDF5_integer_matrix(const Rcpp::RObject& incoming) : HDF5_matrix(incoming), 
         row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
 
@@ -62,13 +64,19 @@ int HDF5_integer_matrix::get(int r, int c) {
     return get_one_inside<int>(r, c, H5::PredType::NATIVE_INT32);
 }
 
+#endif
+
 /* Dispatch definition */
 
 std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incoming) { 
     if (incoming.isS4()) { 
         std::string ctype=get_class(incoming);
         if (ctype=="HDF5Matrix") { 
+#ifdef BEACHMAT_USE_HDF5
             return std::shared_ptr<integer_matrix>(new HDF5_integer_matrix(incoming));
+#else
+            throw std::runtime_error("'beachmat' not compiled with HDF5 support");
+#endif            
         }
         std::stringstream err;
         err << "unsupported class '" << ctype << "' for integer_matrix";

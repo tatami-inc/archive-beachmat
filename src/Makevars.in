@@ -1,4 +1,3 @@
-PKG_CPPFLAGS=@PKG_CPPFLAGS@
 PKG_LIBS=@PKG_LIBS@
 
 .PHONY: all libbeach

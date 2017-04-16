@@ -175,6 +175,8 @@ int Psymm_matrix::get_index(int r, int c) const {
 
 /* Methods for the virtual HDF5Matrix. */
 
+#ifdef BEACHMAT_USE_HDF5
+
 HDF5_matrix::HDF5_matrix(const Rcpp::RObject& incoming) {
     std::string ctype=get_class(incoming);
     if (!incoming.isS4() || ctype!="HDF5Matrix") {
@@ -263,3 +265,4 @@ void HDF5_matrix::set_one(int r, int c) {
     return;
 }
 
+#endif

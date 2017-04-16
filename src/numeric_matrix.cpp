@@ -110,6 +110,8 @@ double Psymm_numeric_matrix::get(int r, int c) {
 
 /* Methods for a HDF5 matrix. */
 
+#ifdef BEACHMAT_USE_HDF5
+
 HDF5_numeric_matrix::HDF5_numeric_matrix(const Rcpp::RObject& incoming) : HDF5_matrix(incoming), 
         row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
 
@@ -138,6 +140,8 @@ double HDF5_numeric_matrix::get(int r, int c) {
     return get_one_inside<double>(r, c, H5::PredType::NATIVE_DOUBLE);
 }
 
+#endif
+
 /* Dispatch definition */
 
 std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incoming) { 
@@ -152,7 +156,11 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
         } else if (ctype=="dspMatrix") {
             return std::shared_ptr<numeric_matrix>(new Psymm_numeric_matrix(incoming));
         } else if (ctype=="HDF5Matrix") { 
+#ifdef BEACHMAT_USE_HDF5
             return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
+#else  
+            throw std::runtime_error("'beachmat' not compiled with HDF5 support");
+#endif            
         }
         throw_custom_error("unsupported class '", ctype, "' for numeric_matrix");
     } 

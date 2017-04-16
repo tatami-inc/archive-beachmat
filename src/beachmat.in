@@ -12,4 +12,6 @@
 #include "R.h"
 #include "Rinternals.h"
 
+@DEF_HDF_CPP@
+
 #endif

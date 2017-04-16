@@ -79,6 +79,8 @@ const T* Psymm_matrix::get_rowcol_inside (const T* in, int rc, T* out) {
 
 /* HDF5Matrix templated methods */
 
+#ifdef BEACHMAT_USE_HDF5
+
 template<typename T>
 const T* HDF5_matrix::get_row_inside(int r, T* out, const H5::PredType& S) {
     set_row(r);
@@ -100,5 +102,7 @@ T HDF5_matrix::get_one_inside(int r, int c, const H5::PredType& S) {
     hdata.read(&out, S, onespace, hspace);
     return out;
 }
+
+#endif
 
 #endif

@@ -100,6 +100,8 @@ protected:
 
 /* HDF5Matrix */
 
+#ifdef BEACHMAT_USE_HDF5
+
 class HDF5_logical_matrix : public HDF5_matrix, public logical_matrix {
 public:
     HDF5_logical_matrix(const Rcpp::RObject&);
@@ -113,6 +115,8 @@ protected:
     std::vector<int> row_data, col_data;
     int* row_ptr, * col_ptr;
 };
+
+#endif
 
 /* Dispatcher */
 

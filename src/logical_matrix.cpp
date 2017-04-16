@@ -110,6 +110,8 @@ int Psymm_logical_matrix::get(int r, int c) {
 
 /* Methods for a HDF5 matrix. */
 
+#ifdef BEACHMAT_USE_HDF5
+
 HDF5_logical_matrix::HDF5_logical_matrix(const Rcpp::RObject& incoming) : HDF5_matrix(incoming), 
         row_data(ncol), col_data(nrow), row_ptr(row_data.data()), col_ptr(col_data.data()) {
 
@@ -138,6 +140,8 @@ int HDF5_logical_matrix::get(int r, int c) {
     return get_one_inside<int>(r, c, H5::PredType::NATIVE_INT32);
 }
 
+#endif
+
 /* Dispatch definition */
 
 std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incoming) { 
@@ -152,7 +156,11 @@ std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
         } else if (ctype=="lspMatrix") {
             return std::shared_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
         } else if (ctype=="HDF5Matrix") { 
+#ifdef BEACHMAT_USE_HDF5            
             return std::shared_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
+#else
+            throw std::runtime_error("'beachmat' not compiled with HDF5 support");
+#endif            
         }
         throw_custom_error("unsupported class '", ctype, "' for logical_matrix");
     } 

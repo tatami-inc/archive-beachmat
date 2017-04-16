@@ -2,8 +2,11 @@
 #define MATRIX_H
 
 #include "beachmat.h"
-#include "H5Cpp.h"
 #include "utils.h"
+
+#ifdef BEACHMAT_USE_HDF5
+#include "H5Cpp.h"
+#endif
 
 /* A virtual base matrix class */
 
@@ -102,6 +105,8 @@ protected:
 
 /* A virtual HDF5Matrix class */
 
+#ifdef BEACHMAT_USE_HDF5
+
 class HDF5_matrix : public virtual any_matrix {
 public:
     HDF5_matrix(const Rcpp::RObject&);
@@ -125,6 +130,8 @@ protected:
     template<typename T>
     T get_one_inside(int r, int c, const H5::PredType&);
 };
+
+#endif
 
 #include "template_methods.h"
 
