@@ -5,10 +5,10 @@ Title: Test whether we can link to beachmat properly
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: R (>= 3.4)
+Imports: Rcpp
 Suggests: testthat
-Description: For testing copmilation settings
+Description: For testing beachmat compilation settings.
 License: GPL-3
 NeedsCompilation: yes
-VignetteBuilder: knitr
-SystemRequirements: C++11, hdf5
+SystemRequirements: C++11
 LinkingTo: Rcpp, beachmat

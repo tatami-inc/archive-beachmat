@@ -33,12 +33,12 @@ Supported classes include base `matrix` objects, a number of classes from the `r
 The _beachmat_ package currently has several dependencies:
 
 - The build system should support the C++11 standard.
-- The system should have the HDF5 libraries installed (see https://support.hdfgroup.org/HDF5/).
-Currently, we are not particularly smart about detecting non-default installation locations.
-This should hopefully be rectified in the future.
 - `r CRANpkg("Rcpp")` should be installed.
+- To support `HDF5Matrix` objects, the system should have the HDF5 libraries installed (see https://support.hdfgroup.org/HDF5/).
+Currently, we are not particularly smart about detecting non-default installation locations - this should hopefully be rectified in the future.
+If the HDF5 libraries are not installed, _beachmat_ can still be used but will not support `HDF5Matrix` access.
 
-Note that most of the following instructions are ripped from the `r Biocpkg("Rhtslib")` vignette.
+Most of the following instructions are ripped from the `r Biocpkg("Rhtslib")` vignette.
 
 ## Link to the library
 
@@ -88,9 +88,15 @@ Header files are available for perusal at the following location (enter in an R 
 system.file(package="beachmat", "include")
 ```
 
-## Initializing `r CRANpkg("Rcpp")`
+## Finishing up
 
-One final task is to ensure that `r CRANpkg("Rcpp")` is initialized when your package is loaded.
+You need to tell the build system to use C++11, by modifying the `SystemRequirements` field of the `DESCRIPTION` file:
+
+```
+SystemRequirements: C++11
+```
+
+You also need to ensure that `r CRANpkg("Rcpp")` is initialized when your package is loaded.
 This requires addition of `Rcpp` to the `Imports` field of the `DESCRIPTION` file:
 
 ```
