@@ -99,6 +99,8 @@ expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "lengt
 
 # HDF5 matrices.
 
+if (beachmat:::use.hdf5) { 
+
 library(HDF5Array)
 test.mat <- matrix(150, 15, 10)
 A <- as(test.mat, "HDF5Array")
@@ -126,6 +128,8 @@ expect_fixed_error(wrong@seed@name <- 1)
 wrong@seed@name <- c("YAY", "YAY")
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "'name' slot in a HDF5ArraySeed object should be a string")
 
+}
+
 # Numeric checks
 
 b <- matrix(100L, 10, 10)
@@ -144,11 +148,15 @@ B <- pack(forceSymmetric(matrix(1:10, 10, 10)))
 storage.mode(B@x) <- "integer"
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dspMatrix object should be double-precision")
 
+if (beachmat:::use.hdf5) { 
+
 test.mat <- matrix(150L, 15, 10)
 B <- as(test.mat, "HDF5Array")
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'first_val' slot in a HDF5ArraySeed object should be double-precision")
 storage.mode(B@seed@first_val) <- "double"
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "data type in HDF5 file is not floating-point")
+
+}
 
 # Logical checks
 
@@ -168,16 +176,22 @@ expect_fixed_error(storage.mode(B@x) <- "integer")
 B <- pack(forceSymmetric(matrix(c(TRUE, FALSE), 10, 10)))
 expect_fixed_error(storage.mode(B@x) <- "integer")
 
+if (beachmat:::use.hdf5) { 
+
 test.mat <- matrix(150, 15, 10)
 B <- as(test.mat, "HDF5Array")
 expect_fixed_error(.Call(beachtest:::cxx_test_logical_access, B, 1L), "'first_val' slot in a HDF5ArraySeed object should be logical")
 storage.mode(B@seed@first_val) <- "logical"
 expect_fixed_error(.Call(beachtest:::cxx_test_logical_access, B, 1L), "data type in HDF5 file is not integer")
 
+}
+
 # Integer checks
 
 b <- matrix(1, 10, 10)
 expect_fixed_error(.Call(beachtest:::cxx_test_integer_access, b, 1L), "matrix should be integer")
+
+if (beachmat:::use.hdf5) { 
 
 test.mat <- matrix(150, 15, 10)
 B <- as(test.mat, "HDF5Array")
@@ -185,3 +199,4 @@ expect_fixed_error(.Call(beachtest:::cxx_test_integer_access, B, 1L), "'first_va
 storage.mode(B@seed@first_val) <- "integer"
 expect_fixed_error(.Call(beachtest:::cxx_test_integer_access, B, 1L), "data type in HDF5 file is not integer")
 
+}

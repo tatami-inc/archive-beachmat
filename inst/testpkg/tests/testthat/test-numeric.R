@@ -105,6 +105,8 @@ expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
 
 # Testing HDF5 matrices:
 
+if (beachmat:::use.hdf5) { 
+
 set.seed(34567)
 library(HDF5Array)
 
@@ -126,3 +128,4 @@ expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
 
+}
