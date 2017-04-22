@@ -33,8 +33,7 @@ setClass("SingleCellExperiment",
     }
     
     # Checking version.
-    v <- objectVersion(object)
-    if (!grepl("^0\\.98", v)) {
+    if (objectVersion(object) < "0.98.2") {
         msg <- c(msg, "object is out of date, update with 'updateSCE(object)'")
     }
    
