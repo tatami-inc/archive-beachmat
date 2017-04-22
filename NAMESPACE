@@ -1,2 +1,18 @@
 importFrom(Rcpp, sourceCpp)
-export(pkgconfig)
+
+import(SummarizedExperiment, methods, S4Vectors, BiocGenerics)
+
+export(pkgconfig,
+    SingleCellExperiment)
+
+exportClasses(SingleCellExperiment)
+
+exportMethods(reducedDims, 
+    "reducedDims<-", 
+    reducedDim, 
+    "reducedDim<-",
+    isSpike, 
+    "isSpike<-",
+    spikeNames,
+    objectVersion
+)
