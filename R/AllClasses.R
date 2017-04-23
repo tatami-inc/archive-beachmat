@@ -31,6 +31,14 @@ setClass("SingleCellExperiment",
     if (nrow(int_colData(object))!=ncol(object)) { 
         msg <- c(msg, "'nrow' of internal 'colData' not equal to 'ncol(object)'")
     }
+
+    # Checking spike-in names are present and accounted for.
+    spike.fields <- .get_spike_field(spikeNames(object), check=FALSE)
+    lost.spikes <- ! spike.fields %in% colnames(int_elementMetadata(object))
+    if (any(lost.spikes)) { 
+        was.lost <- spikeNames(object)[lost.spikes][1]
+        msg <- c(msg, sprintf("no field specifying rows belonging to spike-in set '%s'", was.lost))
+    }
     
     # Checking version.
     if (objectVersion(object) < "0.98.2") {

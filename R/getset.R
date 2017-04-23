@@ -53,15 +53,6 @@ setReplaceMethod("int_metadata", "SingleCellExperiment", function(x, value) {
 
 # Size factor getter/setter functions.
 
-.get_sf_field <- function(type) { 
-    search <- "size_factor"
-    if (!is.null(type)) { 
-        if (length(type)!=1L) { stop("'type' must be a character vector of length 1") }
-        search <- paste0(search, "_", type) 
-    }
-    return(search)
-}
-
 setMethod("sizeFactors", "SingleCellExperiment", function(object, type=NULL) {
     field <- .get_sf_field(type)          
     return(int_colData(object)[[field]])
@@ -77,33 +68,34 @@ setReplaceMethod("sizeFactors", "SingleCellExperiment", function(object, type=NU
 
 # Spike-in getter/setter functions.
 
-.spike_field <- "is_spike"
-
-.get_spike_field <- function(x, type) {
-    if (length(type)!=1L) { stop("'type' must be a character vector of length 1") }
+setMethod("isSpike", c("SingleCellExperiment", "character"), function(x, type) {
+    field <- .get_spike_field(type)
     if (!type %in% spikeNames(x)) { 
         stop(sprintf("spike-in set '%s' does not exist", type))
     }
-    paste0(.spike_field, "_", type) 
-}
-
-setMethod("isSpike", c("SingleCellExperiment", "character"), function(x, type) {
-    field <- .get_spike_field(x, type)
     return(int_elementMetadata(x)[[field]])    
 })
 
-setMethod("isSpike", c("SingleCellExperiment", "missing"), function(x, type) {
-    return(int_elementMetadata(x)[[.spike_field]])    
-})
+for (sig in c("missing", "NULL")){ 
+    setMethod("isSpike", c("SingleCellExperiment", sig), function(x, type) {
+        return(int_elementMetadata(x)[[.spike_field]])    
+    })
+}
 
 setReplaceMethod("isSpike", c("SingleCellExperiment", "character"), function(x, type, ..., value) {
     md <- int_metadata(x)
-    md$spike_names <- union(md$spike_names, type)
-    int_metadata(x) <- md
-    
-    field <- .get_spike_field(x, type)
     rd <- int_elementMetadata(x)
-    rd[[field]] <- value
+    field <- .get_spike_field(type)
+
+    if (is.null(value)) {
+        md$spike_names <- setdiff(md$spike_names, type) # Deleting if NULL.
+        rd[[field]] <- NULL
+    } else {
+        md$spike_names <- union(md$spike_names, type)
+        rd[[field]] <- .convert_subset(value, .length=nrow(x), .names=rownames(x))
+    }
+    
+    int_metadata(x) <- md
     int_elementMetadata(x) <- rd # need this, otherwise 'isSpike' below won't be up-to-date.
     
     # Updating is_spike.
