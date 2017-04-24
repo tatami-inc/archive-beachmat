@@ -15,7 +15,7 @@
     if (check && length(type)!=1L) { 
         stop("'type' must be a character vector of length 1") 
     }
-    paste0(.spike_field, "_", type) 
+    sprintf("%s_%s", .spike_field, type) 
 }
 
 .convert_subset_spike <- function(subset, .length, .names) {

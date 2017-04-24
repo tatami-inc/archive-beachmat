@@ -51,7 +51,7 @@ dm <- matrix(runif(ncells*2), ncells)
 reducedDim(sce, "DM") <- dm
 expect_equivalent(dm, reducedDim(sce, "DM"))
 reducedDim(sce, "DM") <- NULL 
-expect_equivalent(reducedDims(sce), SimpleList())
+expect_equivalent(reducedDims(sce), combined)
 reducedDims(sce) <- SimpleList(DM=dm)
 expect_equivalent(SimpleList(DM=dm), reducedDims(sce))
 
