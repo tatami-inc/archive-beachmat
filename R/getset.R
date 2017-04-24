@@ -92,7 +92,7 @@ setReplaceMethod("isSpike", c("SingleCellExperiment", "character"), function(x, 
         rd[[field]] <- NULL
     } else {
         md$spike_names <- union(md$spike_names, type)
-        rd[[field]] <- .convert_subset(value, .length=nrow(x), .names=rownames(x))
+        rd[[field]] <- .convert_subset_spike(value, .length=nrow(x), .names=rownames(x))
     }
     
     int_metadata(x) <- md

@@ -34,6 +34,7 @@ expect_identical(spikeNames(sce), c("SIRV", "ERCC")) # flipped
 rownames(sce) <- paste0("Gene", seq_len(nrow(v))) # character setting
 isSpike(sce, "SIRV") <- rownames(sce)[chosen]
 expect_identical(which(isSpike(sce, "SIRV")), sort(chosen))
+rownames(sce) <- NULL
 
 beachmat:::int_metadata(sce)$spike_names <- c("random")
 expect_error(validObject(sce), "no field specifying rows belonging to spike-in set 'random'", fixed=TRUE)

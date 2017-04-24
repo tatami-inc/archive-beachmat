@@ -90,88 +90,41 @@ SingleCellExperiment <- function(..., reducedDims=SimpleList()) {
 # Define subsetting methods.
 
 setMethod("[", c("SingleCellExperiment", "ANY", "ANY"), function(x, i, j, ..., drop=TRUE) {
-    if (!missing(i)) { 
-        int_elementMetadata(x) <- int_elementMetadata(x)[i,] 
+    if (!missing(i)) {
+        ii <- .convert_subset_index(i, rownames(x))
+        int_elementMetadata(x) <- int_elementMetadata(x)[ii,,drop=FALSE] 
     }
 
     if (!missing(j)) { 
-        int_colData(x) <- int_colData(x)[j,]
+        jj <- .convert_subset_index(j, colnames(x)) 
+        int_colData(x) <- int_colData(x)[jj,,drop=FALSE]
         rd <- reducedDims(x)
-        for (mode in seq_along(rd)) { rd[[mode]] <- rd[[mode]][j,,drop=FALSE] }
+        for (mode in seq_along(rd)) { rd[[mode]] <- rd[[mode]][jj,,drop=FALSE] }
         int_reducedDims(x) <- rd
     }
 
     callNextMethod()
 })
 
-.standardize_DataFrames <- function(...) {
-    all.d <- list(...)
-    all.fields <- Reduce(union, lapply(all.d, colnames))
-
-    for (d in seq_along(all.d)) { 
-        cur.d <- all.d[[d]]
-        missing.fields <- setdiff(all.fields, colnames(cur.d))
-        for (val in missing.fields) { cur.d[[val]] <- NA }
-        all.d[[d]] <- cur.d[,all.fields,drop=FALSE]
-    }
-
-    return(all.d)
-}
-
-.standardize_reducedDims <- function(...) {
-    args <- list(...)
-    all.ncells <- lapply(args, ncol)
-    all.rd <- lapply(args, reducedDims)
-    all.modes <- Reduce(union, lapply(all.rd, names))
-
-    for (m in all.modes) {
-        all.dims <- integer(length(all.rd))
-        for (d in seq_along(all.rd)) {
-            current <- all.rd[[d]][[m]]
-            if (!is.null(current)) { 
-                all.dims[d] <- ncol(current)
-            } else {
-                all.dims[d] <- NA_integer_
-            }
-        }
-        
-        # Checking consistency of dimensions between objects.
-        ok <- !is.na(all.dims)
-        udim <- unique(all.dims[ok])
-        if (length(udim)!=1) {
-            stop(sprintf("dimensions of '%s' are not consistent between objects"), m)
-        }
-        
-        # Filling in dimensions, for those who are missing them.
-        for (d in which(!ok)) { 
-            all.rd[[d]][[m]] <- matrix(NA_real_, all.ncells[[d]], udim) 
-        }
-    }
-   
-    # Standardizing the order.
-    for (d in seq_along(all.rd)) {
-        all.rd[[d]] <- all.rd[[d]][all.modes]
-    }
-    return(all.rd)
-}
-
 setMethod("[<-", c("SingleCellExperiment", "ANY", "ANY", "SingleCellExperiment"), function(x, i, j, ..., value) {
     if (!missing(i)) { 
+        ii <- .convert_subset_index(i, rownames(x))
         sout <- .standardize_DataFrames(first=int_elementMetadata(x), last=int_elementMetadata(value))
-        sout$first[i,] <- sout$last
+        sout$first[ii,] <- sout$last
         int_elementMetadata(x) <- sout$first
     }
 
     if (!missing(j)) {
+        jj <- .convert_subset_index(j, colnames(x)) 
         sout <- .standardize_DataFrames(first=int_colData(x), last=int_colData(value))
-        sout$first[j,] <- sout$last
+        sout$first[jj,] <- sout$last
         int_colData(x) <- sout$first
 
         rdout <- .standardize_reducedDims(first=x, last=value)
         rd <- rdout$first
         rdv <- rdout$last
         for (mode in seq_along(rd)) { 
-            rd[[mode]][j,] <- rdv[[mode]] 
+            rd[[mode]][jj,] <- rdv[[mode]] 
         }
         int_reducedDims(x) <- rd
     }
