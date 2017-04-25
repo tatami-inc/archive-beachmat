@@ -1,10 +1,15 @@
 \name{Spike-in methods}
+
 \alias{isSpike}
 \alias{isSpike,SingleCellExperiment,character-method}
 \alias{isSpike,SingleCellExperiment,missing-method}
 \alias{isSpike,SingleCellExperiment,NULL-method}
+
+\alias{isSpike<-}
 \alias{isSpike<-,SingleCellExperiment,character-method}
+
 \alias{spikeNames}
+\alias{spikeNames,SingleCellExperiment-method}
 
 \title{Spike-in methods}
 \description{Gets or sets the rows corresponding to spike-in transcripts.}

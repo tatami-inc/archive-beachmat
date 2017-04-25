@@ -2,7 +2,6 @@
 
 \alias{rbind,SingleCellExperiment-method}
 \alias{cbind,SingleCellExperiment-method}
-\alias{c,SingleCellExperiment-method}
 
 \title{Combining methods}
 
@@ -11,16 +10,14 @@ Methods to combine SingleCellExperiment objects.
 }
 
 \usage{
-\S4method{rbind}{GInteractions}(..., deparse.level=1)
+\S4method{rbind}{SingleCellExperiment}(..., deparse.level=1)
 
-\S4method{cbind}{InteractionSet}(..., deparse.level=1)
+\S4method{cbind}{SingleCellExperiment}(..., deparse.level=1)
 }
 
 \arguments{
-\item{x}{A SingleCellExperiment object.}
-\item{...}{More SingleCellExperiment objects.}
+\item{...}{One or more SingleCellExperiment objects.}
 \item{deparse.level}{An integer scalar; see \code{?base::\link[base]{cbind}} for a description of this argument.}
-\item{recursive}{An integer scalar, ignored.}
 }
 
 \details{

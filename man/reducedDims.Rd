@@ -1,22 +1,27 @@
 \name{Reduced dimensions}
+
 \alias{reducedDim}
-\alias{reducedDims}
 \alias{reducedDim,SingleCellExperiment,character-method}
+
+\alias{reducedDims}
 \alias{reducedDims,SingleCellExperiment-method}
+
+\alias{reducedDim<-}
 \alias{reducedDim<-,SingleCellExperiment,character-method}
+\alias{reducedDims<-}
 \alias{reducedDims<-,SingleCellExperiment-method}
 
 \title{Reduced dimensions methods}
-\alias{Methods to get or set the dimensionality reduction results.}
+\description{Methods to get or set the dimensionality reduction results.}
 
 \usage{
 \S4method{reducedDim}{SingleCellExperiment,character}(x, type)
 
 \S4method{reducedDim}{SingleCellExperiment,character}(x, type) <- value
 
-\S4method{reducedDims}{SingleCellExperiment,character}(x)
+\S4method{reducedDims}{SingleCellExperiment}(x)
 
-\S4method{reducedDims}{SingleCellExperiment,character}(x) <- value
+\S4method{reducedDims}{SingleCellExperiment}(x) <- value
 }
 
 \arguments{

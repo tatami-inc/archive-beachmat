@@ -1,5 +1,7 @@
 importFrom(Rcpp, sourceCpp)
 
+importFrom(utils, packageVersion)
+
 import(SummarizedExperiment, methods, S4Vectors, BiocGenerics)
 
 export(pkgconfig,

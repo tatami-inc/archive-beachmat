@@ -23,7 +23,7 @@ Methods to subset SingleCellExperiment objects.
 \arguments{
 \item{x}{A SingleCellExperiment object.}
 \item{i, j}{A vector of logical or integer subscripts, indicating the rows and columns to be subsetted for \code{i} and \code{j}, respectively.}
-\item{...}{Extra arguments to be passed to \code{\link{[,SummarizedExperiment,ANY,ANY-method}}.}
+\item{...}{Extra arguments to be passed to \code{\link{[,SummarizedExperiment-method}}.}
 \item{drop}{A logical scalar that is ignored.}
 \item{value}{A SingleCellExperiment object with number of rows equal to length of \code{i} (or that of \code{x}, if \code{i} is not specified).
 The number of columns must be equal to the length of \code{j} (or number of columns in \code{x}, if \code{j} is not specified).
