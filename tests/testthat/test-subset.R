@@ -79,6 +79,7 @@ expect_error(sce[,"A"], "index out of bounds: A")
 # Subset replacement by row.
 sce.alt <- sce
 rownames(sce.alt) <- paste0(rownames(sce), "x")
+beachmat:::int_metadata(sce.alt)$whee <- 1
 
 scex <- sce.alt
 to <- 1:10
@@ -89,6 +90,7 @@ expect_identical(assay(scex)[to,,drop=FALSE], assay(sce)[from,,drop=FALSE])
 expect_equivalent(assay(scex)[-to,,drop=FALSE], assay(sce)[-to,,drop=FALSE])
 expect_identical(isSpike(scex)[to], isSpike(sce)[from])
 expect_identical(isSpike(scex)[-to], isSpike(sce)[-to])
+expect_identical(beachmat:::int_metadata(scex), beachmat:::int_metadata(sce))
 expect_identical(sizeFactors(scex), sizeFactors(sce))
 
 scex2 <- sce.alt
@@ -117,6 +119,7 @@ expect_identical(assay(scex)[,to,drop=FALSE], assay(sce)[,from,drop=FALSE])
 expect_equivalent(assay(scex)[,-to,drop=FALSE], assay(sce)[,-to,drop=FALSE])
 expect_identical(sizeFactors(scex)[to], sizeFactors(sce)[from])
 expect_identical(sizeFactors(scex)[-to], sizeFactors(sce)[-to])
+expect_identical(beachmat:::int_metadata(scex), beachmat:::int_metadata(sce))
 expect_identical(isSpike(scex), isSpike(sce))
 
 scex2 <- sce.alt
@@ -134,4 +137,15 @@ to <- colnames(scex2)[1:10]
 from <- colnames(sce)[21:30]
 scex2[,to] <- sce[,from]
 expect_equal(scex, scex2)
+
+# Subset replacement, all.
+sce.alt <- sce
+rownames(sce.alt) <- paste0(rownames(sce), "x")
+colnames(sce.alt) <- paste0(colnames(sce), "x")
+beachmat:::int_metadata(sce.alt)$whee <- 1
+
+scex <- sce.alt
+scex[] <- sce
+expect_equal(scex, sce)
+
 

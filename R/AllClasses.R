@@ -107,6 +107,12 @@ setMethod("[", c("SingleCellExperiment", "ANY", "ANY"), function(x, i, j, ..., d
 })
 
 setMethod("[<-", c("SingleCellExperiment", "ANY", "ANY", "SingleCellExperiment"), function(x, i, j, ..., value) {
+    if (missing(i) && missing(j)) {
+        int_elementMetadata(x) <- int_elementMetadata(value)
+        int_colData(x) <- int_colData(value)
+        int_reducedDims(x) <- reducedDims(value)
+    }        
+
     if (!missing(i)) { 
         ii <- .convert_subset_index(i, rownames(x))
         sout <- .standardize_DataFrames(first=int_elementMetadata(x), last=int_elementMetadata(value))
@@ -129,6 +135,7 @@ setMethod("[<-", c("SingleCellExperiment", "ANY", "ANY", "SingleCellExperiment")
         int_reducedDims(x) <- rd
     }
 
+    int_metadata(x) <- int_metadata(value)
     callNextMethod()
 })
 
@@ -166,9 +173,5 @@ setMethod("rbind", "SingleCellExperiment", function(..., deparse.level=1) {
     ans <- args[[1]]
     new("SingleCellExperiment", base, int_colData=int_colData(ans), int_elementMetadata=new.row.data,
         int_metadata=int_metadata(ans), reducedDims=reducedDims(ans))
-})
-
-setMethod("c", "SingleCellExperiment", function(x, ..., recursive = FALSE) {
-    rbind(x, ...)
 })
 
