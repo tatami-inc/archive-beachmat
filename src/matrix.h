@@ -71,13 +71,6 @@ protected:
     void fill_dims(const Rcpp::RObject&);
 };
 
-/* If any class has pointers as data members, the data that each pointer points to should be 
- * contained within a RObject that is also a member of the class. This ensures that the 
- * data is PROTECTed for the lifetime of the class instance. Otherwise, one could imagine 
- * a situation where the class is instantiated from an RObject; the RObject is destroyed;
- * and garbage collection occurs, such that the pointers in the class instance are invalid.
- */
-
 /* Simple matrix */
 
 template<typename T>
@@ -208,3 +201,22 @@ protected:
 #include "template_methods.h"
 
 #endif
+
+/* Comments (Aaron Lun):
+ *
+ * (i) If any class has pointers to SEXP data, the data that each pointer points to should be contained within a RObject that is also a member of the class. 
+ * This ensures that the data is PROTECTed for the lifetime of the class instance. 
+ * Otherwise, one could imagine a situation where the class is instantiated from an RObject; the RObject is destroyed; and garbage collection occurs.
+ * This would invalidate the pointers in the class instance.
+ *
+ * (ii) We return pointers rather than std::vectors to maintain high performance for column-major access of base matrices.
+ * For these matrices, we can currently return a pointer for direct access to the column-wise arrays.
+ * In contrast, if we were forced to return std::vectors, we would have to do a copy to transfer data ownership to the std::vector container.
+ * Note that this choice does require some care by the user, as existing pointers are not guaranteed to be valid after another get_* call.
+ *
+ * (iii) It would be nice to allow the fill_* methods to take any random access iterator; however, virtual methods cannot be templated.
+ * We could add a template argument to the entire class, but this would only allow it to take either a random access iterator or a pointer (not both).
+ * Overloading seems like the best approach, but would be a pain if I have to rewrite every fill_* method.
+ */
+
+
