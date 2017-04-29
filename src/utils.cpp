@@ -29,4 +29,12 @@ void throw_custom_error(const std::string& left, const std::string& classname, c
     throw std::runtime_error(err.str().c_str());
 }
 
+std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& expected) {
+    std::string mattype=get_class(mat);
+    if (!mat.isS4() || mattype.empty() || mattype.substr(1)!=expected) {
+        throw_custom_error("matrix should be a *", expected, " object");
+    }
+    return mattype;
+}
+
 

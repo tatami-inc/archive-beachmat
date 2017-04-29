@@ -11,6 +11,8 @@ Rcpp::RObject get_safe_slot(const Rcpp::RObject&, const std::string&);
 
 void throw_custom_error(const std::string&, const std::string&, const std::string&);
 
+std::string check_Matrix_class (const Rcpp::RObject&, const std::string&);
+
 template <class T>
 struct index_orderer { 
     index_orderer(const T* host) : ptr(host) {}

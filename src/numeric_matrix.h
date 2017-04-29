@@ -1,119 +1,54 @@
+#ifndef NUMERIC_MATRIX_H
+#define NUMERIC_MATRIX_H
+
 #include "matrix.h"
 
 /* Virtual base class for numeric matrices. */
 
-class numeric_matrix : public virtual any_matrix {
-public:
-    numeric_matrix();
-    virtual ~numeric_matrix();
-
-    /* Returns values in the specified row.
-     *
-     * @param r The row index (0-based).
-     * @return An array of doubles of length 'ncol', containing all values in row 'r'.
-     */
-    virtual const double* get_row(int)=0;
-
-    /* Returns values in the specified column.
-     *
-     * @param c The column index (0-based).
-     * @return An array of doubles of length 'nrow', containing all values in column 'c'.
-     */
-    virtual const double* get_col(int)=0;
-
-    /* Returns values in the specified cell.
-     *
-     * @param r The row index (0-based).
-     * @param c The column index (0-based).
-     * @return Double, the value of the matrix at row 'r' and column 'c'.
-     */
-    virtual double get(int, int)=0;
-};
+typedef any_matrix<double> numeric_matrix;
 
 /* Simple numeric matrix */
 
-class simple_numeric_matrix : public simple_matrix, public numeric_matrix {
+class simple_numeric_matrix : public simple_matrix<double> {
 public:    
     simple_numeric_matrix(const Rcpp::RObject&);
     ~simple_numeric_matrix();
-
-    const double* get_row(int);
-    const double* get_col(int);
-    double get(int, int);
-
-protected:
-    const double* simple_ptr;
-    std::vector<double> row_data;
-    double * row_ptr;
 };
 
 /* dgeMatrix */
 
-class dense_numeric_matrix : public dense_matrix, public numeric_matrix {
+class dense_numeric_matrix : public dense_matrix<double> {
 public:    
     dense_numeric_matrix(const Rcpp::RObject&);
     ~dense_numeric_matrix();
-
-    const double* get_row(int);
-    const double* get_col(int);
-    double get(int, int);
-
-protected:
-    const double* dense_ptr;
-    std::vector<double> row_data;
-    double * row_ptr;
 };
 
 /* dgCMatrix */
 
-class Csparse_numeric_matrix : public Csparse_matrix, public numeric_matrix {
-public:    
+extern constexpr double numeric_zero=0;
+
+class Csparse_numeric_matrix : public Csparse_matrix<double, numeric_zero> {
+public: 
     Csparse_numeric_matrix(const Rcpp::RObject&);
     ~Csparse_numeric_matrix();
-
-    const double * get_row(int);
-    const double * get_col(int);
-    double get(int, int);
-    
-protected:
-    const double * xptr;
-    std::vector<double> row_data, col_data;
-    double* row_ptr, * col_ptr;
 };
 
 /* dspMatrix */
 
-class Psymm_numeric_matrix : public Psymm_matrix, public numeric_matrix {
+class Psymm_numeric_matrix : public Psymm_matrix<double> {
 public:    
     Psymm_numeric_matrix(const Rcpp::RObject&);
     ~Psymm_numeric_matrix();
-
-    const double * get_row(int);
-    const double * get_col(int);
-    double get(int, int);
-    
-protected:
-    const double * xptr;
-    std::vector<double> out_data;
-    double* out_ptr;
 };
 
 /* HDF5Matrix */
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_numeric_matrix : public HDF5_matrix, public numeric_matrix {
+class HDF5_numeric_matrix : public HDF5_matrix<double, H5::PredType::NATIVE_DOUBLE> { 
 public:
     HDF5_numeric_matrix(const Rcpp::RObject&);
     ~HDF5_numeric_matrix();
-
-    const double * get_row(int);
-    const double * get_col(int);
-    double get(int, int);
-
-protected:
-    std::vector<double> row_data, col_data;
-    double* row_ptr, * col_ptr;
 };
 
 #endif
@@ -122,4 +57,4 @@ protected:
 
 std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
 
-
+#endif

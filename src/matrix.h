@@ -8,8 +8,9 @@
 #include "H5Cpp.h"
 #endif
 
-/* A virtual base matrix class */
+/* Virtual base class for matrices. */
 
+template<typename T>
 class any_matrix {
 public:
     any_matrix();
@@ -27,90 +28,167 @@ public:
      */
     int get_ncol() const;
 
+    /* Returns values in the specified row.
+     *
+     * @param r The row index (0-based).
+     * @return An array of T's of length 'ncol', containing all values in row 'r'.
+     */
+    virtual const T* get_row(int)=0;
+
+    /* Fills an array with values in the specified row.
+     *
+     * @param r The row index (0-based).
+     * @param out An array of T's of length 'nrow'.
+     * @return Void. 'out' is filled with values in row 'r'.
+     */
+    virtual void fill_row(int, T*)=0;
+
+    /* Returns values in the specified column.
+     *
+     * @param c The column index (0-based).
+     * @return An array of T's of length 'nrow', containing all values in column 'c'.
+     */
+    virtual const T* get_col(int)=0;
+
+    /* Fills an array with values in the specified column.
+     *
+     * @param c The column index (0-based).
+     * @param out An array of T's of length 'nrow'.
+     * @return Void. 'out' is filled with values in column 'c'.
+     */
+    virtual void fill_col(int, T*)=0;
+
+    /* Returns values in the specified cell.
+     *
+     * @param r The row index (0-based).
+     * @param c The column index (0-based).
+     * @return T, the value of the matrix at row 'r' and column 'c'.
+     */
+    virtual T get(int, int)=0;
+
 protected:
     int nrow, ncol;
     void fill_dims(const Rcpp::RObject&);
 };
 
-/* A virtual simple matrix class */
+/* If any class has pointers as data members, the data that each pointer points to should be 
+ * contained within a RObject that is also a member of the class. This ensures that the 
+ * data is PROTECTed for the lifetime of the class instance. Otherwise, one could imagine 
+ * a situation where the class is instantiated from an RObject; the RObject is destroyed;
+ * and garbage collection occurs, such that the pointers in the class instance are invalid.
+ */
 
-class simple_matrix : public virtual any_matrix {
-public:   
-   simple_matrix(const Rcpp::RObject&);
-   ~simple_matrix();
+/* Simple matrix */
+
+template<typename T>
+class simple_matrix : public any_matrix<T> {
+public:    
+    simple_matrix(const Rcpp::RObject&);
+    ~simple_matrix();
+
+    const T* get_row(int);
+    const T* get_col(int);
+    T get(int, int);
+
+    void fill_row(int, T*);
+    void fill_col(int, T*);
 protected:
     Rcpp::RObject obj;
     int get_index(int, int) const;   
 
-    template<typename T>
-    const T* get_row_inside(const T*, int, T*);
+    const T* simple_ptr;
+    std::vector<T> row_data;
+    T* row_ptr;
+};
 
-    template<typename T>
-    const T* get_col_inside(const T*, int);
-}; 
+/* dense Matrix */
 
-/* A virtual *geMatrix class */
-
-class dense_matrix : public virtual any_matrix {
-public:
+template<typename T>
+class dense_matrix : public any_matrix<T> {
+public:    
     dense_matrix(const Rcpp::RObject&);
     ~dense_matrix();
+
+    const T* get_row(int);
+    const T* get_col(int);
+    T get(int, int);
+
+    void fill_row(int, T*);
+    void fill_col(int, T*);
 protected:
     Rcpp::RObject obj_x;
     int get_index(int, int) const;   
 
-    template<typename T>
-    const T* get_row_inside(const T*, int, T*);
-
-    template<typename T>
-    const T* get_col_inside(const T*, int);
+    const T* dense_ptr;
+    std::vector<T> row_data;
+    T * row_ptr;
 };
 
-/* A virtual *gCMatrix class */
+/* Column-major sparse Matrix */
 
-class Csparse_matrix : public virtual any_matrix {
-public:
+template<typename T, const T& Z>
+class Csparse_matrix : public any_matrix<T> {
+public:    
     Csparse_matrix(const Rcpp::RObject&);
-    ~Csparse_matrix();   
+    ~Csparse_matrix();
+
+    const T * get_row(int);
+    const T * get_col(int);
+    T get(int, int);
+
+    void fill_row(int, T*);
+    void fill_col(int, T*);
 protected:
     Rcpp::RObject obj_i, obj_p, obj_x;
     const int * iptr, * pptr;
     int nx;
     int get_index(int, int) const;   
 
-    template<typename T>
-    const T* get_row_inside(const T*, int, T*, T);
-
-    template<typename T>
-    const T* get_col_inside(const T*, int, T*, T);
-
-    template<typename T>
-    T get_one_inside(const T*, int, int, T);
+    const T * xptr;
+    std::vector<T> row_data, col_data;
+    T* row_ptr, * col_ptr;
 };
 
-/* A virtual *spMatrix class */
+/* symmetric packed Matrix */
 
-class Psymm_matrix : public virtual any_matrix {
-public:
-    Psymm_matrix(SEXP);
+template<typename T>
+class Psymm_matrix : public any_matrix<T> {
+public:    
+    Psymm_matrix(const Rcpp::RObject&);
     ~Psymm_matrix();
+
+    const T * get_row(int);
+    const T * get_col(int);
+    T get(int, int);
+    
+    void fill_row(int, T*);
+    void fill_col(int, T*);
 protected:
     Rcpp::RObject obj_x;
     bool upper;
     int get_index(int, int) const;
     
-    template<typename T>
-    const T* get_rowcol_inside (const T*, int, T*);
+    const T * xptr;
+    std::vector<T> out_data;
+    T* out_ptr;
 };
 
-/* A virtual HDF5Matrix class */
+/* HDF5Matrix */
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_matrix : public virtual any_matrix {
+template<typename T, const H5::PredType& H>
+class HDF5_matrix : public any_matrix<T> {
 public:
     HDF5_matrix(const Rcpp::RObject&);
     ~HDF5_matrix();
+
+    const T * get_row(int);
+    const T * get_col(int);
+    T get(int, int);
+
+    void fill_row(int, T*);
+    void fill_col(int, T*);
 protected:
     H5::H5File hfile;
     H5::DataSet hdata;
@@ -121,14 +199,8 @@ protected:
     void set_col(int);
     void set_one(int, int);
 
-    template<typename T>
-    const T* get_row_inside(int, T*, const H5::PredType&);
-
-    template<typename T>
-    const T* get_col_inside(int, T*, const H5::PredType&);
-
-    template<typename T>
-    T get_one_inside(int r, int c, const H5::PredType&);
+    std::vector<T> row_data, col_data;
+    T * row_ptr, * col_ptr;
 };
 
 #endif
