@@ -117,7 +117,7 @@ protected:
     T * row_ptr;
 };
 
-/* Column-major sparse Matrix */
+/* column-major sparse Matrix */
 
 template<typename T, const T& Z>
 class Csparse_matrix : public any_matrix<T> {
@@ -135,7 +135,11 @@ protected:
     Rcpp::RObject obj_i, obj_p, obj_x;
     const int * iptr, * pptr;
     int nx;
-    int get_index(int, int) const;   
+    int get_index(int, int) const;
+
+    int currow;
+    std::vector<int> indices;
+    void update_indices(int);
 
     const T * xptr;
     std::vector<T> row_data, col_data;

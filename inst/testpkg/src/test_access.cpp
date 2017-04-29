@@ -82,6 +82,34 @@ SEXP test_logical_access (SEXP in, SEXP mode) {
     END_RCPP
 }
 
+SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
+    BEGIN_RCPP
+    auto ptr=create_numeric_matrix(in);
+    const int& nrows=ptr->get_nrow();
+    const int& ncols=ptr->get_ncol();
+    
+    Rcpp::IntegerVector ro(rorder);
+    if (ro.size()!=nrows) {
+        throw std::runtime_error("'rorder' should have length equal to number of rows");
+    }
+
+    Rcpp::NumericMatrix output(nrows, ncols);
+    double* optr=REAL(output.get__());
+        
+    // By row, in the specified order.
+    const double* rptr;
+    for (int r=0; r<nrows; ++r) {
+        int currow=ro[r]-1;
+        rptr=ptr->get_row(currow);
+        for (int c=0; c<ncols; ++c) {
+            optr[c * nrows + r]=rptr[c];
+        }
+    }
+
+    return output;
+    END_RCPP
+}
+
 }
 
 #include "R_ext/Rdynload.h"
@@ -94,6 +122,7 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_numeric_access, 2),
     REGISTER(test_integer_access, 2),
     REGISTER(test_logical_access, 2),
+    REGISTER(test_sparse_numeric, 2),
     {NULL, NULL, 0}
 };
 

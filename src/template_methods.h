@@ -138,7 +138,7 @@ T dense_matrix<T>::get(int r, int c) {
 /* Methods for a Csparse matrix. */
 
 template <typename T, const T& Z>
-Csparse_matrix<T, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : iptr(NULL), pptr(NULL), nx(0), xptr(NULL) {
+Csparse_matrix<T, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : iptr(NULL), pptr(NULL), nx(0), xptr(NULL), currow(0) {
     std::string ctype=check_Matrix_class(incoming, "gCMatrix");  
     this->fill_dims(get_safe_slot(incoming, "Dim"));
     const int& NC=this->ncol;
@@ -160,23 +160,22 @@ Csparse_matrix<T, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : iptr(NULL)
     if (pptr[NC]!=nx) { throw_custom_error("last element of 'p' in a ", ctype, " object should be 'length(x)'"); }
 
     // Checking all the indices.
-    int px, ix;
-    for (px=1; px<=(NC); ++px) {
-        if (pptr[px] < pptr[px-1]) { throw_custom_error("'p' slot in a ", ctype, " object should be sorted"); }
-    }
-    for (px=0; px<(NC); ++px) { 
-        for (ix=pptr[px]+1; ix<pptr[px+1]; ++ix) {
+    indices.resize(NC);
+    for (int px=0; px<NC; ++px) {
+        if (pptr[px] > pptr[px+1]) { throw_custom_error("'p' slot in a ", ctype, " object should be sorted"); }
+        indices[px]=pptr[px]; 
+        for (int ix=pptr[px]+1; ix<pptr[px+1]; ++ix) {
             if (iptr[ix]<iptr[ix-1]) { 
                 throw_custom_error("'i' in each column of a ", ctype, " object should be sorted");
             }
         }
     }
-    for (ix=0; ix<nx; ++ix) {
+    for (int ix=0; ix<nx; ++ix) {
         if (iptr[ix]<0 || iptr[ix]>=NR) {
             throw_custom_error("'i' slot in a ", ctype, " object should contain elements in [0, nrow)");
         }
     }
-   
+
     // Resizing the output vectors.
     row_data.resize(NC);
     col_data.resize(NR);
@@ -200,11 +199,54 @@ int Csparse_matrix<T, Z>::get_index(int r, int c) const {
 }
 
 template <typename T, const T& Z>
+void Csparse_matrix<T, Z>::update_indices(int r) {
+    /* entry of 'indices' for each column should contain the index of the first
+     * element with row number not less than 'r'. If no such element exists, it
+     * will contain the index of the first element of the next column.
+     */
+    if (r==currow) { 
+        return; 
+    } else if (r==currow+1) {
+        for (int c=0; c<(this->ncol); ++c) {
+            int& curdex=indices[c];
+            if (curdex!=pptr[c+1] && iptr[curdex] < r) { 
+                ++curdex;
+            }
+        }
+    } else if (r==currow-1) {
+        for (int c=0; c<(this->ncol); ++c) {
+            int& curdex=indices[c];
+            if (curdex!=pptr[c] && iptr[curdex-1] >= r) { 
+                --curdex;
+            }
+        }
+    } else if (r > currow) {
+        const int* iend, * loc;
+        for (int c=0; c<(this->ncol); ++c) {
+            int& curdex=indices[c];
+            loc=std::lower_bound(iptr + curdex, iptr + pptr[c+1], r);
+            curdex=loc - iptr;
+        }
+    } else { 
+        const int* iend, * loc;
+        for (int c=0; c<(this->ncol); ++c) {
+            int& curdex=indices[c];
+            loc=std::lower_bound(iptr + pptr[c], iptr + curdex, r);
+            curdex=loc - iptr;
+        }
+    }
+    currow=r;
+    return;
+}
+
+template <typename T, const T& Z>
 void Csparse_matrix<T, Z>::fill_row(int r, T* out) {
+    update_indices(r);
     const int& NC=this->ncol;
     std::fill(out, out+NC, Z);
-    for (int col=0; col<NC; ++col) {  
-        if (pptr[col]!=pptr[col+1]) { out[col]=get(r, col); } 
+    for (int col=0; col<NC; ++col) { 
+        const int& idex=indices[col];
+        if (idex!=pptr[col+1] && iptr[idex]==r) { out[col]=xptr[idex]; }
     } 
     return;  
 }
