@@ -9,37 +9,20 @@ typedef any_matrix<double> numeric_matrix;
 
 /* Simple numeric matrix */
 
-class simple_numeric_matrix : public simple_matrix<double> {
-public:    
-    simple_numeric_matrix(const Rcpp::RObject&);
-    ~simple_numeric_matrix();
-};
+typedef simple_matrix<double, Rcpp::NumericVector> simple_numeric_matrix;
 
 /* dgeMatrix */
 
-class dense_numeric_matrix : public dense_matrix<double> {
-public:    
-    dense_numeric_matrix(const Rcpp::RObject&);
-    ~dense_numeric_matrix();
-};
+typedef dense_matrix<double, Rcpp::NumericVector> dense_numeric_matrix;
 
 /* dgCMatrix */
 
 extern constexpr double numeric_zero=0;
-
-class Csparse_numeric_matrix : public Csparse_matrix<double, numeric_zero> {
-public: 
-    Csparse_numeric_matrix(const Rcpp::RObject&);
-    ~Csparse_numeric_matrix();
-};
+typedef Csparse_matrix<double, Rcpp::NumericVector, numeric_zero> Csparse_numeric_matrix;
 
 /* dspMatrix */
 
-class Psymm_numeric_matrix : public Psymm_matrix<double> {
-public:    
-    Psymm_numeric_matrix(const Rcpp::RObject&);
-    ~Psymm_numeric_matrix();
-};
+typedef Psymm_matrix<double, Rcpp::NumericVector> Psymm_numeric_matrix;
 
 /* HDF5Matrix */
 

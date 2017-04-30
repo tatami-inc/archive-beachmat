@@ -1,17 +1,5 @@
 #include "integer_matrix.h"
 
-/* Methods for a simple matrix. */
-
-simple_integer_matrix::simple_integer_matrix(const Rcpp::RObject& incoming) : simple_matrix<int>(incoming) {
-    if (obj.sexp_type()!=INTSXP) { 
-        throw std::runtime_error("matrix should be integer");
-    }
-    simple_ptr=INTEGER(obj.get__());
-    return;
-}
-
-simple_integer_matrix::~simple_integer_matrix () {}
-
 /* Methods for a HDF5 matrix. */
 
 #ifdef BEACHMAT_USE_HDF5

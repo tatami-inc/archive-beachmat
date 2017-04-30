@@ -9,37 +9,20 @@ typedef any_matrix<int> logical_matrix;
 
 /* Simple logical matrix */
 
-class simple_logical_matrix : public simple_matrix<int> {
-public:    
-    simple_logical_matrix(const Rcpp::RObject&);
-    ~simple_logical_matrix();
-};
+typedef simple_matrix<int, Rcpp::LogicalVector> simple_logical_matrix;
 
 /* lgeMatrix */
 
-class dense_logical_matrix : public dense_matrix<int> {
-public:    
-    dense_logical_matrix(const Rcpp::RObject&);
-    ~dense_logical_matrix();
-};
+typedef dense_matrix<int, Rcpp::LogicalVector> dense_logical_matrix;
 
 /* lgCMatrix */
 
 extern constexpr int logical_false=0;
-
-class Csparse_logical_matrix : public Csparse_matrix<int, logical_false> {
-public:    
-    Csparse_logical_matrix(const Rcpp::RObject&);
-    ~Csparse_logical_matrix();
-};
+typedef Csparse_matrix<int, Rcpp::LogicalVector, logical_false> Csparse_logical_matrix;
 
 /* lspMatrix */
 
-class Psymm_logical_matrix : public Psymm_matrix<int> {
-public:    
-    Psymm_logical_matrix(const Rcpp::RObject&);
-    ~Psymm_logical_matrix();
-};
+typedef Psymm_matrix<int, Rcpp::LogicalVector> Psymm_logical_matrix;
 
 /* HDF5Matrix */
 

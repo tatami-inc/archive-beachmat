@@ -13,18 +13,18 @@ void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
 
     if (Mode==1) { 
         // By column.
-        const T* cptr=NULL;
+        std::vector<T> target(nrows);
         for (int c=0; c<ncols; ++c) {
-            cptr=ptr->get_col(c);
-            std::copy(cptr, cptr+nrows, optr+c*nrows);
+            ptr->fill_col(c, target.data());
+            std::copy(target.begin(), target.end(), optr+c*nrows);
         }
     } else if (Mode==2) { 
         // By row.
-        const T* rptr=NULL;
+        std::vector<T> target(ncols);
         for (int r=0; r<nrows; ++r) {
-            rptr=ptr->get_row(r);
+            ptr->fill_row(r, target.data());
             for (int c=0; c<ncols; ++c) {
-                optr[c * nrows + r]=rptr[c];
+                optr[c * nrows + r]=target[c];
             }
         }
     } else if (Mode==3) {
@@ -97,12 +97,12 @@ SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
     double* optr=REAL(output.get__());
         
     // By row, in the specified order.
-    const double* rptr;
+    std::vector<double> target(ncols);
     for (int r=0; r<nrows; ++r) {
         int currow=ro[r]-1;
-        rptr=ptr->get_row(currow);
+        ptr->fill_row(currow, target.data());
         for (int c=0; c<ncols; ++c) {
-            optr[c * nrows + r]=rptr[c];
+            optr[c * nrows + r]=target[c];
         }
     }
 

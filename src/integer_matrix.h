@@ -9,11 +9,7 @@ typedef any_matrix<int> integer_matrix;
 
 /* Simple integer matrix */
 
-class simple_integer_matrix : public simple_matrix<int> {
-public:    
-    simple_integer_matrix(const Rcpp::RObject&);
-    ~simple_integer_matrix();
-};
+typedef simple_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
 
 /* HDF5Matrix */
 

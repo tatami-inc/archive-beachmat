@@ -29,6 +29,29 @@ void throw_custom_error(const std::string& left, const std::string& classname, c
     throw std::runtime_error(err.str().c_str());
 }
 
+std::string translate_type(int sexp_type) {
+    std::string should_be;
+    switch(sexp_type) {
+        case REALSXP:
+            should_be="double-precision";
+            break;
+        case INTSXP:
+            should_be="integer";
+            break;
+        case LGLSXP:
+            should_be="logical";
+            break;
+        case STRSXP:
+            should_be="character";
+            break;
+        default:
+            std::stringstream err;
+            err << "unsupported sexptype '" << sexp_type << "'";
+            throw std::runtime_error(err.str().c_str());
+    }
+    return should_be;
+}
+
 std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& expected) {
     std::string mattype=get_class(mat);
     if (!mat.isS4() || mattype.empty() || mattype.substr(1)!=expected) {

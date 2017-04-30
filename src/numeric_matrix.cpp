@@ -1,51 +1,5 @@
 #include "numeric_matrix.h"
 
-/* Methods for a simple matrix. */
-
-simple_numeric_matrix::simple_numeric_matrix(const Rcpp::RObject& incoming) : simple_matrix<double>(incoming) {
-    if (obj.sexp_type()!=REALSXP) { 
-        throw std::runtime_error("matrix should be double-precision");
-    }
-    simple_ptr=REAL(obj.get__());
-    return;
-}
-
-simple_numeric_matrix::~simple_numeric_matrix () {}
-
-/* Methods for a dense Matrix. */
-
-const double* check_Matrix_numeric(const Rcpp::RObject& x, const Rcpp::RObject& incoming) { 
-    if (x.sexp_type()!=REALSXP) { 
-        throw_custom_error("'x' slot in a ", get_class(incoming), " object should be double-precision"); 
-    }
-    return REAL(x.get__());
-}
-
-dense_numeric_matrix::dense_numeric_matrix(const Rcpp::RObject& incoming) : dense_matrix<double>(incoming) {  
-    dense_ptr=check_Matrix_numeric(obj_x, incoming);
-    return;
-}
-
-dense_numeric_matrix::~dense_numeric_matrix() {}
-
-/* Methods for a Csparse matrix. */
-
-Csparse_numeric_matrix::Csparse_numeric_matrix(const Rcpp::RObject& incoming) : Csparse_matrix<double, numeric_zero>(incoming) {
-    xptr=check_Matrix_numeric(obj_x, incoming);
-    return;
-}
-
-Csparse_numeric_matrix::~Csparse_numeric_matrix () {}
-
-/* Methods for a Psymm matrix. */
-
-Psymm_numeric_matrix::Psymm_numeric_matrix(const Rcpp::RObject& incoming) : Psymm_matrix<double>(incoming) {
-    xptr=check_Matrix_numeric(obj_x, incoming);
-    return;
-}
-
-Psymm_numeric_matrix::~Psymm_numeric_matrix () {}
-
 /* Methods for a HDF5 matrix. */
 
 #ifdef BEACHMAT_USE_HDF5
