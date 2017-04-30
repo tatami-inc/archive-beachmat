@@ -34,7 +34,7 @@ public:
      * @param out An array of T's of length 'nrow'.
      * @return Void. 'out' is filled with values in row 'r'.
      */
-    virtual void fill_row(int, T*)=0;
+    virtual void get_row(int, T*)=0;
 
     /* Fills an array with values in the specified column.
      *
@@ -42,7 +42,7 @@ public:
      * @param out An array of T's of length 'nrow'.
      * @return Void. 'out' is filled with values in column 'c'.
      */
-    virtual void fill_col(int, T*)=0;
+    virtual void get_col(int, T*)=0;
 
     /* Returns values in the specified cell.
      *
@@ -66,8 +66,8 @@ public:
     ~simple_matrix();
 
     T get(int, int);
-    void fill_row(int, T*);
-    void fill_col(int, T*);
+    void get_row(int, T*);
+    void get_col(int, T*);
 protected:
     int get_index(int, int) const;   
     V mat;
@@ -82,8 +82,8 @@ public:
     ~dense_matrix();
 
     T get(int, int);
-    void fill_row(int, T*);
-    void fill_col(int, T*);
+    void get_row(int, T*);
+    void get_col(int, T*);
 protected:
     int get_index(int, int) const;   
     V x;
@@ -98,8 +98,8 @@ public:
     ~Csparse_matrix();
 
     T get(int, int);
-    void fill_row(int, T*);
-    void fill_col(int, T*);
+    void get_row(int, T*);
+    void get_col(int, T*);
 protected:
     Rcpp::IntegerVector i, p;
     V x;
@@ -120,8 +120,8 @@ public:
     ~Psymm_matrix();
 
     T get(int, int);   
-    void fill_row(int, T*);
-    void fill_col(int, T*);
+    void get_row(int, T*);
+    void get_col(int, T*);
 protected:
     V x;
     bool upper;
@@ -139,8 +139,8 @@ public:
     ~HDF5_matrix();
 
     T get(int, int);
-    void fill_row(int, T*);
-    void fill_col(int, T*);
+    void get_row(int, T*);
+    void get_col(int, T*);
 protected:
     H5::H5File hfile;
     H5::DataSet hdata;

@@ -15,14 +15,14 @@ void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
         // By column.
         std::vector<T> target(nrows);
         for (int c=0; c<ncols; ++c) {
-            ptr->fill_col(c, target.data());
+            ptr->get_col(c, target.data());
             std::copy(target.begin(), target.end(), optr+c*nrows);
         }
     } else if (Mode==2) { 
         // By row.
         std::vector<T> target(ncols);
         for (int r=0; r<nrows; ++r) {
-            ptr->fill_row(r, target.data());
+            ptr->get_row(r, target.data());
             for (int c=0; c<ncols; ++c) {
                 optr[c * nrows + r]=target[c];
             }
@@ -100,7 +100,7 @@ SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
     std::vector<double> target(ncols);
     for (int r=0; r<nrows; ++r) {
         int currow=ro[r]-1;
-        ptr->fill_row(currow, target.data());
+        ptr->get_row(currow, target.data());
         for (int c=0; c<ncols; ++c) {
             optr[c * nrows + r]=target[c];
         }

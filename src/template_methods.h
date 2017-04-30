@@ -54,7 +54,7 @@ template<typename T, class V>
 int simple_matrix<T, V>::get_index(int r, int c) const { return r + c*(this->nrow); }
 
 template<typename T, class V>
-void simple_matrix<T, V>::fill_row(int r, T* out) {
+void simple_matrix<T, V>::get_row(int r, T* out) {
     auto src=mat.begin()+r;
     const int& NR=this->nrow;
     const int& NC=this->ncol;
@@ -63,7 +63,7 @@ void simple_matrix<T, V>::fill_row(int r, T* out) {
 }
 
 template<typename T, class V>
-void simple_matrix<T, V>::fill_col(int c, T* out) {
+void simple_matrix<T, V>::get_col(int c, T* out) {
     const int& NR=this->nrow;
     auto src=mat.begin() + c*NR;
     std::copy(src, src+NR, out);
@@ -103,7 +103,7 @@ template <typename T, class V>
 int dense_matrix<T, V>::get_index(int r, int c) const { return r + c*(this->nrow); }
 
 template <typename T, class V>
-void dense_matrix<T, V>::fill_row(int r, T* out) {
+void dense_matrix<T, V>::get_row(int r, T* out) {
     auto src=x.begin()+r;
     const int& NR=this->nrow;
     const int& NC=this->ncol;
@@ -112,7 +112,7 @@ void dense_matrix<T, V>::fill_row(int r, T* out) {
 }
 
 template <typename T, class V>
-void dense_matrix<T, V>::fill_col(int c, T* out) {
+void dense_matrix<T, V>::get_col(int c, T* out) {
     const int& NR=this->nrow;
     auto src=x.begin() + c*NR;
     std::copy(src, src+NR, out);
@@ -249,7 +249,7 @@ void Csparse_matrix<T, V, Z>::update_indices(int r) {
 }
 
 template <typename T, class V, const T& Z>
-void Csparse_matrix<T, V, Z>::fill_row(int r, T* out) {
+void Csparse_matrix<T, V, Z>::get_row(int r, T* out) {
     update_indices(r);
     const int& NC=this->ncol;
     std::fill(out, out+NC, Z);
@@ -264,7 +264,7 @@ void Csparse_matrix<T, V, Z>::fill_row(int r, T* out) {
 }
 
 template <typename T, class V, const T& Z>
-void Csparse_matrix<T, V, Z>::fill_col(int c, T* out) {
+void Csparse_matrix<T, V, Z>::get_col(int c, T* out) {
     std::fill(out, out+(this->nrow), Z); 
     const int& pstart=p[c];
     auto iIt=i.begin()+pstart, 
@@ -344,7 +344,7 @@ int Psymm_matrix<T, V>::get_index(int r, int c) const {
 }
 
 template <typename T, class V>
-void Psymm_matrix<T, V>::fill_col (int c, T* out) {
+void Psymm_matrix<T, V>::get_col (int c, T* out) {
     auto xIt=x.begin();
     if (upper) {
         xIt+=(c*(c+1))/2;
@@ -366,8 +366,8 @@ void Psymm_matrix<T, V>::fill_col (int c, T* out) {
 }
 
 template <typename T, class V>
-void Psymm_matrix<T, V>::fill_row (int r, T* out) {
-    fill_col(r, out);
+void Psymm_matrix<T, V>::get_row (int r, T* out) {
+    get_col(r, out);
     return;
 }
 
@@ -470,7 +470,7 @@ template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
 HDF5_matrix<T, RTYPE, HTC, HPT>::~HDF5_matrix() {}
 
 template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, RTYPE, HTC, HPT>::fill_row(int r, T* out) { 
+void HDF5_matrix<T, RTYPE, HTC, HPT>::get_row(int r, T* out) { 
     offset[0] = 0;
     offset[1] = r;
     hspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
@@ -479,7 +479,7 @@ void HDF5_matrix<T, RTYPE, HTC, HPT>::fill_row(int r, T* out) {
 } 
 
 template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, RTYPE, HTC, HPT>::fill_col(int c, T* out) { 
+void HDF5_matrix<T, RTYPE, HTC, HPT>::get_col(int c, T* out) { 
     offset[0] = c;
     offset[1] = 0;
     hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
