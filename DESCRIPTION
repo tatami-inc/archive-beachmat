@@ -1,15 +1,16 @@
 Package: beachmat
-Version: 0.98.2
-Date: 2017-04-22
-Title: A Relaxing C++ API for all Matrix Types
+Version: 0.98.3
+Date: 2017-04-30
+Title: Using Bioconductor for Each Matrix Type
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: R (>= 3.4), SummarizedExperiment
 Imports: Rcpp, S4Vectors, methods, BiocGenerics, utils
 Suggests: Matrix, testthat, BiocStyle, knitr
-biocViews: DataRepresentation, DataImport
-Description: Provides a consistent C++ class interface
-    for a variety of commonly used matrix types.    
+biocViews: DataRepresentation, DataImport, Infrastructure, SingleCell
+Description: Provides a consistent C++ class interface for a variety of
+    commonly used matrix types, including sparse and HDF5-backed matrices. 
+    Also defines a S4 class for storing data from single-cell experiments.
 License: GPL-3
 NeedsCompilation: yes
 VignetteBuilder: knitr

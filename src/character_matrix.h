@@ -32,6 +32,8 @@ protected:
     std::vector<char> row_buf, col_buf;
 };
 
+// H5::PredType::C_S1 not really necessary here, as we override get* methods anyway, so it never actually gets used. 
+
 #endif
 
 /* Dispatcher */
