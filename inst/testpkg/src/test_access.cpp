@@ -1,9 +1,10 @@
 #include "numeric_matrix.h"
 #include "integer_matrix.h"
 #include "logical_matrix.h"
+#include "character_matrix.h"
 
-template <typename M, typename T> 
-void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
+template <typename T, typename M, class O>  // Only T needs to be specified, rest is automatically deduced.
+void fill_up (M& ptr, O& output, const Rcpp::IntegerVector& mode) {
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
@@ -16,7 +17,9 @@ void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
         std::vector<T> target(nrows);
         for (int c=0; c<ncols; ++c) {
             ptr->get_col(c, target.data());
-            std::copy(target.begin(), target.end(), optr+c*nrows);
+            for (int r=0; r<nrows; ++r) {
+                output[c * nrows + r]=target[r];
+            }
         }
     } else if (Mode==2) { 
         // By row.
@@ -24,14 +27,14 @@ void fill_up (M& ptr, T* optr, const Rcpp::IntegerVector& mode) {
         for (int r=0; r<nrows; ++r) {
             ptr->get_row(r, target.data());
             for (int c=0; c<ncols; ++c) {
-                optr[c * nrows + r]=target[c];
+                output[c * nrows + r]=target[c];
             }
         }
     } else if (Mode==3) {
         // By cell.
         for (int c=0; c<ncols; ++c){ 
             for (int r=0; r<nrows; ++r) {
-                optr[c * nrows + r]=ptr->get(r, c);
+                output[c * nrows + r]=ptr->get(r, c);
             }
         }
     } else { 
@@ -50,8 +53,7 @@ SEXP test_numeric_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::NumericMatrix output(nrows, ncols);
-    double* optr=REAL(output.get__());
-    fill_up(ptr, optr, mode);
+    fill_up<double>(ptr, output, mode);
     return output;
     END_RCPP
 }
@@ -63,8 +65,7 @@ SEXP test_integer_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::IntegerMatrix output(nrows, ncols);
-    int* optr=INTEGER(output.get__());
-    fill_up(ptr, optr, mode);
+    fill_up<int>(ptr, output, mode);
     return output;
     END_RCPP
 }
@@ -76,8 +77,19 @@ SEXP test_logical_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::LogicalMatrix output(nrows, ncols);
-    int* optr=INTEGER(output.get__());
-    fill_up(ptr, optr, mode);
+    fill_up<int>(ptr, output, mode);
+    return output;
+    END_RCPP
+}
+
+SEXP test_character_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=create_character_matrix(in);
+    const int& nrows=ptr->get_nrow();
+    const int& ncols=ptr->get_ncol();
+
+    Rcpp::CharacterMatrix output(nrows, ncols);
+    fill_up<const char*>(ptr, output, mode);
     return output;
     END_RCPP
 }
@@ -122,6 +134,7 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_numeric_access, 2),
     REGISTER(test_integer_access, 2),
     REGISTER(test_logical_access, 2),
+    REGISTER(test_character_access, 2),
     REGISTER(test_sparse_numeric, 2),
     {NULL, NULL, 0}
 };
