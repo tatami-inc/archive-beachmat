@@ -1,5 +1,7 @@
 #include "integer_matrix.h"
 
+namespace beachmat {
+
 /* Dispatch definition */
 
 std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incoming) { 
@@ -19,3 +21,4 @@ std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incom
     return std::shared_ptr<integer_matrix>(new simple_integer_matrix(incoming));
 }
 
+}

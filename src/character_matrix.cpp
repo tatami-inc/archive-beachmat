@@ -1,6 +1,8 @@
 #include "character_matrix.h"
 #include "hdf5.h"
 
+namespace beachmat {
+
 /* Methods for the HDF5 character matrix. */
 
 HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HDF5_matrix<const char*, STRSXP, H5T_STRING, H5::PredType::C_S1>(incoming), 
@@ -76,3 +78,4 @@ std::shared_ptr<character_matrix> create_character_matrix(const Rcpp::RObject& i
     return std::shared_ptr<character_matrix>(new simple_character_matrix(incoming));
 }
 
+}

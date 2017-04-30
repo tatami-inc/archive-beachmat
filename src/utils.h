@@ -3,6 +3,8 @@
 
 #include "beachmat.h"
 
+namespace beachmat { 
+
 std::string make_to_string(const Rcpp::RObject&);
 
 std::string get_class(const Rcpp::RObject&);
@@ -21,5 +23,7 @@ struct index_orderer {
     bool operator()(const int& l, const int& r) const { return ptr[l] < ptr[r]; }
     const T* ptr;
 };
+
+}
 
 #endif

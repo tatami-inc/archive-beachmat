@@ -3,6 +3,8 @@
 
 #include "matrix.h"
 
+namespace beachmat { 
+
 /* Virtual base class for character matrices. */
 
 typedef any_matrix<const char*> character_matrix;
@@ -28,7 +30,6 @@ public:
 protected:
     H5::StrType str_type;
     std::vector<char> row_buf, col_buf;
-    std::vector<char*> by_row, by_col;
 };
 
 #endif
@@ -36,5 +37,7 @@ protected:
 /* Dispatcher */
 
 std::shared_ptr<character_matrix> create_character_matrix(const Rcpp::RObject&);
+
+}
 
 #endif

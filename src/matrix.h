@@ -8,6 +8,8 @@
 #include "H5Cpp.h"
 #endif
 
+namespace beachmat { 
+
 /* Virtual base class for matrices. */
 
 template<typename T>
@@ -151,6 +153,8 @@ protected:
 #endif
 
 #include "template_methods.h"
+
+}
 
 #endif
 

@@ -1,17 +1,18 @@
 PKG_LIBS=@PKG_LIBS@
 
-.PHONY: all libbeach
+.PHONY: all libbeachmat
 
-all: libbeach $(SHLIB)
+all: libbeachmat $(SHLIB)
 
-libbeach: $(SHLIB)
-	mkdir -p "${R_PACKAGE_DIR}/include"
-	cp *.h "${R_PACKAGE_DIR}/include"
-	ar rc libbeach.a *.o
-	mv $< libbeach.so
-	cp libbeach.* "${R_PACKAGE_DIR}/libs"
+libbeachmat: $(SHLIB)
+	mkdir -p "${R_PACKAGE_DIR}/include/beachmat"
+	cp *.h "${R_PACKAGE_DIR}/include/beachmat"
+	ar rc libbeachmat.a *.o
+	mv $< libbeachmat.so
+	mkdir -p "${R_PACKAGE_DIR}/lib"
+	mv libbeachmat.* "${R_PACKAGE_DIR}/lib"
 
 shlib-clean: clean
 
 clean: 
-	rm -f libbeach.*
+	rm -f libbeachmat.*

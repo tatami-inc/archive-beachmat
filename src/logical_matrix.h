@@ -3,6 +3,8 @@
 
 #include "matrix.h"
 
+namespace beachmat {
+
 /* Virtual base class for logical matrices. */
 
 typedef any_matrix<int> logical_matrix;
@@ -35,5 +37,7 @@ typedef HDF5_matrix<int, LGLSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32> HDF5_l
 /* Dispatcher */
 
 std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject&);
+
+}
 
 #endif

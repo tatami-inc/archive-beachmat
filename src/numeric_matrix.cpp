@@ -1,5 +1,7 @@
 #include "numeric_matrix.h"
 
+namespace beachmat { 
+
 /* Dispatch definition */
 
 std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incoming) { 
@@ -25,4 +27,4 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
     return std::shared_ptr<numeric_matrix>(new simple_numeric_matrix(incoming));
 }
 
-
+}

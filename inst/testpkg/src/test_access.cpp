@@ -1,7 +1,7 @@
-#include "numeric_matrix.h"
-#include "integer_matrix.h"
-#include "logical_matrix.h"
-#include "character_matrix.h"
+#include "beachmat/numeric_matrix.h"
+#include "beachmat/integer_matrix.h"
+#include "beachmat/logical_matrix.h"
+#include "beachmat/character_matrix.h"
 
 template <typename T, typename M, class O>  // Only T needs to be specified, rest is automatically deduced.
 void fill_up (M& ptr, O& output, const Rcpp::IntegerVector& mode) {
@@ -48,7 +48,7 @@ extern "C" {
 
 SEXP test_numeric_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    auto ptr=create_numeric_matrix(in);
+    auto ptr=beachmat::create_numeric_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
 
@@ -60,7 +60,7 @@ SEXP test_numeric_access (SEXP in, SEXP mode) {
 
 SEXP test_integer_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    auto ptr=create_integer_matrix(in);
+    auto ptr=beachmat::create_integer_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
 
@@ -72,7 +72,7 @@ SEXP test_integer_access (SEXP in, SEXP mode) {
 
 SEXP test_logical_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    auto ptr=create_logical_matrix(in);
+    auto ptr=beachmat::create_logical_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
 
@@ -84,7 +84,7 @@ SEXP test_logical_access (SEXP in, SEXP mode) {
 
 SEXP test_character_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    auto ptr=create_character_matrix(in);
+    auto ptr=beachmat::create_character_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
 
@@ -96,7 +96,7 @@ SEXP test_character_access (SEXP in, SEXP mode) {
 
 SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
     BEGIN_RCPP
-    auto ptr=create_numeric_matrix(in);
+    auto ptr=beachmat::create_numeric_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
     

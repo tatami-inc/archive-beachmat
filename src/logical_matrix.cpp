@@ -1,5 +1,7 @@
 #include "logical_matrix.h"
 
+namespace beachmat {
+
 /* Dispatch definition */
 
 std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incoming) { 
@@ -25,4 +27,4 @@ std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
     return std::shared_ptr<logical_matrix>(new simple_logical_matrix(incoming));
 }
 
-
+}

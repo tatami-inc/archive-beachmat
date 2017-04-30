@@ -3,6 +3,8 @@
 
 #include "matrix.h"
 
+namespace beachmat {
+
 /* Virtual base class for integer matrices. */
 
 typedef any_matrix<int> integer_matrix;
@@ -22,5 +24,7 @@ typedef HDF5_matrix<int, INTSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32> HDF5_i
 /* Dispatcher */
 
 std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);
+
+}
 
 #endif

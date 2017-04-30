@@ -3,6 +3,8 @@
 
 #include "matrix.h"
 
+namespace beachmat { 
+
 /* Virtual base class for numeric matrices. */
 
 typedef any_matrix<double> numeric_matrix;
@@ -35,5 +37,7 @@ typedef HDF5_matrix<double, REALSXP, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE> HDF
 /* Dispatcher */
 
 std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
+
+}
 
 #endif

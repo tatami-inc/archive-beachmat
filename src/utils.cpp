@@ -1,5 +1,7 @@
 #include "utils.h"
 
+namespace beachmat {
+
 std::string make_to_string(const Rcpp::RObject& str) {
     if (str.sexp_type()!=STRSXP || Rf_length(str.get__())!=1) {
         throw std::runtime_error("input RObject should contain a single string");
@@ -60,4 +62,5 @@ std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& exp
     return mattype;
 }
 
+}
 
