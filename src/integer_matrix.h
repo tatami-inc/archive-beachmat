@@ -15,11 +15,7 @@ typedef simple_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_integer_matrix : public HDF5_matrix<int, H5::PredType::NATIVE_INT32> {
-public:
-    HDF5_integer_matrix(const Rcpp::RObject&);
-    ~HDF5_integer_matrix();
-};
+typedef HDF5_matrix<int, INTSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32> HDF5_integer_matrix;
 
 #endif
 

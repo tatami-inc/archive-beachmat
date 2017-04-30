@@ -380,8 +380,8 @@ T Psymm_matrix<T, V>::get(int r, int c) {
 
 #ifdef BEACHMAT_USE_HDF5
 
-template<typename T, const H5::PredType& H>
-HDF5_matrix<T, H>::HDF5_matrix(const Rcpp::RObject& incoming) {
+template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
+HDF5_matrix<T, RTYPE, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) {
     std::string ctype=get_class(incoming);
     if (!incoming.isS4() || ctype!="HDF5Matrix") {
         throw std::runtime_error("matrix should be a HDF5Matrix object");
@@ -391,6 +391,14 @@ HDF5_matrix<T, H>::HDF5_matrix(const Rcpp::RObject& incoming) {
     std::string stype=get_class(h5_seed);
     if (!h5_seed.isS4() || stype!="HDF5ArraySeed") {
         throw_custom_error("'seed' slot in a ", ctype, " object should be a HDF5ArraySeed object");
+    }
+
+    // Checking first value.
+    const Rcpp::RObject& firstval=get_safe_slot(h5_seed, "first_val");
+    if (firstval.sexp_type()!=RTYPE) { 
+        std::stringstream err;
+        err << "'first_val' slot in a " << get_class(h5_seed) << " object should be " << translate_type(RTYPE);
+        throw std::runtime_error(err.str().c_str());
     }
 
     // Checking dimensions.
@@ -418,10 +426,20 @@ HDF5_matrix<T, H>::HDF5_matrix(const Rcpp::RObject& incoming) {
     // Setting up the HDF5 accessors.
     hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);
     hdata = hfile.openDataSet(H5std_string(dataset));
+    if (hdata.getTypeClass()!=HTC) {
+        std::stringstream err;
+        err << "data type in HDF5 file is not ";
+        if (HTC==H5T_FLOAT) { err << "floating-point"; }
+        else if (HTC==H5T_INTEGER) { err << "integer"; }
+        else { err << "the specified type"; }
+        throw std::runtime_error(err.str().c_str());
+    }
+
     hspace = hdata.getSpace();
     if (hspace.getSimpleExtentNdims()!=2) {
         throw std::runtime_error("data in HDF5 file is not a two-dimensional array");
     }
+
     hsize_t dims_out[2];
     hspace.getSimpleExtentDims(dims_out, NULL);
     if (dims_out[1]!=NR || dims_out[0]!=NC) { 
@@ -448,34 +466,34 @@ HDF5_matrix<T, H>::HDF5_matrix(const Rcpp::RObject& incoming) {
     return;
 }
 
-template<typename T, const H5::PredType& H>
-HDF5_matrix<T, H>::~HDF5_matrix() {}
+template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
+HDF5_matrix<T, RTYPE, HTC, HPT>::~HDF5_matrix() {}
 
-template<typename T, const H5::PredType& H>
-void HDF5_matrix<T, H>::fill_row(int r, T* out) { 
+template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
+void HDF5_matrix<T, RTYPE, HTC, HPT>::fill_row(int r, T* out) { 
     offset[0] = 0;
     offset[1] = r;
     hspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
-    hdata.read(out, H, rowspace, hspace);
+    hdata.read(out, HPT, rowspace, hspace);
     return;
 } 
 
-template<typename T, const H5::PredType& H>
-void HDF5_matrix<T, H>::fill_col(int c, T* out) { 
+template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
+void HDF5_matrix<T, RTYPE, HTC, HPT>::fill_col(int c, T* out) { 
     offset[0] = c;
     offset[1] = 0;
     hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
-    hdata.read(out, H, colspace, hspace);
+    hdata.read(out, HPT, colspace, hspace);
     return;
 }
  
-template<typename T, const H5::PredType& H>
-T HDF5_matrix<T, H>::get(int r, int c) { 
+template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
+T HDF5_matrix<T, RTYPE, HTC, HPT>::get(int r, int c) { 
     offset[0]=c;
     offset[1]=r;
     hspace.selectHyperslab( H5S_SELECT_SET, one_out, offset);
     T out;
-    hdata.read(&out, H, onespace, hspace);
+    hdata.read(&out, HPT, onespace, hspace);
     return out;
 }
 

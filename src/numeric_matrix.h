@@ -28,11 +28,7 @@ typedef Psymm_matrix<double, Rcpp::NumericVector> Psymm_numeric_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_numeric_matrix : public HDF5_matrix<double, H5::PredType::NATIVE_DOUBLE> { 
-public:
-    HDF5_numeric_matrix(const Rcpp::RObject&);
-    ~HDF5_numeric_matrix();
-};
+typedef HDF5_matrix<double, REALSXP, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE> HDF5_numeric_matrix; 
 
 #endif
 

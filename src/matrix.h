@@ -132,7 +132,7 @@ protected:
 
 #ifdef BEACHMAT_USE_HDF5
 
-template<typename T, const H5::PredType& H>
+template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
 class HDF5_matrix : public any_matrix<T> {
 public:
     HDF5_matrix(const Rcpp::RObject&);
