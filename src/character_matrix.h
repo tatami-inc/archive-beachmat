@@ -7,11 +7,11 @@ namespace beachmat {
 
 /* Virtual base class for character matrices. */
 
-typedef any_matrix<const char*> character_matrix;
+typedef any_matrix<Rcpp::String> character_matrix;
 
 /* Simple character matrix */
 
-typedef simple_matrix<const char*, Rcpp::StringVector> simple_character_matrix;
+typedef simple_matrix<Rcpp::String, Rcpp::StringVector> simple_character_matrix;
 
 // This is possible as Rcpp will automatically convert CHARSXP to const char* via CHAR().
 
@@ -19,14 +19,14 @@ typedef simple_matrix<const char*, Rcpp::StringVector> simple_character_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_character_matrix : public HDF5_matrix<const char*, STRSXP, H5T_STRING, H5::PredType::C_S1> {
+class HDF5_character_matrix : public HDF5_matrix<Rcpp::String, STRSXP, H5T_STRING, H5::PredType::C_S1> {
 public:    
     HDF5_character_matrix(const Rcpp::RObject&);
     ~HDF5_character_matrix();
 
-    const char* get(int, int);
-    void get_row(int, const char**);
-    void get_col(int, const char**);
+    Rcpp::String get(int, int);
+    void get_row(int, Rcpp::String*);
+    void get_col(int, Rcpp::String*);
 protected:
     H5::StrType str_type;
     std::vector<char> row_buf, col_buf;

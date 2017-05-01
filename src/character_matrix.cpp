@@ -5,7 +5,7 @@ namespace beachmat {
 
 /* Methods for the HDF5 character matrix. */
 
-HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HDF5_matrix<const char*, STRSXP, H5T_STRING, H5::PredType::C_S1>(incoming), 
+HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HDF5_matrix<Rcpp::String, STRSXP, H5T_STRING, H5::PredType::C_S1>(incoming), 
     str_type(hdata) {
     if (!H5Tis_variable_str(str_type.getId())) {
         auto bufsize=str_type.getSize(); 
@@ -18,7 +18,7 @@ HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HD
 
 HDF5_character_matrix::~HDF5_character_matrix() {}
 
-void HDF5_character_matrix::get_row(int r, const char** out) { 
+void HDF5_character_matrix::get_row(int r, Rcpp::String* out) { 
     offset[0] = 0;
     offset[1] = r;
     hspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
@@ -29,12 +29,12 @@ void HDF5_character_matrix::get_row(int r, const char** out) {
 
     const int& NC=this->ncol;
     for (int c=0; c<NC; ++c, ref+=bufsize) {
-        out[c]=CHAR(Rf_mkChar(ref)); // store in R's cache.
+        out[c]=ref; 
     }
     return;
 } 
 
-void HDF5_character_matrix::get_col(int c, const char** out) { 
+void HDF5_character_matrix::get_col(int c, Rcpp::String* out) { 
     offset[0] = c;
     offset[1] = 0;
     hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
@@ -45,18 +45,18 @@ void HDF5_character_matrix::get_col(int c, const char** out) {
 
     const int& NR=this->nrow;
     for (int r=0; r<NR; ++r, ref+=bufsize) {
-        out[r]=CHAR(Rf_mkChar(ref)); // store in R's cache.
+        out[r]=ref; 
     }
     return;
 }
  
-const char* HDF5_character_matrix::get(int r, int c) { 
+Rcpp::String HDF5_character_matrix::get(int r, int c) { 
     offset[0]=c;
     offset[1]=r;
     hspace.selectHyperslab(H5S_SELECT_SET, one_out, offset);
     std::string out;
     hdata.read(out, str_type, onespace, hspace);
-    return CHAR(Rf_mkChar(out.c_str())); // store in R's cache.
+    return out;
 }
 
 /* Dispatch definition */

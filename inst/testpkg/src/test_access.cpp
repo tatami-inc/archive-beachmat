@@ -89,7 +89,7 @@ SEXP test_character_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::CharacterMatrix output(nrows, ncols);
-    fill_up<const char*>(ptr, output, mode);
+    fill_up<Rcpp::String>(ptr, output, mode);
     return output;
     END_RCPP
 }

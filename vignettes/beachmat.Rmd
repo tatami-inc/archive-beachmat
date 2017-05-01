@@ -161,21 +161,22 @@ std::shared_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matr
 ```
 
 For integer and logical matrices, `X` should be an integer pointer to an array of the specified length, and `get` will return an integer.
-For character matrices, `X` should point to an array of `const char*`, and `get` will return a `const char*`.
+For character matrices, `X` should point to an array of `Rcpp::String` objects, and `get` will return a `Rcpp::String`.
 
 ## Important developer information 
 
 - R stores dimensions as integers rather than as `size_t`, so we simply follow suit when calling `get_nrow` and `get_ncol`.
-- In theory, greater efficiency could be obtained for `get_col` on base matrices by returning a pointer to the column, rather than copying the data.
+- In theory, greater efficiency could be obtained when calling `get_col` on column-major base matrices.
+Specifically, a pointer to the column could be directly returned rather than copying the data to an array.
 However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
-This would be dangerous as the internal storage will change upon repeated calls to `get_col`.
-Filling a user-supplied array is clearer as it is obvious that the array will change when `get_col` is called again.
+This would be dangerous as the values in the internal storage will change upon repeated calls to `get_col`.
+Filling a user-supplied array is more intuitive as it is obvious that the array will change when `get_col` is called again.
 - The API is not thread-safe for multiple shared pointers to the same `*_matrix` instance.
 Some intermediate constructs are cached for greater efficiency, and simultaneous calls will cause race conditions. 
 Users should instead create new shared pointers for use in each thread, by copying the `*_matrix` instance via `std::make_shared`.
 This is fairly cheap as the matrix data itself is not copied.
-- When using character matrices, each `const char*` value points to a null-terminated C-style string stored in R's global cache.
-These can be assumed to persist for the lifetime of the `character_matrix` object, but should _not_ be modified.
+- When accessing `character_matrix` data, the `Rcpp::String` class is used as it provides a convenient wrapper around the underlying `CHARSXP`. 
+This ensures that the string is stored in R's global cache and is suitably protected against garbage collection. 
 - The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
 See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
