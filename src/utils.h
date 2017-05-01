@@ -17,12 +17,7 @@ std::string translate_type(int);
 
 std::string check_Matrix_class (const Rcpp::RObject&, const std::string&);
 
-template <class T>
-struct index_orderer { 
-    index_orderer(const T* host) : ptr(host) {}
-    bool operator()(const int& l, const int& r) const { return ptr[l] < ptr[r]; }
-    const T* ptr;
-};
+int find_sexp_type (const Rcpp::RObject&);
 
 }
 
