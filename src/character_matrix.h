@@ -7,7 +7,7 @@ namespace beachmat {
 
 /* Virtual base class for character matrices. */
 
-typedef any_matrix<Rcpp::String> character_matrix;
+typedef any_matrix<Rcpp::String, Rcpp::StringVector> character_matrix;
 
 /* Simple character matrix */
 
@@ -19,14 +19,14 @@ typedef simple_matrix<Rcpp::String, Rcpp::StringVector> simple_character_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_character_matrix : public HDF5_matrix<Rcpp::String, STRSXP, H5T_STRING, H5::PredType::C_S1> {
+class HDF5_character_matrix : public HDF5_matrix<Rcpp::String, Rcpp::StringVector, H5T_STRING, H5::PredType::C_S1> {
 public:    
     HDF5_character_matrix(const Rcpp::RObject&);
     ~HDF5_character_matrix();
 
     Rcpp::String get(int, int);
-    void get_row(int, Rcpp::String*);
-    void get_col(int, Rcpp::String*);
+    void get_row(int, Rcpp::StringVector::iterator);
+    void get_col(int, Rcpp::StringVector::iterator);
 protected:
     H5::StrType str_type;
     std::vector<char> row_buf, col_buf;

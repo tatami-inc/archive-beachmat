@@ -7,7 +7,7 @@ namespace beachmat {
 
 /* Virtual base class for numeric matrices. */
 
-typedef any_matrix<double> numeric_matrix;
+typedef any_matrix<double, Rcpp::NumericVector> numeric_matrix;
 
 /* Simple numeric matrix */
 
@@ -30,7 +30,7 @@ typedef Psymm_matrix<double, Rcpp::NumericVector> Psymm_numeric_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-typedef HDF5_matrix<double, REALSXP, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE> HDF5_numeric_matrix; 
+typedef HDF5_matrix<double, Rcpp::NumericVector, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE> HDF5_numeric_matrix; 
 
 #endif
 

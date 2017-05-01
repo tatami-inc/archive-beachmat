@@ -12,7 +12,7 @@ namespace beachmat {
 
 /* Virtual base class for matrices. */
 
-template<typename T>
+template<typename T, class V>
 class any_matrix {
 public:
     any_matrix();
@@ -33,18 +33,18 @@ public:
     /* Fills an array with values in the specified row.
      *
      * @param r The row index (0-based).
-     * @param out An array of T's of length 'nrow'.
+     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'ncol'.
      * @return Void. 'out' is filled with values in row 'r'.
      */
-    virtual void get_row(int, T*)=0;
+    virtual void get_row(int, typename V::iterator)=0;
 
     /* Fills an array with values in the specified column.
      *
      * @param c The column index (0-based).
-     * @param out An array of T's of length 'nrow'.
+     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'nrow'.
      * @return Void. 'out' is filled with values in column 'c'.
      */
-    virtual void get_col(int, T*)=0;
+    virtual void get_col(int, typename V::iterator)=0;
 
     /* Returns values in the specified cell.
      *
@@ -62,14 +62,14 @@ protected:
 /* Simple matrix */
 
 template<typename T, class V>
-class simple_matrix : public any_matrix<T> {
+class simple_matrix : public any_matrix<T, V> {
 public:    
     simple_matrix(const Rcpp::RObject&);
     ~simple_matrix();
 
     T get(int, int);
-    void get_row(int, T*);
-    void get_col(int, T*);
+    void get_row(int, typename V::iterator);
+    void get_col(int, typename V::iterator);
 protected:
     int get_index(int, int) const;   
     V mat;
@@ -78,14 +78,14 @@ protected:
 /* dense Matrix */
 
 template<typename T, class V>
-class dense_matrix : public any_matrix<T> {
+class dense_matrix : public any_matrix<T, V> {
 public:    
     dense_matrix(const Rcpp::RObject&);
     ~dense_matrix();
 
     T get(int, int);
-    void get_row(int, T*);
-    void get_col(int, T*);
+    void get_row(int, typename V::iterator);
+    void get_col(int, typename V::iterator);
 protected:
     int get_index(int, int) const;   
     V x;
@@ -94,14 +94,14 @@ protected:
 /* column-major sparse Matrix */
 
 template<typename T, class V, const T& Z>
-class Csparse_matrix : public any_matrix<T> {
+class Csparse_matrix : public any_matrix<T, V> {
 public:    
     Csparse_matrix(const Rcpp::RObject&);
     ~Csparse_matrix();
 
     T get(int, int);
-    void get_row(int, T*);
-    void get_col(int, T*);
+    void get_row(int, typename V::iterator);
+    void get_col(int, typename V::iterator);
 protected:
     Rcpp::IntegerVector i, p;
     V x;
@@ -116,14 +116,14 @@ protected:
 /* symmetric packed Matrix */
 
 template<typename T, class V>
-class Psymm_matrix : public any_matrix<T> {
+class Psymm_matrix : public any_matrix<T, V> {
 public:    
     Psymm_matrix(const Rcpp::RObject&);
     ~Psymm_matrix();
 
     T get(int, int);   
-    void get_row(int, T*);
-    void get_col(int, T*);
+    void get_row(int, typename V::iterator);
+    void get_col(int, typename V::iterator);
 protected:
     V x;
     bool upper;
@@ -134,15 +134,15 @@ protected:
 
 #ifdef BEACHMAT_USE_HDF5
 
-template<typename T, int RTYPE, H5T_class_t HTC, const H5::PredType& HPT>
-class HDF5_matrix : public any_matrix<T> {
+template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
+class HDF5_matrix : public any_matrix<T, V> {
 public:
     HDF5_matrix(const Rcpp::RObject&);
     ~HDF5_matrix();
 
     T get(int, int);
-    void get_row(int, T*);
-    void get_col(int, T*);
+    void get_row(int, typename V::iterator);
+    void get_col(int, typename V::iterator);
 protected:
     H5::H5File hfile;
     H5::DataSet hdata;

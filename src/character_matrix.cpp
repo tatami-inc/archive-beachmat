@@ -5,7 +5,7 @@ namespace beachmat {
 
 /* Methods for the HDF5 character matrix. */
 
-HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HDF5_matrix<Rcpp::String, STRSXP, H5T_STRING, H5::PredType::C_S1>(incoming), 
+HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HDF5_matrix<Rcpp::String, Rcpp::StringVector, H5T_STRING, H5::PredType::C_S1>(incoming), 
     str_type(hdata) {
     if (!H5Tis_variable_str(str_type.getId())) {
         auto bufsize=str_type.getSize(); 
@@ -18,7 +18,7 @@ HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HD
 
 HDF5_character_matrix::~HDF5_character_matrix() {}
 
-void HDF5_character_matrix::get_row(int r, Rcpp::String* out) { 
+void HDF5_character_matrix::get_row(int r, Rcpp::StringVector::iterator out) { 
     offset[0] = 0;
     offset[1] = r;
     hspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
@@ -28,13 +28,13 @@ void HDF5_character_matrix::get_row(int r, Rcpp::String* out) {
     auto bufsize=str_type.getSize(); 
 
     const int& NC=this->ncol;
-    for (int c=0; c<NC; ++c, ref+=bufsize) {
-        out[c]=ref; 
+    for (int c=0; c<NC; ++c, ref+=bufsize, ++out) {
+        (*out)=ref; 
     }
     return;
 } 
 
-void HDF5_character_matrix::get_col(int c, Rcpp::String* out) { 
+void HDF5_character_matrix::get_col(int c, Rcpp::StringVector::iterator out) { 
     offset[0] = c;
     offset[1] = 0;
     hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
@@ -44,8 +44,8 @@ void HDF5_character_matrix::get_col(int c, Rcpp::String* out) {
     auto bufsize=str_type.getSize(); 
 
     const int& NR=this->nrow;
-    for (int r=0; r<NR; ++r, ref+=bufsize) {
-        out[r]=ref; 
+    for (int r=0; r<NR; ++r, ref+=bufsize, ++out) {
+        (*out)=ref; 
     }
     return;
 }

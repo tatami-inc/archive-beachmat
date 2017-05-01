@@ -7,7 +7,7 @@ namespace beachmat {
 
 /* Virtual base class for integer matrices. */
 
-typedef any_matrix<int> integer_matrix;
+typedef any_matrix<int, Rcpp::IntegerVector> integer_matrix;
 
 /* Simple integer matrix */
 
@@ -17,7 +17,7 @@ typedef simple_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-typedef HDF5_matrix<int, INTSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32> HDF5_integer_matrix;
+typedef HDF5_matrix<int, Rcpp::IntegerVector, H5T_INTEGER, H5::PredType::NATIVE_INT32> HDF5_integer_matrix;
 
 #endif
 

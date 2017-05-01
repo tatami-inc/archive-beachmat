@@ -3,7 +3,7 @@
 #include "beachmat/logical_matrix.h"
 #include "beachmat/character_matrix.h"
 
-template <typename T, typename M, class O>  // Only T needs to be specified, rest is automatically deduced.
+template <class T, class M, class O>  // Only T needs to be specified, rest is automatically deduced.
 void fill_up (M& ptr, O& output, const Rcpp::IntegerVector& mode) {
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
@@ -14,18 +14,18 @@ void fill_up (M& ptr, O& output, const Rcpp::IntegerVector& mode) {
 
     if (Mode==1) { 
         // By column.
-        std::vector<T> target(nrows);
+        T target(nrows);
         for (int c=0; c<ncols; ++c) {
-            ptr->get_col(c, target.data());
+            ptr->get_col(c, target.begin());
             for (int r=0; r<nrows; ++r) {
                 output[c * nrows + r]=target[r];
             }
         }
     } else if (Mode==2) { 
         // By row.
-        std::vector<T> target(ncols);
+        T target(ncols);
         for (int r=0; r<nrows; ++r) {
-            ptr->get_row(r, target.data());
+            ptr->get_row(r, target.begin());
             for (int c=0; c<ncols; ++c) {
                 output[c * nrows + r]=target[c];
             }
@@ -53,7 +53,7 @@ SEXP test_numeric_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::NumericMatrix output(nrows, ncols);
-    fill_up<double>(ptr, output, mode);
+    fill_up<Rcpp::NumericVector>(ptr, output, mode);
     return output;
     END_RCPP
 }
@@ -65,7 +65,7 @@ SEXP test_integer_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::IntegerMatrix output(nrows, ncols);
-    fill_up<int>(ptr, output, mode);
+    fill_up<Rcpp::IntegerVector>(ptr, output, mode);
     return output;
     END_RCPP
 }
@@ -77,7 +77,7 @@ SEXP test_logical_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::LogicalMatrix output(nrows, ncols);
-    fill_up<int>(ptr, output, mode);
+    fill_up<Rcpp::LogicalVector>(ptr, output, mode);
     return output;
     END_RCPP
 }
@@ -89,7 +89,7 @@ SEXP test_character_access (SEXP in, SEXP mode) {
     const int& ncols=ptr->get_ncol();
 
     Rcpp::CharacterMatrix output(nrows, ncols);
-    fill_up<Rcpp::String>(ptr, output, mode);
+    fill_up<Rcpp::StringVector>(ptr, output, mode);
     return output;
     END_RCPP
 }
