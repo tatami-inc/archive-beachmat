@@ -25,6 +25,8 @@ expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat
 expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 3L))
 
+expect_identical("character", .Call(beachtest:::cxx_test_type_check, test.mat))
+
 # Testing HDF5 matrices:
 
 if (beachmat:::use.hdf5) { 
@@ -49,5 +51,7 @@ A <- as(test.mat, "HDF5Array")
 expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 1L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 3L))
+
+expect_identical("character", .Call(beachtest:::cxx_test_type_check, test.mat))
 
 }

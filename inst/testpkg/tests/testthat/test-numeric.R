@@ -19,6 +19,8 @@ expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 3L))
 
+expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, test.mat))
+
 # Testing dense matrices:
 
 set.seed(13579)
@@ -40,6 +42,8 @@ A <- Matrix(test.mat)
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+
+expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
 
 # Testing sparse matrices (dgCMatrix):
 
@@ -86,6 +90,8 @@ expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
 
+expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
+
 # Testing dense symmetric matrices (dspMatrix):
 
 set.seed(45678)
@@ -102,6 +108,8 @@ dimnames(test.mat) <- NULL
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+
+expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
 
 # Testing HDF5 matrices:
 
@@ -127,5 +135,7 @@ A <- as(test.mat, "HDF5Array")
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
 expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+
+expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
 
 }

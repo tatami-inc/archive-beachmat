@@ -48,10 +48,6 @@ extern "C" {
 
 SEXP test_numeric_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    if (beachmat::find_sexp_type(in)!=REALSXP) {
-        throw std::runtime_error("numeric type check failed");
-    }
-
     auto ptr=beachmat::create_numeric_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
@@ -64,10 +60,6 @@ SEXP test_numeric_access (SEXP in, SEXP mode) {
 
 SEXP test_integer_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    if (beachmat::find_sexp_type(in)!=INTSXP) {
-        throw std::runtime_error("integer type check failed");
-    }
-
     auto ptr=beachmat::create_integer_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
@@ -80,10 +72,6 @@ SEXP test_integer_access (SEXP in, SEXP mode) {
 
 SEXP test_logical_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    if (beachmat::find_sexp_type(in)!=LGLSXP) {
-        throw std::runtime_error("logical type check failed");
-    }
-
     auto ptr=beachmat::create_logical_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
@@ -96,10 +84,6 @@ SEXP test_logical_access (SEXP in, SEXP mode) {
 
 SEXP test_character_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
-    if (beachmat::find_sexp_type(in)!=STRSXP) {
-        throw std::runtime_error("character type check failed");
-    }
-
     auto ptr=beachmat::create_character_matrix(in);
     const int& nrows=ptr->get_nrow();
     const int& ncols=ptr->get_ncol();
@@ -138,6 +122,13 @@ SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
     END_RCPP
 }
 
+SEXP test_type_check(SEXP in) {
+    BEGIN_RCPP
+    std::string out=beachmat::translate_type(beachmat::find_sexp_type(in));
+    return Rf_mkString(out.c_str());
+    END_RCPP
+}
+
 }
 
 #include "R_ext/Rdynload.h"
@@ -152,6 +143,7 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_logical_access, 2),
     REGISTER(test_character_access, 2),
     REGISTER(test_sparse_numeric, 2),
+    REGISTER(test_type_check, 1),
     {NULL, NULL, 0}
 };
 
