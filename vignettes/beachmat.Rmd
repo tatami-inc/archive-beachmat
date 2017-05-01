@@ -21,10 +21,9 @@ Compilation date: `r Sys.Date()`
 # Introduction
 
 The _beachmat_ package provides a C++ API for handling a variety of R matrix types.
-The aim is to abstract the specific type of matrix when writing C++ extensions to R packages, thus simplifying the processing of data stored in matrices or matrix-like objects.
-Currently, the API supports double-precision, integer and logical matrices.
+The aim is to abstract away the specific type of matrix object when writing C++ extensions, thus simplifying the processing of data stored in those objects.
+Currently, the API supports double-precision, integer, logical and character matrices.
 Supported classes include base `matrix` objects, a number of classes from the `r CRANpkg("Matrix")` package, and disk-backed matrices from the `r CRANpkg("HDF5Array")` package.
-
 
 # Linking to the package
 
@@ -32,7 +31,7 @@ Supported classes include base `matrix` objects, a number of classes from the `r
 
 The _beachmat_ package currently has several dependencies:
 
-- The build system should support the C++11 standard.
+- The compiler should support the C++11 standard.
 - `r CRANpkg("Rcpp")` should be installed.
 - To support `HDF5Matrix` objects, the system should have the HDF5 libraries installed (see https://support.hdfgroup.org/HDF5/).
 Currently, we are not particularly smart about detecting non-default installation locations - this should hopefully be rectified in the future.
@@ -78,10 +77,8 @@ In order for the C/C++ compiler to find the _beachmat_ package headers during in
 ```
 LinkingTo: Rcpp, beachmat
 ``` 
-
-Note that as of R 3.0.2 `LinkingTo` values can include version specifications, e.g., `LinkingTo: Rhtslib (>= 0.99.10)`.
     
-In C or C++ code files, use standard techniques, e.g., `#include "numeric_matrix.h"` (see below for more details). 
+In C or C++ code files, use standard techniques, e.g., `#include "beachmat/numeric_matrix.h"` (see below for more details). 
 Header files are available for perusal at the following location (enter in an R session):
 
 ```{R headers}
@@ -117,28 +114,29 @@ Check out the `r CRANpkg("Rcpp")` documentation for more details.
 ## An example with a numeric matrix
 
 We demonstrate the use of the API for numeric matrices.
-First, we include the relevant header file (in this case, `numeric_matrix.h`):
+First, we include the relevant header file:
 
 ```
-#include "numeric_matrix.h"
+#include "beachmat/numeric_matrix.h"
 ```
 
 A double-precision matrix object `dmat` is handled in C++ by passing the `SEXP` struct from `.Call` to `create_numeric_matrix`:
 
 ```
-std::shared_dptr<numeric_matrix> dptr=create_numeric_matrix(dmat);
+std::shared_dptr<beachmat::numeric_matrix> dptr = beachmat::create_numeric_matrix(dmat);
 ```
 
 This creates a shared pointer that points to an object of the `numeric_matrix` virtual class.
 The exact class depends on the type of matrix in `dmat`, though the behaviour of the user-level functions are not affected by this detail.
-(Note that this requires C++11 to work.)
 
 The available methods for this object are:
 
 - `dptr->get_nrow()` returns an integer number of rows (`nrow`).
 - `dptr->get_ncol()` returns an integer number of columns (`ncol`).
-- `dptr->get_row(r)` returns a constant pointer to an array of doubles of length `ncol`, containing values at row `r`.
-- `dptr->get_col(c)` returns a constant pointer to an array of doubles of length `nrow`, containing values at column `c`.
+- `dptr->get_col(c, X)` takes a pointer `X` to an array of doubles of length `nrow`, and fills it with values at column `c`.
+It returns nothing.
+- `dptr->get_row(r, X)` takes a pointer `X` to an array of doubles of length `ncol`, and fills it with values at row `r`.
+It returns nothing.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 
 In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
@@ -146,50 +144,54 @@ Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C
 
 ## Other matrix types
 
-Logical and integer matrices are also supported, by including the following header files:
+Logical, integer and character matrices are also supported, by including the following header files:
 
 ```
-#include "logical_matrix.h"
-#include "integer_matrix.h"
+#include "beachmat/logical_matrix.h"
+#include "beachmat/integer_matrix.h"
+#include "beachmat/character_matrix.h"
 ```
 
-The creation function changes correspondingly, for logical matrix `lmat` and integer matrix `imat`:
+The creation function changes correspondingly, for logical matrix `lmat`, integer matrix `imat` and character matrix `cmat`:
 
 ```
-std::shared_ptr<logical_matrix> lptr=create_logical_matrix(lmat);
-std::shared_ptr<integer_matrix> iptr=create_integer_matrix(imat);
+std::shared_ptr<beachmat::logical_matrix> lptr=beachmat::create_logical_matrix(lmat);
+std::shared_ptr<beachmat::integer_matrix> iptr=beachmat::create_integer_matrix(imat);
+std::shared_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matrix(cmat);
 ```
 
-Here, the `get_row` and `get_col` methods return pointers to integer arrays, while `get` returns an integer.
+For integer and logical matrices, `X` should be an integer pointer to an array of the specified length, and `get` will return an integer.
+For character matrices, `X` should point to an array of `const char*`, and `get` will return a `const char*`.
 
 ## Important developer information 
 
-__NOTE:__ A pointer returned by `get_row` is not guaranteed to be valid after another call to `get_row`.
-The same applies for pointers returned by `get_col` after another call to `get_col`.
-This is because these pointers refer to internal arrays within each instance of the `*_matrix` class, which are overwritten upon repeated calls to the above methods.
-
-```
-const double* x=dptr->get_row(0);
-x[0]; // First entry of first row, okay.
-const double* y=dptr->get_row(1);
-x[0]; // Not guaranteed to be unchanged!
-```
-
-If the values need to be stored, copy the values from the returned pointer into your own chunk of memory.
-
-```
-const double* x=dptr->get_row(0);
-std::copy(x, x+dptr->get_ncol(), z); // Assuming you have some pointer z.
-const double* y=dptr->get_row(1);
-z[0]; // First entry of first row, okay.
-```
-
-For this reason, the current API is unlikely to be safe if there are multiple shared pointers to the same `*_matrix` instance (e.g., with multiple threads).
-In such cases, users should instead create new shared pointers by copying the `*_matrix` instance via `std::make_shared`.
-
-__NOTE:__ The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
+- R stores dimensions as integers rather than as `size_t`, so we simply follow suit when calling `get_nrow` and `get_ncol`.
+- In theory, greater efficiency could be obtained for `get_col` on base matrices by returning a pointer to the column, rather than copying the data.
+However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
+This would be dangerous as the internal storage will change upon repeated calls to `get_col`.
+Filling a user-supplied array is clearer as it is obvious that the array will change when `get_col` is called again.
+- The API is not thread-safe for multiple shared pointers to the same `*_matrix` instance.
+Some intermediate constructs are cached for greater efficiency, and simultaneous calls will cause race conditions. 
+Users should instead create new shared pointers for use in each thread, by copying the `*_matrix` instance via `std::make_shared`.
+This is fairly cheap as the matrix data itself is not copied.
+- When using character matrices, each `const char*` value points to a null-terminated C-style string stored in R's global cache.
+These can be assumed to persist for the lifetime of the `character_matrix` object, but should _not_ be modified.
+- The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
-See the error-handling mechanism in `r CRANpkg("Rcpp")` for an example of how to deal with these exceptions.
+See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
+
+<!--
+Advanced comments:
+
+- If any class has pointers to SEXP data, the data that each pointer points to should be contained within a RObject that is also a member of the class. 
+This ensures that the data is PROTECTed for the lifetime of the class instance. 
+Otherwise, one could imagine a situation where the class is instantiated from an RObject; the RObject is destroyed; and garbage collection occurs.
+This would invalidate the pointers in the class instance.
+- It would be nice to allow the fill_* methods to take any random access iterator; however, virtual methods cannot be templated.
+We could add a template argument to the entire class, but this would only allow it to take either a random access iterator or a pointer (not both).
+Overloading seems like the best approach, but would be a pain if I have to rewrite every fill_* method.
+-- Storage of CHARSXPs in a StringVector for HDF5_character_matrices is the simplest solution to ensure they don't get garbage collected.
+-->
 
 # Supported matrix types
 
@@ -198,6 +200,7 @@ The following matrix classes are supported:
 - numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dspMatrix`, `HDF5Matrix`
 - integer: `matrix`, `HDF5Matrix`
 - logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lspMatrix`, `HDF5Matrix`
+- character: `matrix`, `HDF5Matrix`
 
 Additional classes can be added on a need-to-use basis.
 As a general rule, if a matrix-like object can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
