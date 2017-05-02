@@ -66,7 +66,6 @@ public:
      */
     virtual void get_col(int, typename V::iterator, int, int)=0;
 
-
     /* Returns values in the specified cell.
      *
      * @param r The row index (0-based).

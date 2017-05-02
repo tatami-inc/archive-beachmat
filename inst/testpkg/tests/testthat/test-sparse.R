@@ -44,6 +44,21 @@ expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
 o <- sample(nrows)
 expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
 
+# Checking random column slices behave correctly.
+
+A <- rsparsematrix(nrow=100, 20, density=0.2)
+test.mat <- as.matrix(A)
+dimnames(test.mat) <- NULL
+slice.start <- sample(ncol(A), nrow(A), replace=TRUE)
+slice.end <- pmin(ncol(A), slice.start + sample(10, nrow(A), replace=TRUE))
+
+out <- .Call(beachtest:::cxx_test_sparse_numeric_slice, A, cbind(slice.start, slice.end))
+ref <- vector('list', nrow(A))
+for (x in seq_along(ref)) { 
+     ref[[x]] <- A[x,slice.start[x]:slice.end[x]]
+}
+expect_identical(out, ref)
+
 # # Benchmarking with a huge matrix.
 # library(microbenchmark); library(beachmat); library(Matrix); library(beachtest)
 # nrows <- 10000

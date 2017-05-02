@@ -210,7 +210,8 @@ int Csparse_matrix<T, V, Z>::get_index(int r, int c) const {
 template <typename T, class V, const T& Z>
 void Csparse_matrix<T, V, Z>::update_indices(int r, int start, int end) {
     /* If left/right slice are not equal to what is stored, we reset the indices,
-     * so that the code below will know to recompute them.
+     * so that the code below will know to recompute them. It's too much effort
+     * to try to figure out exactly which columns need recomputing; just do them all.
      */
     if (start!=curstart || end!=curend) {
         curstart=start;
@@ -377,30 +378,45 @@ void Psymm_matrix<T, V>::get_col (int c, typename V::iterator out, int start, in
     auto xIt=x.begin();
     if (upper) {
         xIt+=(c*(c+1))/2;
-        int i=c;
         if (start < c) {
-            std::copy(xIt+start, xIt+c, out);
-            out+=c-start;
+            if (end <= c) { 
+                std::copy(xIt+start, xIt+end, out);
+            } else {
+                std::copy(xIt+start, xIt+c, out);
+                out+=c - start;
+                for (int i=c; i<end; ++i, ++out) {
+                    (*out)=*(xIt+c);
+                    xIt+=i+1;
+                }
+            }
         } else {
-            i=start;
-        }
-        for (; i<end; ++i, ++out) {
-            (*out)=*(xIt+c);
-            xIt+=i+1;
+            int diff=start - c;
+            xIt+=c*diff+(diff*(diff+1))/2;
+            for (int i=start; i<end; ++i, ++out) {
+                (*out)=*(xIt+c);
+                xIt+=i+1;
+            }
         }
     } else {
         const int& NR=this->nrow;
         if (start < c) { 
-            xIt+=NR*start - (start*(start+1))/2;
-            for (int i=0; i<c; ++i, ++out) {
-                (*out)=*(xIt+c-i);
-                xIt+=NR-i;
+            xIt+=NR*start - (start*(start-1))/2;
+            if (end <= c) {
+                for (int i=start; i<end; ++i, ++out) {
+                    (*out)=*(xIt+c-i);
+                    xIt+=NR-i;
+                }
+            } else {
+                for (int i=start; i<c; ++i, ++out) {
+                    (*out)=*(xIt+c-i);
+                    xIt+=NR-i;
+                }
+                std::copy(xIt, xIt+end-c, out);
             }
         } else {
-            xIt+=NR*c - (c*(c+1))/2;
-            xIt+=start-c;
+            xIt+=NR*c - (c*(c-1))/2;
+            std::copy(xIt + start - c, xIt+end - c, out);
         }
-        std::copy(xIt, xIt+end-c, out);
     }
     return;
 }
@@ -533,7 +549,7 @@ void HDF5_matrix<T, V, HTC, HPT>::select_col(int c, int start, int end) {
     offset[1] = start;
     cols_out[1]=end-start;
     hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
-    rowspace.selectHyperslab(H5S_SELECT_SET, cols_out, zero_offset);
+    colspace.selectHyperslab(H5S_SELECT_SET, cols_out, zero_offset);
     return;
 }
 

@@ -2,95 +2,63 @@
 #include "beachmat/integer_matrix.h"
 #include "beachmat/logical_matrix.h"
 #include "beachmat/character_matrix.h"
-
-template <class T, class M, class O>  // Only T needs to be specified, rest is automatically deduced.
-void fill_up (M& ptr, O& output, const Rcpp::IntegerVector& mode) {
-    if (mode.size()!=1) { 
-        throw std::runtime_error("'mode' should be an integer scalar"); 
-    }
-    const int Mode=mode[0];
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
-
-    if (Mode==1) { 
-        // By column.
-        T target(nrows);
-        for (int c=0; c<ncols; ++c) {
-            ptr->get_col(c, target.begin());
-            for (int r=0; r<nrows; ++r) {
-                output[c * nrows + r]=target[r];
-            }
-        }
-    } else if (Mode==2) { 
-        // By row.
-        T target(ncols);
-        for (int r=0; r<nrows; ++r) {
-            ptr->get_row(r, target.begin());
-            for (int c=0; c<ncols; ++c) {
-                output[c * nrows + r]=target[c];
-            }
-        }
-    } else if (Mode==3) {
-        // By cell.
-        for (int c=0; c<ncols; ++c){ 
-            for (int r=0; r<nrows; ++r) {
-                output[c * nrows + r]=ptr->get(r, c);
-            }
-        }
-    } else { 
-        throw std::runtime_error("'mode' should be in [1,3]"); 
-    }
-
-    return;
-}
+#include "template_testfun.h"
 
 extern "C" { 
 
 SEXP test_numeric_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
-
-    Rcpp::NumericMatrix output(nrows, ncols);
-    fill_up<Rcpp::NumericVector>(ptr, output, mode);
-    return output;
+    return fill_up<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr, mode);
     END_RCPP
 }
 
 SEXP test_integer_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
-
-    Rcpp::IntegerMatrix output(nrows, ncols);
-    fill_up<Rcpp::IntegerVector>(ptr, output, mode);
-    return output;
+    return fill_up<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr, mode);
     END_RCPP
 }
 
 SEXP test_logical_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
-
-    Rcpp::LogicalMatrix output(nrows, ncols);
-    fill_up<Rcpp::LogicalVector>(ptr, output, mode);
-    return output;
+    return fill_up<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr, mode);
     END_RCPP
 }
 
 SEXP test_character_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_character_matrix(in);
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
+    return fill_up<Rcpp::StringVector, Rcpp::StringMatrix>(ptr, mode);
+    END_RCPP
+}
 
-    Rcpp::CharacterMatrix output(nrows, ncols);
-    fill_up<Rcpp::StringVector>(ptr, output, mode);
-    return output;
+SEXP test_numeric_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up_slice<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr, mode, rx, cx);
+    END_RCPP
+}
+
+SEXP test_integer_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up_slice<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr, mode, rx, cx);
+    END_RCPP
+}
+
+SEXP test_logical_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up_slice<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr, mode, rx, cx);
+    END_RCPP
+}
+
+SEXP test_character_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    return fill_up_slice<Rcpp::StringVector, Rcpp::StringMatrix>(ptr, mode, rx, cx);
     END_RCPP
 }
 
@@ -104,18 +72,41 @@ SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
     if (ro.size()!=nrows) {
         throw std::runtime_error("'rorder' should have length equal to number of rows");
     }
-
     Rcpp::NumericMatrix output(nrows, ncols);
-    double* optr=REAL(output.get__());
         
     // By row, in the specified order.
-    std::vector<double> target(ncols);
+    Rcpp::NumericVector target(ncols);
     for (int r=0; r<nrows; ++r) {
         int currow=ro[r]-1;
-        ptr->get_row(currow, target.data());
+        ptr->get_row(currow, target.begin());
         for (int c=0; c<ncols; ++c) {
-            optr[c * nrows + r]=target[c];
+            output[c * nrows + r]=target[c];
         }
+    }
+
+    return output;
+    END_RCPP
+}
+
+SEXP test_sparse_numeric_slice(SEXP in, SEXP Inx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    const int& nrows=ptr->get_nrow();
+    const int& ncols=ptr->get_ncol();
+    
+    Rcpp::IntegerMatrix inx(Inx);
+    if (inx.nrow()!=nrows) {
+        throw std::runtime_error("'rorder' should have length equal to number of rows");
+    }
+
+    Rcpp::List output(nrows);
+        
+    // By row, in the specified order.
+    for (int r=0; r<nrows; ++r) {
+        int start=inx(r, 0)-1, end=inx(r, 1);
+        Rcpp::NumericVector target(end-start);
+        ptr->get_row(r, target.begin(), start, end);
+        output[r]=target;
     }
 
     return output;
@@ -142,7 +133,12 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_integer_access, 2),
     REGISTER(test_logical_access, 2),
     REGISTER(test_character_access, 2),
+    REGISTER(test_numeric_slice, 4),
+    REGISTER(test_integer_slice, 4),
+    REGISTER(test_logical_slice, 4),
+    REGISTER(test_character_slice, 4),
     REGISTER(test_sparse_numeric, 2),
+    REGISTER(test_sparse_numeric_slice, 2),
     REGISTER(test_type_check, 1),
     {NULL, NULL, 0}
 };
