@@ -25,8 +25,8 @@ public:
     ~HDF5_character_matrix();
 
     Rcpp::String get(int, int);
-    void get_row(int, Rcpp::StringVector::iterator);
-    void get_col(int, Rcpp::StringVector::iterator);
+    void get_row(int, Rcpp::StringVector::iterator, int, int);
+    void get_col(int, Rcpp::StringVector::iterator, int, int);
 protected:
     H5::StrType str_type;
     std::vector<char> row_buf, col_buf;

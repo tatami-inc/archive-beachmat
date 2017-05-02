@@ -36,7 +36,17 @@ public:
      * @param out An iterator pointing to an Rcpp::Vector of T's of length 'ncol'.
      * @return Void. 'out' is filled with values in row 'r'.
      */
-    virtual void get_row(int, typename V::iterator)=0;
+    void get_row(int, typename V::iterator);
+
+    /* Fills an array with values in the specified row.
+     *
+     * @param r The row index (0-based).
+     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'ncol'.
+     * @param start The index of the first column to store.
+     * @param end One past the index of the last column to store. 
+     * @return Void. 'out' is filled with values in row 'r', from 'start' to 'end-1'.
+     */
+    virtual void get_row(int, typename V::iterator, int, int)=0;
 
     /* Fills an array with values in the specified column.
      *
@@ -44,7 +54,18 @@ public:
      * @param out An iterator pointing to an Rcpp::Vector of T's of length 'nrow'.
      * @return Void. 'out' is filled with values in column 'c'.
      */
-    virtual void get_col(int, typename V::iterator)=0;
+    void get_col(int, typename V::iterator);
+
+    /* Fills an array with values in the specified column.
+     *
+     * @param c The column index (0-based).
+     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'nrow'.
+     * @param start The index of the first column to store.
+     * @param end One past the index of the last column to store. 
+     * @return Void. 'out' is filled with values in column 'c', from 'start' to 'end-1'.
+     */
+    virtual void get_col(int, typename V::iterator, int, int)=0;
+
 
     /* Returns values in the specified cell.
      *
@@ -68,8 +89,8 @@ public:
     ~simple_matrix();
 
     T get(int, int);
-    void get_row(int, typename V::iterator);
-    void get_col(int, typename V::iterator);
+    void get_row(int, typename V::iterator, int, int);
+    void get_col(int, typename V::iterator, int, int);
 protected:
     int get_index(int, int) const;   
     V mat;
@@ -84,8 +105,8 @@ public:
     ~dense_matrix();
 
     T get(int, int);
-    void get_row(int, typename V::iterator);
-    void get_col(int, typename V::iterator);
+    void get_row(int, typename V::iterator, int, int);
+    void get_col(int, typename V::iterator, int, int);
 protected:
     int get_index(int, int) const;   
     V x;
@@ -100,17 +121,17 @@ public:
     ~Csparse_matrix();
 
     T get(int, int);
-    void get_row(int, typename V::iterator);
-    void get_col(int, typename V::iterator);
+    void get_row(int, typename V::iterator, int, int);
+    void get_col(int, typename V::iterator, int, int);
 protected:
     Rcpp::IntegerVector i, p;
     V x;
     int nx;
     int get_index(int, int) const;
 
-    int currow;
+    int currow, curstart, curend;
     std::vector<int> indices;
-    void update_indices(int);
+    void update_indices(int, int, int);
 };
 
 /* symmetric packed Matrix */
@@ -122,8 +143,8 @@ public:
     ~Psymm_matrix();
 
     T get(int, int);   
-    void get_row(int, typename V::iterator);
-    void get_col(int, typename V::iterator);
+    void get_row(int, typename V::iterator, int, int);
+    void get_col(int, typename V::iterator, int, int);
 protected:
     V x;
     bool upper;
@@ -141,13 +162,16 @@ public:
     ~HDF5_matrix();
 
     T get(int, int);
-    void get_row(int, typename V::iterator);
-    void get_col(int, typename V::iterator);
+    void get_row(int, typename V::iterator, int, int);
+    void get_col(int, typename V::iterator, int, int);
 protected:
     H5::H5File hfile;
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
-    hsize_t offset[2], rows_out[2], cols_out[2], one_out[2];
+    hsize_t offset[2], rows_out[2], cols_out[2], one_out[2], zero_offset[2];
+
+    void select_row(int, int, int);
+    void select_col(int, int, int);
 };
 
 #endif

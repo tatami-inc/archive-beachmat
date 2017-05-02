@@ -18,33 +18,27 @@ HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HD
 
 HDF5_character_matrix::~HDF5_character_matrix() {}
 
-void HDF5_character_matrix::get_row(int r, Rcpp::StringVector::iterator out) { 
-    offset[0] = 0;
-    offset[1] = r;
-    hspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
+void HDF5_character_matrix::get_row(int r, Rcpp::StringVector::iterator out, int start, int end) { 
+    select_row(r, start, end);
 
     char* ref=row_buf.data();
     hdata.read(ref, str_type, rowspace, hspace);
     auto bufsize=str_type.getSize(); 
 
-    const int& NC=this->ncol;
-    for (int c=0; c<NC; ++c, ref+=bufsize, ++out) {
+    for (int c=start; c<end; ++c, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
 } 
 
-void HDF5_character_matrix::get_col(int c, Rcpp::StringVector::iterator out) { 
-    offset[0] = c;
-    offset[1] = 0;
-    hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
+void HDF5_character_matrix::get_col(int c, Rcpp::StringVector::iterator out, int start, int end) { 
+    select_col(c, start, end);
 
     char* ref=col_buf.data();
     hdata.read(ref, str_type, colspace, hspace);
     auto bufsize=str_type.getSize(); 
 
-    const int& NR=this->nrow;
-    for (int r=0; r<NR; ++r, ref+=bufsize, ++out) {
+    for (int r=start; r<end; ++r, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
