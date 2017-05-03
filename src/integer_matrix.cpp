@@ -21,4 +21,17 @@ std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incom
     return std::shared_ptr<integer_matrix>(new simple_integer_matrix(incoming));
 }
 
+/* Output dispatch definition */
+
+std::shared_ptr<integer_output> create_integer_output(int nrow, int ncol, bool basic) {
+    if (basic) { 
+        return std::shared_ptr<integer_output>(new simple_integer_output(nrow, ncol));
+    } 
+    return std::shared_ptr<integer_output>(new HDF5_integer_output(nrow, ncol));
+}
+
+std::shared_ptr<integer_output> create_integer_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {
+    return create_integer_output(nrow, ncol, (simplify || !incoming.isS4()));
+}
+
 }
