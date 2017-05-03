@@ -45,9 +45,7 @@ void HDF5_character_matrix::get_col(int c, Rcpp::StringVector::iterator out, int
 }
  
 Rcpp::String HDF5_character_matrix::get(int r, int c) { 
-    offset[0]=c;
-    offset[1]=r;
-    hspace.selectHyperslab(H5S_SELECT_SET, one_out, offset);
+    select_one(r, c);
     std::string out;
     hdata.read(out, str_type, onespace, hspace);
     return out;

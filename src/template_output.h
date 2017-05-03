@@ -80,18 +80,26 @@ HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>
     H5::DSetCreatPropList plist;
     plist.setFillValue(HPT, &FILL);
 
-    h5_count[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
-    h5_count[1]=this->nrow; 
-    hspace=H5::DataSpace(2, h5_count);
+    hsize_t dims[2];
+    dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
+    dims[1]=this->nrow; 
+    hspace=H5::DataSpace(2, dims);
     hdata=H5::DataSet(hfile.createDataSet(dname, HPT, hspace, plist)); // Creating the data set.
 
-    rowspace=H5::DataSpace(1, h5_count);
-    colspace=H5::DataSpace(1, h5_count+1);
+    h5_start[0]=0;
+    h5_start[1]=0;
+    col_count[0]=1;
+    col_count[1]=this->nrow;
+    row_count[0]=this->ncol;
+    row_count[1]=1;
+    rowspace=H5::DataSpace(1, row_count);
+    colspace=H5::DataSpace(1, col_count+1);
+    
     zero_start[0]=0;
-
-    hsize_t h5_one=1;
-    onespace=H5::DataSpace(1, &h5_one);
-    onespace.selectHyperslab(H5S_SELECT_SET, &h5_one, zero_start);
+    one_count[0]=1;
+    one_count[1]=1;
+    onespace=H5::DataSpace(1, one_count);
+    onespace.selectAll();
     return;
 }
 
@@ -100,12 +108,12 @@ HDF5_output<T, V, HPT, FILL>::~HDF5_output() {}
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 void HDF5_output<T, V, HPT, FILL>::select_col(int c, int start, int end) {
+    col_count[1]=end-start;
+    colspace.setExtentSimple(1, col_count+1);
+    colspace.selectAll();
     h5_start[0]=c;
     h5_start[1]=start;
-    h5_count[0]=1;
-    h5_count[1]=end-start;
-    hspace.selectHyperslab(H5S_SELECT_SET, h5_count, h5_start);
-    colspace.selectHyperslab(H5S_SELECT_SET, h5_count+1, zero_start);
+    hspace.selectHyperslab(H5S_SELECT_SET, col_count, h5_start);
     return;
 }
 
@@ -118,12 +126,12 @@ void HDF5_output<T, V, HPT, FILL>::fill_col(int c, typename V::iterator in, int 
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 void HDF5_output<T, V, HPT, FILL>::select_row(int r, int start, int end) {
-    h5_start[0]=start;
-    h5_start[1]=r;
-    h5_count[0]=end-start;
-    h5_count[1]=1;
-    hspace.selectHyperslab(H5S_SELECT_SET, h5_count, h5_start);
-    rowspace.selectHyperslab(H5S_SELECT_SET, h5_count, zero_start);
+    row_count[0] = end-start;
+    rowspace.setExtentSimple(1, row_count);
+    rowspace.selectAll();
+    h5_start[0] = start;
+    h5_start[1] = r;
+    hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
     return;
 }
 
@@ -138,9 +146,7 @@ template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 void HDF5_output<T, V, HPT, FILL>::select_one(int r, int c) {
     h5_start[0]=c;
     h5_start[1]=r;
-    h5_count[0]=1;
-    h5_count[1]=1;
-    hspace.selectHyperslab(H5S_SELECT_SET, h5_count, h5_start);
+    hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
     return;
 }
 

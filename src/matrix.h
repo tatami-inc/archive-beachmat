@@ -41,7 +41,7 @@ public:
     /* Fills an array with values in the specified row.
      *
      * @param r The row index (0-based).
-     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'ncol'.
+     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'end-start'.
      * @param start The index of the first column to store.
      * @param end One past the index of the last column to store. 
      * @return Void. 'out' is filled with values in row 'r', from 'start' to 'end-1'.
@@ -59,7 +59,7 @@ public:
     /* Fills an array with values in the specified column.
      *
      * @param c The column index (0-based).
-     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'nrow'.
+     * @param out An iterator pointing to an Rcpp::Vector of T's of length 'end-start'.
      * @param start The index of the first column to store.
      * @param end One past the index of the last column to store. 
      * @return Void. 'out' is filled with values in column 'c', from 'start' to 'end-1'.
@@ -167,10 +167,11 @@ protected:
     H5::H5File hfile;
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
-    hsize_t offset[2], rows_out[2], cols_out[2], one_out[2], zero_offset[2];
+    hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
 
     void select_row(int, int, int);
     void select_col(int, int, int);
+    void select_one(int, int);
 };
 
 #endif

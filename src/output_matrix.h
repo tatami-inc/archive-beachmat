@@ -54,10 +54,8 @@ protected:
 
     H5::H5File hfile;
     H5::DataSet hdata;
-    H5::DataSpace hspace;
-    hsize_t h5_start[2], h5_count[2], zero_start[1];
-  
-    H5::DataSpace rowspace, colspace, onespace;
+    H5::DataSpace hspace, rowspace, colspace, onespace;
+    hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
     
     void select_row(int, int, int);
     void select_col(int, int, int);

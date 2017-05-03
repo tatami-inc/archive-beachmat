@@ -503,23 +503,20 @@ HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) {
         throw_custom_error("dimensions in HDF5 file do not equal dimensions in the ", ctype, " object");
     }
 
-    offset[0]=0;
-    offset[1]=0;
-    zero_offset[0]=0;
-    zero_offset[1]=0;
+    h5_start[0]=0;
+    h5_start[1]=0;
+    col_count[0]=1;
+    col_count[1]=NR;
+    row_count[0]=NC;
+    row_count[1]=1;
+    rowspace=H5::DataSpace(1, row_count);
+    colspace=H5::DataSpace(1, col_count+1);
 
-    rows_out[0]=NC;
-    rows_out[1]=1;
-    rowspace=H5::DataSpace(2, rows_out);
-
-    cols_out[0]=1;
-    cols_out[1]=NR;
-    colspace=H5::DataSpace(2, cols_out);
-
-    one_out[0]=1;
-    one_out[1]=1;
-    onespace=H5::DataSpace(2, one_out);
-    onespace.selectHyperslab(H5S_SELECT_SET, one_out, offset);
+    zero_start[0]=0;
+    one_count[0]=1;
+    one_count[1]=1;
+    onespace=H5::DataSpace(1, one_count);
+    onespace.selectAll();
     return;
 }
 
@@ -528,11 +525,12 @@ HDF5_matrix<T, V, HTC, HPT>::~HDF5_matrix() {}
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
 void HDF5_matrix<T, V, HTC, HPT>::select_row(int r, int start, int end) {
-    offset[0] = start;
-    offset[1] = r;
-    rows_out[0]=end-start;
-    hspace.selectHyperslab(H5S_SELECT_SET, rows_out, offset);
-    rowspace.selectHyperslab(H5S_SELECT_SET, rows_out, zero_offset);
+    row_count[0] = end-start;
+    rowspace.setExtentSimple(1, row_count);
+    rowspace.selectAll();
+    h5_start[0] = start;
+    h5_start[1] = r;
+    hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
     return;
 }
 
@@ -545,11 +543,12 @@ void HDF5_matrix<T, V, HTC, HPT>::get_row(int r, typename V::iterator out, int s
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
 void HDF5_matrix<T, V, HTC, HPT>::select_col(int c, int start, int end) {
-    offset[0] = c;
-    offset[1] = start;
-    cols_out[1]=end-start;
-    hspace.selectHyperslab(H5S_SELECT_SET, cols_out, offset);
-    colspace.selectHyperslab(H5S_SELECT_SET, cols_out, zero_offset);
+    col_count[1] = end-start;
+    colspace.setExtentSimple(1, col_count+1);
+    colspace.selectAll();
+    h5_start[0] = c;
+    h5_start[1] = start;
+    hspace.selectHyperslab(H5S_SELECT_SET, col_count, h5_start);
     return;
 }
 
@@ -559,12 +558,18 @@ void HDF5_matrix<T, V, HTC, HPT>::get_col(int c, typename V::iterator out, int s
     hdata.read(&(*out), HPT, colspace, hspace);
     return;
 }
+
+template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
+void HDF5_matrix<T, V, HTC, HPT>::select_one(int r, int c) {
+    h5_start[0]=c;
+    h5_start[1]=r;
+    hspace.selectHyperslab( H5S_SELECT_SET, one_count, h5_start);
+    return;
+}
  
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
 T HDF5_matrix<T, V, HTC, HPT>::get(int r, int c) { 
-    offset[0]=c;
-    offset[1]=r;
-    hspace.selectHyperslab( H5S_SELECT_SET, one_out, offset);
+    select_one(r, c);
     T out;
     hdata.read(&out, HPT, onespace, hspace);
     return out;
