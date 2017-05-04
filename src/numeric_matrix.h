@@ -1,5 +1,5 @@
-#ifndef NUMERIC_MATRIX_H
-#define NUMERIC_MATRIX_H
+#ifndef BEACHMAT_NUMERIC_MATRIX_H
+#define BEACHMAT_NUMERIC_MATRIX_H
 
 #include "matrix.h"
 #include "output.h"
@@ -20,7 +20,6 @@ typedef dense_matrix<double, Rcpp::NumericVector> dense_numeric_matrix;
 
 /* dgCMatrix */
 
-extern constexpr double numeric_zero=0;
 typedef Csparse_matrix<double, Rcpp::NumericVector, numeric_zero> Csparse_numeric_matrix;
 
 /* dspMatrix */

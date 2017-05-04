@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef BEACHMAT_MATRIX_H
+#define BEACHMAT_MATRIX_H
 
 #include "beachmat.h"
 #include "utils.h"

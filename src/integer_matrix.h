@@ -1,5 +1,5 @@
-#ifndef INTEGER_MATRIX_H
-#define INTEGER_MATRIX_H
+#ifndef BEACHMAT_INTEGER_MATRIX_H
+#define BEACHMAT_INTEGER_MATRIX_H
 
 #include "matrix.h"
 #include "output.h"
@@ -41,8 +41,6 @@ typedef simple_output<int, Rcpp::IntegerVector> simple_integer_output;
 /* HDF5 output integer matrix */
 
 #ifdef BEACHMAT_USE_HDF5
-
-extern constexpr int integer_zero=0;
 
 typedef HDF5_output<int, Rcpp::IntegerVector, H5::PredType::NATIVE_INT32, integer_zero> HDF5_integer_output;
 

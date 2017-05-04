@@ -106,6 +106,16 @@ HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>
     one_count[1]=1;
     onespace=H5::DataSpace(1, one_count);
     onespace.selectAll();
+
+    // Specifying it's logical, if that's the case.
+    V tmp;
+    if (tmp.sexp_type()==LGLSXP) {
+        H5::StrType str_type(0, H5T_VARIABLE);
+        H5::DataSpace att_space(1, one_count);
+        H5::Attribute att = hdata.createAttribute("storage.mode", str_type, att_space);
+        att.write(str_type, std::string("logical"));
+    }
+
     return;
 }
 

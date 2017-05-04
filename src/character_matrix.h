@@ -1,5 +1,5 @@
-#ifndef CHARACTER_MATRIX_H
-#define CHARACTER_MATRIX_H
+#ifndef BEACHMAT_CHARACTER_MATRIX_H
+#define BEACHMAT_CHARACTER_MATRIX_H
 
 #include "matrix.h"
 

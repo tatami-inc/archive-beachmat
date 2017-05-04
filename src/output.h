@@ -1,5 +1,5 @@
-#ifndef OUTPUT_MATRIX_H
-#define OUTPUT_MATRIX_H
+#ifndef BEACHMAT_OUTPUT_H
+#define BEACHMAT_OUTPUT_H
 
 #include "matrix.h"
 

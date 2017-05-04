@@ -1,5 +1,5 @@
-#ifndef LOGICAL_MATRIX_H
-#define LOGICAL_MATRIX_H
+#ifndef BEACHMAT_LOGICAL_MATRIX_H
+#define BEACHMAT_LOGICAL_MATRIX_H
 
 #include "matrix.h"
 #include "output.h"
@@ -22,7 +22,6 @@ typedef dense_matrix<int, Rcpp::LogicalVector> dense_logical_matrix;
 
 /* lgCMatrix */
 
-extern constexpr int logical_false=0;
 typedef Csparse_matrix<int, Rcpp::LogicalVector, logical_false> Csparse_logical_matrix;
 
 /* lspMatrix */
