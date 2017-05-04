@@ -27,7 +27,11 @@ std::shared_ptr<integer_output> create_integer_output(int nrow, int ncol, bool b
     if (basic) { 
         return std::shared_ptr<integer_output>(new simple_integer_output(nrow, ncol));
     } 
+#ifdef BEACHMAT_USE_HDF5
     return std::shared_ptr<integer_output>(new HDF5_integer_output(nrow, ncol));
+#else
+    throw std::runtime_error("'beachmat' not compiled with HDF5 support");
+#endif            
 }
 
 std::shared_ptr<integer_output> create_integer_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {

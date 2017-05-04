@@ -2,11 +2,13 @@
 #define INTEGER_MATRIX_H
 
 #include "matrix.h"
-#include "output_matrix.h"
+#include "output.h"
 
 namespace beachmat {
 
-/* Virtual base class for integer matrices. */
+/********************************************
+ * Virtual base class for integer matrices. *
+ ********************************************/
 
 typedef any_matrix<int, Rcpp::IntegerVector> integer_matrix;
 
@@ -26,7 +28,9 @@ typedef HDF5_matrix<int, Rcpp::IntegerVector, H5T_INTEGER, H5::PredType::NATIVE_
 
 std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);
 
-/* Virtual base class for output integer matrices. */
+/***************************************************
+ * Virtual base class for output integer matrices. *
+ ***************************************************/
 
 typedef output_matrix<int, Rcpp::IntegerVector> integer_output;
 
@@ -36,9 +40,13 @@ typedef simple_output<int, Rcpp::IntegerVector> simple_integer_output;
 
 /* HDF5 output integer matrix */
 
+#ifdef BEACHMAT_USE_HDF5
+
 extern constexpr int integer_zero=0;
 
 typedef HDF5_output<int, Rcpp::IntegerVector, H5::PredType::NATIVE_INT32, integer_zero> HDF5_integer_output;
+
+#endif
 
 /* Output dispatchers */
 

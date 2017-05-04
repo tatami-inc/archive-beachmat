@@ -2,10 +2,13 @@
 #define LOGICAL_MATRIX_H
 
 #include "matrix.h"
+#include "output.h"
 
 namespace beachmat {
 
-/* Virtual base class for logical matrices. */
+/********************************************
+ * Virtual base class for logical matrices. *
+ ********************************************/
 
 typedef any_matrix<int, Rcpp::LogicalVector> logical_matrix;
 
@@ -37,6 +40,30 @@ typedef HDF5_matrix<int, Rcpp::LogicalVector, H5T_INTEGER, H5::PredType::NATIVE_
 /* Dispatcher */
 
 std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject&);
+
+/***************************************************
+ * Virtual base class for output logical matrices. *
+ ***************************************************/
+
+typedef output_matrix<int, Rcpp::LogicalVector> logical_output;
+
+/* Simple output logical matrix */
+
+typedef simple_output<int, Rcpp::LogicalVector> simple_logical_output;
+
+/* HDF5 output logical matrix */
+
+#ifdef BEACHMAT_USE_HDF5
+
+typedef HDF5_output<int, Rcpp::LogicalVector, H5::PredType::NATIVE_INT32, logical_false> HDF5_logical_output;
+
+#endif
+
+/* Output dispatchers */
+
+std::shared_ptr<logical_output> create_logical_output(int, int, bool=true);
+
+std::shared_ptr<logical_output> create_logical_output(int, int, const Rcpp::RObject&, bool);
 
 }
 

@@ -38,7 +38,6 @@ private:
     V data;    
 };
 
-
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 class HDF5_output : public output_matrix<T, V> {
 public:
@@ -63,7 +62,6 @@ protected:
 
     virtual T get_first();
 };
-
 
 #include "template_output.h"
 

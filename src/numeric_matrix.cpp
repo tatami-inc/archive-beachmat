@@ -27,4 +27,21 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
     return std::shared_ptr<numeric_matrix>(new simple_numeric_matrix(incoming));
 }
 
+/* Output dispatch definition */
+
+std::shared_ptr<numeric_output> create_numeric_output(int nrow, int ncol, bool basic) {
+    if (basic) { 
+        return std::shared_ptr<numeric_output>(new simple_numeric_output(nrow, ncol));
+    } 
+#ifdef BEACHMAT_USE_HDF5
+    return std::shared_ptr<numeric_output>(new HDF5_numeric_output(nrow, ncol));
+#else
+    throw std::runtime_error("'beachmat' not compiled with HDF5 support");
+#endif            
+}
+
+std::shared_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {
+    return create_numeric_output(nrow, ncol, (simplify || !incoming.isS4()));
+}
+
 }

@@ -27,4 +27,21 @@ std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
     return std::shared_ptr<logical_matrix>(new simple_logical_matrix(incoming));
 }
 
+/* Output dispatch definition */
+
+std::shared_ptr<logical_output> create_logical_output(int nrow, int ncol, bool basic) {
+    if (basic) { 
+        return std::shared_ptr<logical_output>(new simple_logical_output(nrow, ncol));
+    } 
+#ifdef BEACHMAT_USE_HDF5
+    return std::shared_ptr<logical_output>(new HDF5_logical_output(nrow, ncol));
+#else
+    throw std::runtime_error("'beachmat' not compiled with HDF5 support");
+#endif            
+}
+
+std::shared_ptr<logical_output> create_logical_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {
+    return create_logical_output(nrow, ncol, (simplify || !incoming.isS4()));
+}
+
 }

@@ -74,12 +74,18 @@ Rcpp::RObject simple_output<T, V>::yield() {
 /* Methods for HDF5 output matrix. */
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>(nr, nc), fname("whee.h5"), dname("yay") {
+HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>(nr, nc) {
+    // Initializing file name (not using getHDF5DumpName, to avoid file handle conflicts
+    // and problems with concurrent read/write).
+    Rcpp::Environment baseenv("package:base");
+    Rcpp::Function tempfun=baseenv["tempfile"];
+    fname = Rcpp::as<std::string>(tempfun()) + ".h5";
     hfile=H5::H5File(fname, H5F_ACC_TRUNC);
    
     H5::DSetCreatPropList plist;
     plist.setFillValue(HPT, &FILL);
-
+    
+    dname="/HDF5ArrayAUTO00001";
     hsize_t dims[2];
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
     dims[1]=this->nrow; 

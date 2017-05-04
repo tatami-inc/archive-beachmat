@@ -2,6 +2,7 @@
 #define NUMERIC_MATRIX_H
 
 #include "matrix.h"
+#include "output.h"
 
 namespace beachmat { 
 
@@ -37,6 +38,30 @@ typedef HDF5_matrix<double, Rcpp::NumericVector, H5T_FLOAT, H5::PredType::NATIVE
 /* Dispatcher */
 
 std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
+
+/***************************************************
+ * Virtual base class for output numeric matrices. *
+ ***************************************************/
+
+typedef output_matrix<double, Rcpp::NumericVector> numeric_output;
+
+/* Simple output numeric matrix */
+
+typedef simple_output<double, Rcpp::NumericVector> simple_numeric_output;
+
+/* HDF5 output numeric matrix */
+
+#ifdef BEACHMAT_USE_HDF5
+
+typedef HDF5_output<double, Rcpp::NumericVector, H5::PredType::NATIVE_DOUBLE, numeric_zero> HDF5_numeric_output;
+
+#endif
+
+/* Output dispatchers */
+
+std::shared_ptr<numeric_output> create_numeric_output(int, int, bool=true);
+
+std::shared_ptr<numeric_output> create_numeric_output(int, int, const Rcpp::RObject&, bool);
 
 }
 
