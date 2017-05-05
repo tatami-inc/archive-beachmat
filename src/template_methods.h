@@ -578,12 +578,13 @@ T HDF5_matrix<T, V, HTC, HPT>::get(int r, int c) {
 /* Methods for a bigmemory matrix. */
 
 template<typename T, class V, int MTYPE>
-bigmemory_matrix<T, V, MTYPE>::bigmemory_matrix(const Rcpp::RObject& incoming) : xptr(get_bigmemory_address(incoming)), mat(*xptr) {
+bigmemory_matrix<T, V, MTYPE>::bigmemory_matrix(const Rcpp::RObject& incoming) : xptr(get_bigmemory_address(incoming)), mat(*xptr), sepmat(*xptr) {
     (this->ncol)=xptr->ncol();
     (this->nrow)=xptr->nrow();
     if (xptr->matrix_type()!=MTYPE) { 
         throw std::runtime_error("SEXP type is not consistent with bigmemory storage type");
-    }    
+    }   
+    separated=xptr->separated_columns();
     return;
 }
 
@@ -592,20 +593,24 @@ bigmemory_matrix<T, V, MTYPE>::~bigmemory_matrix () {}
 
 template<typename T, class V, int MTYPE>
 void bigmemory_matrix<T, V, MTYPE>::get_row(int r, typename V::iterator out, int start, int end) {
-    for (int col=start; col<end; ++col, ++out) { (*out)=mat[col][r]; }
+    if (separated) { 
+        for (int col=start; col<end; ++col, ++out) { (*out)=sepmat[col][r]; }
+    } else { 
+        for (int col=start; col<end; ++col, ++out) { (*out)=mat[col][r]; }
+    }
     return;
 }
 
 template<typename T, class V, int MTYPE>
 void bigmemory_matrix<T, V, MTYPE>::get_col(int c, typename V::iterator out, int start, int end) {
-    auto src=mat[c];
+    auto src=(separated ? sepmat[c] : mat[c]);
     std::copy(src+start, src+end, out);
     return;
 }
 
 template<typename T, class V, int MTYPE>
 T bigmemory_matrix<T, V, MTYPE>::get(int r, int c) {
-    return mat[c][r];
+    return (separated ? sepmat[c][r] : mat[c][r]);
 }
 
 #endif

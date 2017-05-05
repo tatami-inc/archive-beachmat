@@ -192,6 +192,8 @@ public:
 protected:
     Rcpp::XPtr<BigMatrix> xptr;
     MatrixAccessor<T> mat;
+    SepMatrixAccessor<T> sepmat;
+    bool separated;
 
     const Rcpp::RObject& get_address(const Rcpp::RObject&);
 };
