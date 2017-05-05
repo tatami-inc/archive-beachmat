@@ -213,17 +213,6 @@ Rcpp::RObject HDF5_output<T, V, HPT, FILL>::yield() {
         throw_custom_error("missing 'seed' slot in ", matclass, " object");
     }
     h5mat.slot("seed") = h5seed;
-    if (!h5mat.hasSlot("index")) {
-        throw_custom_error("missing 'index' slot in ", matclass, " object");
-    }
-    Rcpp::List ilist(2);
-    Rcpp::IntegerVector rsub(this->nrow);
-    ilist[0] = rsub;
-    std::iota(rsub.begin(), rsub.end(), 1);
-    Rcpp::IntegerVector csub(this->ncol);
-    ilist[1] = csub;
-    std::iota(csub.begin(), csub.end(), 1);
-    h5mat.slot("index") = ilist;
 
     return SEXP(h5mat);
 }
