@@ -437,13 +437,20 @@ T Psymm_matrix<T, V>::get(int r, int c) {
 #ifdef BEACHMAT_USE_HDF5
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) {
+HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_NilValue) { 
     std::string ctype=get_class(incoming);
-    if (!incoming.isS4() || ctype!="HDF5Matrix") {
-        throw std::runtime_error("matrix should be a HDF5Matrix object");
+    if (incoming.isS4()) {
+        if (ctype=="DelayedMatrix") { 
+            realized=realize_DelayedMatrix(incoming);
+        } else if (ctype=="HDF5Matrix") {
+            realized=incoming;
+        }
+    }
+    if (realized==R_NilValue) {
+        throw std::runtime_error("matrix should be a HDF5Matrix or DelayedMatrix object");
     }
 
-    const Rcpp::RObject& h5_seed=get_safe_slot(incoming, "seed");
+    const Rcpp::RObject& h5_seed=get_safe_slot(realized, "seed");
     std::string stype=get_class(h5_seed);
     if (!h5_seed.isS4() || stype!="HDF5ArraySeed") {
         throw_custom_error("'seed' slot in a ", ctype, " object should be a HDF5ArraySeed object");

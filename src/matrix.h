@@ -166,6 +166,8 @@ public:
     void get_row(int, typename V::iterator, int, int);
     void get_col(int, typename V::iterator, int, int);
 protected:
+    Rcpp::RObject realized;
+
     H5::H5File hfile;
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;

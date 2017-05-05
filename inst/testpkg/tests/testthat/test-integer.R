@@ -69,7 +69,21 @@ expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, A,
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
 
-expect_identical("integer", .Call(beachtest:::cxx_test_type_check, test.mat))
+expect_identical("integer", .Call(beachtest:::cxx_test_type_check, A))
+
+B <- A[1:10,] # Testing delayed operations
+resolved <- as.matrix(B)
+expect_s4_class(B, "DelayedMatrix")
+expect_identical(resolved, .Call(beachtest:::cxx_test_integer_access, B, 1L))
+
+B <- A + 1L
+resolved <- as.matrix(B)
+expect_s4_class(B, "DelayedMatrix")
+expect_identical(resolved, .Call(beachtest:::cxx_test_integer_access, B, 1L))
+
+expect_identical("integer", .Call(beachtest:::cxx_test_type_check, B))
+B <- A + 1
+expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
 
 }
 
