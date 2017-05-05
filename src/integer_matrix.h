@@ -24,6 +24,10 @@ typedef HDF5_matrix<int, Rcpp::IntegerVector, H5T_INTEGER, H5::PredType::NATIVE_
 
 #endif
 
+/* Bigmemory integer matrix */
+
+typedef bigmemory_matrix<int, Rcpp::IntegerVector, 4> bigmemory_integer_matrix;
+
 /* Dispatcher */
 
 std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);

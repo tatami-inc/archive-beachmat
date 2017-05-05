@@ -12,6 +12,8 @@
 #include "R.h"
 #include "Rinternals.h"
 
+#include "bigmemory/BigMatrix.h"
+
 @DEF_HDF_CPP@
 
 #endif

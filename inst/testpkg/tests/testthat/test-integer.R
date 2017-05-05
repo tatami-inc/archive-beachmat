@@ -1,6 +1,7 @@
 # This tests the ability of the API to properly access integer matrices of different types.
 # library(beachtest); library(testthat); source("test-integer.R")
 
+##############################################
 # Testing simple matrices:
 
 set.seed(12345)
@@ -31,6 +32,7 @@ expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, te
 
 expect_identical("integer", .Call(beachtest:::cxx_test_type_check, test.mat))
 
+##############################################
 # Testing HDF5 matrices:
 
 if (beachmat:::use.hdf5) { 
@@ -71,6 +73,44 @@ expect_identical("integer", .Call(beachtest:::cxx_test_type_check, test.mat))
 
 }
 
+##############################################
+# Testing bigmemory matrices:
+
+library(bigmemory)
+test.mat <- matrix(rpois(150, lambda=5), 15, 10)
+A <- as.big.matrix(test.mat, type="integer")
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 1L))
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 2L))
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 3L))
+
+test.mat <- matrix(rpois(150, lambda=5), 5, 30)
+A <- as.big.matrix(test.mat, type="integer")
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 1L))
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 2L))
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 3L))
+
+test.mat <- matrix(rpois(150, lambda=5), 30, 5)
+A <- as.big.matrix(test.mat, type="integer")
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 1L))
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 2L))
+expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 3L))
+
+test.mat <- matrix(rpois(150, lambda=5), 15, 10) # slices
+A <- as.big.matrix(test.mat, type="integer")
+expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
+expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
+expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
+expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
+expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
+expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
+expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
+expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
+
+expect_identical("integer", .Call(beachtest:::cxx_test_type_check, A))
+
+##############################################
+##############################################
+##############################################
 # Testing simple integer output:
 
 set.seed(12345)

@@ -25,6 +25,8 @@ extern const int integer_zero;
 
 extern const int logical_false;
 
+Rcpp::RObject get_bigmemory_address(const Rcpp::RObject&);
+
 }
 
 #endif

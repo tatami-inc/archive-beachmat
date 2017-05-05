@@ -8,6 +8,8 @@
 #include "H5Cpp.h"
 #endif
 
+#include "bigmemory/MatrixAccessor.hpp"
+
 namespace beachmat { 
 
 /* Virtual base class for matrices. */
@@ -175,6 +177,24 @@ protected:
 };
 
 #endif
+
+/* Bigmemory Matrix */
+
+template<typename T, class V, int MTYPE>
+class bigmemory_matrix : public any_matrix<T, V> {
+public:
+    bigmemory_matrix(const Rcpp::RObject&);
+    ~bigmemory_matrix();
+
+    T get(int, int);
+    void get_row(int, typename V::iterator, int, int);
+    void get_col(int, typename V::iterator, int, int);
+protected:
+    Rcpp::XPtr<BigMatrix> xptr;
+    MatrixAccessor<T> mat;
+
+    const Rcpp::RObject& get_address(const Rcpp::RObject&);
+};
 
 #include "template_methods.h"
 

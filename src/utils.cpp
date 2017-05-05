@@ -69,11 +69,21 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
             Rcpp::RObject h5seed=get_safe_slot(incoming, "seed");
             Rcpp::RObject first_val=get_safe_slot(h5seed, "first_val");
             return first_val.sexp_type();
+        } else if (classname=="big.matrix") {
+            Rcpp::RObject address=get_bigmemory_address(incoming);
+            Rcpp::XPtr<BigMatrix> xptr(address);
+            switch(xptr->matrix_type()) { 
+                case 4:
+                    return INTSXP;
+                case 8:
+                    return REALSXP;
+            }
         } else if (classname.length()==9 && classname.substr(3)=="Matrix") {
-            if (classname[0]=='d') {
-                return REALSXP;
-            } else if (classname[0]=='l') {
-                return LGLSXP;
+            switch(classname[0]) { 
+                case 'd':
+                    return REALSXP;
+                case 'l':
+                    return LGLSXP;
             }
         }
         throw_custom_error("unknown SEXP type for ", classname, " object");
@@ -86,6 +96,14 @@ const double numeric_zero=0;
 const int integer_zero=0;
                                
 const int logical_false=0;
+
+Rcpp::RObject get_bigmemory_address(const Rcpp::RObject& incoming) {
+    std::string ctype=get_class(incoming);
+    if (!incoming.isS4() || ctype!="big.matrix") {
+        throw std::runtime_error("matrix should be a big.matrix object");
+    }
+    return get_safe_slot(incoming, "address");
+}
 
 }
 

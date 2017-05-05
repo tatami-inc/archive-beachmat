@@ -13,6 +13,8 @@ std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incom
 #else
             throw std::runtime_error("'beachmat' not compiled with HDF5 support");
 #endif            
+        } else if (ctype=="big.matrix") { 
+            return std::shared_ptr<integer_matrix>(new bigmemory_integer_matrix(incoming));
         }
         std::stringstream err;
         err << "unsupported class '" << ctype << "' for integer_matrix";
