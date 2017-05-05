@@ -7,7 +7,7 @@ namespace beachmat {
 std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incoming) { 
     if (incoming.isS4()) { 
         std::string ctype=get_class(incoming);
-        if (ctype=="HDF5Matrix") { 
+        if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
 #ifdef BEACHMAT_USE_HDF5
             return std::shared_ptr<integer_matrix>(new HDF5_integer_matrix(incoming));
 #else

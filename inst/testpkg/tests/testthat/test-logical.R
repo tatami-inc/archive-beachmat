@@ -206,6 +206,20 @@ expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A,
 
 expect_identical("logical", .Call(beachtest:::cxx_test_type_check, A))
 
+B <- A[1:10,] # Testing delayed operations
+resolved <- as.matrix(B)
+expect_s4_class(B, "DelayedMatrix")
+expect_identical(resolved, .Call(beachtest:::cxx_test_logical_access, B, 1L))
+
+B <- A | TRUE
+resolved <- as.matrix(B)
+expect_s4_class(B, "DelayedMatrix")
+expect_identical(resolved, .Call(beachtest:::cxx_test_logical_access, B, 1L))
+
+expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B))
+B <- A + 1L
+expect_identical("integer", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
+
 }
 
 # Testing simple logical output:

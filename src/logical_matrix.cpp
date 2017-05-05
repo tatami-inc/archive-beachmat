@@ -15,7 +15,7 @@ std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
             throw std::runtime_error("lgTMatrix not supported, convert to lgCMatrix");
         } else if (ctype=="lspMatrix") {
             return std::shared_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
-        } else if (ctype=="HDF5Matrix") { 
+        } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
 #ifdef BEACHMAT_USE_HDF5            
             return std::shared_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
 #else

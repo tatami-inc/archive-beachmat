@@ -15,7 +15,7 @@ std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
             throw std::runtime_error("dgTMatrix not supported, convert to dgCMatrix");
         } else if (ctype=="dspMatrix") {
             return std::shared_ptr<numeric_matrix>(new Psymm_numeric_matrix(incoming));
-        } else if (ctype=="HDF5Matrix") { 
+        } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
 #ifdef BEACHMAT_USE_HDF5
             return std::shared_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
 #else  

@@ -73,6 +73,13 @@ expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_character_slice, 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_character_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_character_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
 
-expect_identical("character", .Call(beachtest:::cxx_test_type_check, test.mat))
+expect_identical("character", .Call(beachtest:::cxx_test_type_check, A))
+
+B <- A[1:10,] # Testing delayed operations
+resolved <- as.matrix(B)
+expect_identical(resolved, .Call(beachtest:::cxx_test_character_access, B, 1L))
+expect_identical("character", .Call(beachtest:::cxx_test_type_check, B))
+expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B=="A"))
+
 
 }
