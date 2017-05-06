@@ -4,56 +4,56 @@
 SEXP test_numeric_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
-    return fill_up<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr, mode);
+    return fill_up<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), mode);
     END_RCPP
 }
 
 SEXP test_integer_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
-    return fill_up<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr, mode);
+    return fill_up<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), mode);
     END_RCPP
 }
 
 SEXP test_logical_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
-    return fill_up<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr, mode);
+    return fill_up<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), mode);
     END_RCPP
 }
 
 SEXP test_character_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_character_matrix(in);
-    return fill_up<Rcpp::StringVector, Rcpp::StringMatrix>(ptr, mode);
+    return fill_up<Rcpp::StringVector, Rcpp::StringMatrix>(ptr.get(), mode);
     END_RCPP
 }
 
 SEXP test_numeric_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
-    return fill_up_slice<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr, mode, rx, cx);
+    return fill_up_slice<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), mode, rx, cx);
     END_RCPP
 }
 
 SEXP test_integer_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
-    return fill_up_slice<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr, mode, rx, cx);
+    return fill_up_slice<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), mode, rx, cx);
     END_RCPP
 }
 
 SEXP test_logical_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
-    return fill_up_slice<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr, mode, rx, cx);
+    return fill_up_slice<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), mode, rx, cx);
     END_RCPP
 }
 
 SEXP test_character_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_character_matrix(in);
-    return fill_up_slice<Rcpp::StringVector, Rcpp::StringMatrix>(ptr, mode, rx, cx);
+    return fill_up_slice<Rcpp::StringVector, Rcpp::StringMatrix>(ptr.get(), mode, rx, cx);
     END_RCPP
 }
 
@@ -87,7 +87,6 @@ SEXP test_sparse_numeric_slice(SEXP in, SEXP Inx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
     const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
     
     Rcpp::IntegerMatrix inx(Inx);
     if (inx.nrow()!=nrows) {

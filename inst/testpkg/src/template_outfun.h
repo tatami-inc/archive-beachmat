@@ -9,7 +9,7 @@
  */
 
 template <class T, class M, class O>  // M, O are automatically deduced.
-Rcpp::RObject pump_out(M& ptr, O& optr, const Rcpp::IntegerVector& mode, const Rcpp::LogicalVector& refill) {
+Rcpp::RObject pump_out(M ptr, O optr, const Rcpp::IntegerVector& mode, const Rcpp::LogicalVector& refill) {
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
@@ -60,6 +60,7 @@ Rcpp::RObject pump_out(M& ptr, O& optr, const Rcpp::IntegerVector& mode, const R
     } else { 
         throw std::runtime_error("'mode' should be in [1,3]"); 
     }
+
     return optr->yield();
 }
 
@@ -68,7 +69,7 @@ Rcpp::RObject pump_out(M& ptr, O& optr, const Rcpp::IntegerVector& mode, const R
  */
 
 template <class T, class M, class O>  
-Rcpp::RObject pump_out_slice (M& ptr, O& optr, const Rcpp::IntegerVector& mode, 
+Rcpp::RObject pump_out_slice (M ptr, O optr, const Rcpp::IntegerVector& mode, 
         const Rcpp::IntegerVector& rows, const Rcpp::IntegerVector& cols,  const Rcpp::LogicalVector& refill) {
 
     if (mode.size()!=1) { 
@@ -81,14 +82,12 @@ Rcpp::RObject pump_out_slice (M& ptr, O& optr, const Rcpp::IntegerVector& mode,
     }
     const int rstart=rows[0]-1, rend=rows[1];
     const int nrows=rend-rstart;    
-    const int total_rows=ptr->get_nrow();
 
     if (cols.size()!=2) { 
         throw std::runtime_error("'cols' should be an integer vector of length 2"); 
     }
     const int cstart=cols[0]-1, cend=cols[1];
     const int ncols=cend-cstart;    
-    const int total_cols=ptr->get_ncol();
 
     if (refill.size()!=1) {
         throw std::runtime_error("'refill' should be a logical scalar");

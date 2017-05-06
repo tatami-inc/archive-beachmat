@@ -7,7 +7,7 @@
  */
 
 template <class T, class O, class M>  // M is automatically deduced.
-O fill_up (M& ptr, const Rcpp::IntegerVector& mode) {
+O fill_up (M ptr, const Rcpp::IntegerVector& mode) {
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
@@ -53,7 +53,7 @@ O fill_up (M& ptr, const Rcpp::IntegerVector& mode) {
  */
 
 template <class T, class O, class M>  
-O fill_up_slice (M& ptr, const Rcpp::IntegerVector& mode, const Rcpp::IntegerVector& rows, const Rcpp::IntegerVector& cols) {
+O fill_up_slice (M ptr, const Rcpp::IntegerVector& mode, const Rcpp::IntegerVector& rows, const Rcpp::IntegerVector& cols) {
 
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
