@@ -23,6 +23,7 @@ class HDF5_character_matrix : public HDF5_matrix<Rcpp::String, Rcpp::StringVecto
 public:    
     HDF5_character_matrix(const Rcpp::RObject&);
     ~HDF5_character_matrix();
+    std::shared_ptr<character_matrix> clone() const;
 
     Rcpp::String get(int, int);
     void get_row(int, Rcpp::StringVector::iterator, int, int);

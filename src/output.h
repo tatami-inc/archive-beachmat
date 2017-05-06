@@ -10,6 +10,8 @@ class output_matrix {
 public:
     output_matrix(int, int);
     ~output_matrix();
+    output_matrix(output_matrix<T, V> const&) = delete;
+    output_matrix<T, V>& operator=(output_matrix<T, V> const&) = delete;
 
     void fill_row(int, typename V::iterator);
     void fill_col(int, typename V::iterator);

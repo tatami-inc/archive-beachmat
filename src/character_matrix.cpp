@@ -18,6 +18,10 @@ HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HD
 
 HDF5_character_matrix::~HDF5_character_matrix() {}
 
+std::shared_ptr<character_matrix> HDF5_character_matrix::clone() const {
+    return std::shared_ptr<character_matrix>(new HDF5_character_matrix(*this));
+}
+    
 void HDF5_character_matrix::get_row(int r, Rcpp::StringVector::iterator out, int start, int end) { 
     select_row(r, start, end);
 

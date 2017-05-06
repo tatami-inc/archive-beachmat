@@ -63,6 +63,11 @@ template<typename T, class V>
 simple_matrix<T, V>::~simple_matrix () {}
 
 template<typename T, class V>
+std::shared_ptr<any_matrix<T, V> > simple_matrix<T, V>::clone() const {
+    return std::shared_ptr<any_matrix<T, V> >(new simple_matrix<T, V>(*this));
+}
+
+template<typename T, class V>
 int simple_matrix<T, V>::get_index(int r, int c) const { return r + c*(this->nrow); }
 
 template<typename T, class V>
@@ -108,6 +113,11 @@ dense_matrix<T, V>::dense_matrix(const Rcpp::RObject& incoming) {
 
 template <typename T, class V>
 dense_matrix<T, V>::~dense_matrix() {}
+
+template<typename T, class V>
+std::shared_ptr<any_matrix<T, V> > dense_matrix<T, V>::clone() const {
+    return std::shared_ptr<any_matrix<T, V> >(new dense_matrix<T, V>(*this));
+}
 
 template <typename T, class V>
 int dense_matrix<T, V>::get_index(int r, int c) const { return r + c*(this->nrow); }
@@ -195,6 +205,11 @@ Csparse_matrix<T, V, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : nx(0), 
 
 template <typename T, class V, const T& Z>
 Csparse_matrix<T, V, Z>::~Csparse_matrix () {}
+
+template<typename T, class V, const T& Z>
+std::shared_ptr<any_matrix<T, V> > Csparse_matrix<T, V, Z>::clone() const {
+    return std::shared_ptr<any_matrix<T, V> >(new Csparse_matrix<T, V, Z>(*this));
+}
 
 template <typename T, class V, const T& Z>
 int Csparse_matrix<T, V, Z>::get_index(int r, int c) const {
@@ -355,6 +370,11 @@ Psymm_matrix<T, V>::Psymm_matrix(const Rcpp::RObject& incoming) : upper(true) {
 
 template <typename T, class V>
 Psymm_matrix<T, V>::~Psymm_matrix () {}
+
+template<typename T, class V>
+std::shared_ptr<any_matrix<T, V> > Psymm_matrix<T, V>::clone() const {
+    return std::shared_ptr<any_matrix<T, V> >(new Psymm_matrix<T, V>(*this));
+}
 
 template <typename T, class V>
 int Psymm_matrix<T, V>::get_index(int r, int c) const {
@@ -529,6 +549,11 @@ HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realiz
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
 HDF5_matrix<T, V, HTC, HPT>::~HDF5_matrix() {}
+
+template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
+std::shared_ptr<any_matrix<T, V> > HDF5_matrix<T, V, HTC, HPT>::clone() const {
+    return std::shared_ptr<any_matrix<T, V> >(new HDF5_matrix<T, V, HTC, HPT>(*this));
+}
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
 void HDF5_matrix<T, V, HTC, HPT>::select_row(int r, int start, int end) {
