@@ -31,6 +31,18 @@ int output_matrix<T, V>::get_ncol() const {
     return this->ncol;
 }
 
+template<typename T, class V>
+void output_matrix<T, V>::get_row(int r, typename V::iterator out) {
+    get_row(r, out, 0, ncol);
+    return;
+}
+
+template<typename T, class V>
+void output_matrix<T, V>::get_col(int c, typename V::iterator out) {
+    get_col(c, out, 0, nrow);
+    return;
+}
+
 /* Methods for the simple output matrix. */
 
 template<typename T, class V>
@@ -44,14 +56,14 @@ simple_output<T, V>::~simple_output() {}
 
 template<typename T, class V>
 void simple_output<T, V>::fill_col(int c, typename V::iterator in, int start, int end) {
-    std::copy(in, in + end - start, (this->data).begin()+c*(this->nrow)+start); 
+    std::copy(in, in + end - start, data.begin()+c*(this->nrow)+start); 
     return;
 }
 
 template<typename T, class V>
 void simple_output<T, V>::fill_row(int r, typename V::iterator in, int start, int end) {
     const int& NR=this->nrow;
-    auto mIt=(this->data).begin() + r + start * NR;
+    auto mIt=data.begin() + r + start * NR;
     for (int c=start; c<end; ++c, mIt+=NR, ++in) {
         (*mIt)=*in;        
     }
@@ -60,8 +72,28 @@ void simple_output<T, V>::fill_row(int r, typename V::iterator in, int start, in
 
 template<typename T, class V>
 void simple_output<T, V>::fill(int r, int c, T in) {
-    (this->data)[r + (this->nrow)*c]=in;
+    data[r + (this->nrow)*c]=in;
     return;
+}
+
+template<typename T, class V>
+void simple_output<T, V>::get_row(int r, typename V::iterator out, int start, int end) {
+    const int& NR=this->nrow;
+    auto src=data.begin()+start*NR+r;
+    for (int col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
+    return;
+}
+
+template<typename T, class V>
+void simple_output<T, V>::get_col(int c, typename V::iterator out, int start, int end) {
+    auto src=data.begin() + c*(this->nrow);
+    std::copy(src+start, src+end, out);
+    return;
+}
+
+template<typename T, class V>
+T simple_output<T, V>::get(int r, int c) {
+    return data[c*(this->nrow)+r];
 }
 
 template<typename T, class V>
@@ -174,13 +206,25 @@ void HDF5_output<T, V, HPT, FILL>::fill(int r, int c, T in) {
 }
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-T HDF5_output<T, V, HPT, FILL>::get_first() {
-    T thing;
-    if (this->nrow && this->ncol) {
-        select_one(0, 0);
-        hdata.read(&thing, HPT, onespace, hspace);
-    }
-    return thing;
+void HDF5_output<T, V, HPT, FILL>::get_row(int r, typename V::iterator out, int start, int end) { 
+    select_row(r, start, end);
+    hdata.read(&(*out), HPT, rowspace, hspace);
+    return;
+} 
+
+template<typename T, class V, const H5::PredType& HPT, const T& FILL>
+void HDF5_output<T, V, HPT, FILL>::get_col(int c, typename V::iterator out, int start, int end) { 
+    select_col(c, start, end);
+    hdata.read(&(*out), HPT, colspace, hspace);
+    return;
+}
+
+template<typename T, class V, const H5::PredType& HPT, const T& FILL>
+T HDF5_output<T, V, HPT, FILL>::get(int r, int c) { 
+    select_one(r, c);
+    T out;
+    hdata.read(&out, HPT, onespace, hspace);
+    return out;
 }
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
@@ -204,7 +248,11 @@ Rcpp::RObject HDF5_output<T, V, HPT, FILL>::yield() {
     if (!h5seed.hasSlot("first_val")) {
         throw_custom_error("missing 'first_val' slot in ", seedclass, " object");
     }
-    h5seed.slot("first_val") = V::create(get_first());
+    if (this->nrow && this->ncol) { 
+        h5seed.slot("first_val") = get(0, 0);
+    } else {
+        h5seed.slot("first_val") = V(0); // empty vector.
+    }
 
     // Assigning the seed to the HDF5Matrix.
     std::string matclass="HDF5Matrix";

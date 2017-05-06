@@ -18,8 +18,14 @@ public:
     virtual void fill(int, int, T)=0;
     virtual Rcpp::RObject yield()=0;
 
+    // Methods copied from any_matrix.
     int get_nrow() const;
     int get_ncol() const;
+    void get_row(int, typename V::iterator);
+    void get_col(int, typename V::iterator);
+    virtual void get_col(int, typename V::iterator, int, int)=0;
+    virtual void get_row(int, typename V::iterator, int, int)=0;
+    virtual T get(int, int)=0;
 protected:
     int nrow, ncol;
 };
@@ -34,6 +40,10 @@ public:
     void fill_col(int, typename V::iterator, int, int);
     void fill(int, int, T);
     Rcpp::RObject yield();
+
+    void get_col(int, typename V::iterator, int, int);
+    void get_row(int, typename V::iterator, int, int);
+    T get(int, int);
 private:
     V data;    
 };
@@ -48,6 +58,10 @@ public:
     void fill_col(int, typename V::iterator, int, int);
     void fill(int, int, T);
     Rcpp::RObject yield();
+
+    void get_col(int, typename V::iterator, int, int);
+    void get_row(int, typename V::iterator, int, int);
+    T get(int, int);
 protected:
     std::string fname, dname;
 
@@ -59,8 +73,6 @@ protected:
     void select_row(int, int, int);
     void select_col(int, int, int);
     void select_one(int, int);
-
-    virtual T get_first();
 };
 
 #include "template_output.h"
