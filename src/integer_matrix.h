@@ -30,7 +30,7 @@ typedef bigmemory_matrix<int, Rcpp::IntegerVector, 4> bigmemory_integer_matrix;
 
 /* Dispatcher */
 
-std::shared_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);
+std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);
 
 /***************************************************
  * Virtual base class for output integer matrices. *
@@ -52,9 +52,9 @@ typedef HDF5_output<int, Rcpp::IntegerVector, H5::PredType::NATIVE_INT32, intege
 
 /* Output dispatchers */
 
-std::shared_ptr<integer_output> create_integer_output(int, int, bool=true);
+std::unique_ptr<integer_output> create_integer_output(int, int, bool=true);
 
-std::shared_ptr<integer_output> create_integer_output(int, int, const Rcpp::RObject&, bool);
+std::unique_ptr<integer_output> create_integer_output(int, int, const Rcpp::RObject&, bool);
 
 }
 

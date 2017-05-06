@@ -38,7 +38,7 @@ typedef HDF5_matrix<int, Rcpp::LogicalVector, H5T_INTEGER, H5::PredType::NATIVE_
 
 /* Dispatcher */
 
-std::shared_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject&);
+std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject&);
 
 /***************************************************
  * Virtual base class for output logical matrices. *
@@ -60,9 +60,9 @@ typedef HDF5_output<int, Rcpp::LogicalVector, H5::PredType::NATIVE_INT32, logica
 
 /* Output dispatchers */
 
-std::shared_ptr<logical_output> create_logical_output(int, int, bool=true);
+std::unique_ptr<logical_output> create_logical_output(int, int, bool=true);
 
-std::shared_ptr<logical_output> create_logical_output(int, int, const Rcpp::RObject&, bool);
+std::unique_ptr<logical_output> create_logical_output(int, int, const Rcpp::RObject&, bool);
 
 }
 

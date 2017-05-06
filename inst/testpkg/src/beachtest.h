@@ -32,17 +32,17 @@ SEXP test_type_check(SEXP);
 
 // Output functions.
 
-SEXP test_integer_output(SEXP, SEXP);
+SEXP test_integer_output(SEXP, SEXP, SEXP);
 
-SEXP test_integer_output_slice(SEXP, SEXP, SEXP, SEXP);
+SEXP test_integer_output_slice(SEXP, SEXP, SEXP, SEXP, SEXP);
 
-SEXP test_numeric_output(SEXP, SEXP);
+SEXP test_numeric_output(SEXP, SEXP, SEXP);
 
-SEXP test_numeric_output_slice(SEXP, SEXP, SEXP, SEXP);
+SEXP test_numeric_output_slice(SEXP, SEXP, SEXP, SEXP, SEXP);
 
-SEXP test_logical_output(SEXP, SEXP);
+SEXP test_logical_output(SEXP, SEXP, SEXP);
 
-SEXP test_logical_output_slice(SEXP, SEXP, SEXP, SEXP);
+SEXP test_logical_output_slice(SEXP, SEXP, SEXP, SEXP, SEXP);
 
 }
 

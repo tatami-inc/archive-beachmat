@@ -68,6 +68,14 @@ Rcpp::RObject realize_DelayedMatrix(const Rcpp::RObject& incoming) {
     return realfun(incoming, "HDF5Array");
 }
 
+std::string generate_HDF5Matrix_filename() {
+    // Initializing file name (not using getHDF5DumpName, to avoid file handle conflicts
+    // and problems with concurrent read/write).
+    Rcpp::Environment baseenv("package:base");
+    Rcpp::Function tempfun=baseenv["tempfile"];
+    return Rcpp::as<std::string>(tempfun()) + ".h5";
+}
+
 int find_sexp_type (const Rcpp::RObject& incoming) {
     if (incoming.isObject()) {
         const std::string classname=get_class(incoming);

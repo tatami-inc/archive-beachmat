@@ -109,7 +109,7 @@ importFrom(Rcpp, sourceRcpp)
 (The exact function to be imported doesn't matter, as long as the namespace is loaded.)
 Check out the `r CRANpkg("Rcpp")` documentation for more details.
 
-# Overview of the API
+# Overview of the API (input)
 
 ## An example with a numeric matrix
 
@@ -136,17 +136,24 @@ The available methods for this object are:
 - `dptr->get_col(c, X)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at column `c`.
 There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
 No value is returned by this method.
+- `dptr->get_col(c, X, rstart, rend)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at column `c` from row `rstart` to `rend-1`.
+There should be at least `rend-rstart` accessible elements, i.e., `*X` and `*(X+rend-rstart-1)` should be valid entries.
+No value is returned by this method.
 - `dptr->get_row(r, X)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at row `r`.
 There should be at least `ncol` accessible elements, i.e., `*X` and `*(X+ncol-1)` should be valid entries.
+No value is returned by this method.
+- `dptr->get_row(r, X, cstart, cend)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at row `r` from column `cstart` to `cend-1`.
+There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
 No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 
 In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
+Similar rules apply to `rstart` and `rend`, which should be in `[0, nrow]`; and to `cstart` and `cend`, which should be in `[0, ncol]`.
 
 ## Other matrix types
 
-Logical, integer and character matrices are also supported, by including the following header files:
+Logical, integer and character matrices can be handled by including the following header files:
 
 ```
 #include "beachmat/logical_matrix.h"
@@ -154,7 +161,7 @@ Logical, integer and character matrices are also supported, by including the fol
 #include "beachmat/character_matrix.h"
 ```
 
-The creation function changes correspondingly, for logical matrix `lmat`, integer matrix `imat` and character matrix `cmat`:
+The dispatch function changes correspondingly, for logical matrix `lmat`, integer matrix `imat` and character matrix `cmat`:
 
 ```
 std::shared_ptr<beachmat::logical_matrix> lptr=beachmat::create_logical_matrix(lmat);
@@ -162,8 +169,20 @@ std::shared_ptr<beachmat::integer_matrix> iptr=beachmat::create_integer_matrix(i
 std::shared_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matrix(cmat);
 ```
 
+Equivalent methods are available for all matrix types with appropriate changes in type.
 For integer and logical matrices, `X` should be of type `Rcpp::IntegerVector::iterator` and `Rcpp::LogicalVector::iterator`, respectively, and `get` will return an integer.
 For character matrices, `X` should be of type `Rcpp::StringVector::iterator`, and `get` will return a `Rcpp::String`.
+
+The following matrix classes are supported:
+
+- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dspMatrix`, `HDF5Matrix`, `DelayedMatrix`
+- integer: `matrix`, `HDF5Matrix`, `DelayedMatrix`
+- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lspMatrix`, `HDF5Matrix`, `DelayedMatrix`
+- character: `matrix`, `HDF5Matrix`, `DelayedMatrix`
+
+Additional classes can be added on a need-to-use basis.
+As a general rule, if a matrix-like object can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
+Please contact the maintainers if you have a class that you would like to see supported.
 
 ## Important developer information 
 
@@ -179,6 +198,7 @@ Users should instead create new shared pointers for use in each thread, by copyi
 This is fairly cheap as the matrix data itself is not copied.
 - When accessing `character_matrix` data, the `Rcpp::String` class is used as it provides a convenient wrapper around the underlying `CHARSXP`. 
 This ensures that the string is stored in R's global cache and is suitably protected against garbage collection. 
+- `DelayedMatrix` objects are automatically realized by the API to `HDF5Matrix` objects via the `realize` method in the `r Biocpkg("DelayedArray")` package.
 - The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
 See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
@@ -197,18 +217,72 @@ We could add a template argument to the entire class, but this would only allow 
 Overloading seems like the best approach, but would be a pain if I have to rewrite every fill_* method.
 -->
 
-# Supported matrix types
+# Overview of the API (output)
 
-The following matrix classes are supported:
+## An example with a numeric matrix
 
-- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dspMatrix`, `HDF5Matrix`
-- integer: `matrix`, `HDF5Matrix`
-- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lspMatrix`, `HDF5Matrix`
-- character: `matrix`, `HDF5Matrix`
+Two types of output matrices are supported - simple `matrix` and `HDF5Matrix` objects.
+A simple numeric output matrix with `nrow` rows and `ncol` columns is created by:
 
-Additional classes can be added on a need-to-use basis.
-As a general rule, if a matrix-like object can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
-Please contact the maintainers if you have a class that you would like to see supported.
+```
+std::shared_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol);
+```
+
+A numeric `HDF5Matrix` output matrix is created by setting the last argument (`basic`) to `false`:
+
+```
+std::shared_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, false);
+```
+
+The function is also overloaded so that it can choose the type of output to match an input type.
+For example, if I have a matrix object `dmat`, the output type can be matched to the input type with:
+
+```
+std::shared_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, dmat, false);
+```
+
+Here, the last argument (`simplify`) indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
+If `false`, a `HDF5Matrix` output object will be returned instead.
+
+All of the methods described for `numeric_matrix` objects are also available for a `numeric_output` matrix.
+In addition, several methods are available for storing data:
+
+- `dptr->fill_col(c, X)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
+There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
+No value is returned by this method.
+- `dptr->fill_col(c, X, rstart, rend)` fills column `c` from row `rstart` to `rend-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
+There should be at least `rend-rstart` accessible elements, i.e., `*X` and `*(X+rend-rstart-1)` should be valid entries.
+No value is returned by this method.
+- `dptr->fill_row(r, X)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
+There should be at least `ncol` accessible elements, i.e., `*X` and `*(X+ncol-1)` should be valid entries.
+No value is returned by this method.
+- `dptr->fill_row(r, X, cstart, cend)` fills row `r` from column `cstart` to `cend-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
+There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
+No value is returned by this method.
+- `dptr->fill(r, c, Y)` fills the matrix entry `(r, c)` with the double `Y`.
+
+The allowable range of `r`, `c`, `rstart`, `rend`, `cstart` and `cend` is the same as previously described.
+
+## Other matrix types
+
+Logical and integer output matrices are supported by changing the types in the creator function (and its variants):
+
+```
+std::shared_ptr<integer_output> oimat=beachmat::create_integer_output(nrow, ncol);
+std::shared_ptr<logical_output> oimat=beachmat::create_logical_output(nrow, ncol);
+```
+
+Equivalent methods are available for these matrix types.
+For integer and logical matrices, `X` should be of type `Rcpp::IntegerVector::iterator` and `Rcpp::LogicalVector::iterator`, respectively, and `Y` should be an integer.
+
+Currently, character output matrices are not supported.
+
+## Important developer information
+
+- Creation of a `HDF5Matrix` will perform a new `tempfile()` call to obtain a new file name for storing the HDF5 output.
+This will be a separate file from what would normally be used by the `r Biocpkg("DelayedArray")` methods via `getHDF5DumpFile()`.
+This is necessary to avoid multiple file handles being open to the same file at the same time, which may cause problems when some handles have write access.
+- The API is not currently thread-safe.
 
 # Session information
 
