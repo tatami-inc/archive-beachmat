@@ -20,12 +20,12 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_sparse_numeric, 2),
     REGISTER(test_sparse_numeric_slice, 2),
 
-    REGISTER(test_integer_output, 2),
-    REGISTER(test_numeric_output, 2),
-    REGISTER(test_logical_output, 2),
-    REGISTER(test_integer_output_slice, 4),
-    REGISTER(test_numeric_output_slice, 4),
-    REGISTER(test_logical_output_slice, 4),
+    REGISTER(test_integer_output, 3),
+    REGISTER(test_numeric_output, 3),
+    REGISTER(test_logical_output, 3),
+    REGISTER(test_integer_output_slice, 5),
+    REGISTER(test_numeric_output_slice, 5),
+    REGISTER(test_logical_output_slice, 5),
 
     REGISTER(test_type_check, 1),
     {NULL, NULL, 0}
