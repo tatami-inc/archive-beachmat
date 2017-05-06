@@ -63,8 +63,8 @@ template<typename T, class V>
 simple_matrix<T, V>::~simple_matrix () {}
 
 template<typename T, class V>
-std::shared_ptr<any_matrix<T, V> > simple_matrix<T, V>::clone() const {
-    return std::shared_ptr<any_matrix<T, V> >(new simple_matrix<T, V>(*this));
+std::unique_ptr<any_matrix<T, V> > simple_matrix<T, V>::clone() const {
+    return std::unique_ptr<any_matrix<T, V> >(new simple_matrix<T, V>(*this));
 }
 
 template<typename T, class V>
@@ -115,8 +115,8 @@ template <typename T, class V>
 dense_matrix<T, V>::~dense_matrix() {}
 
 template<typename T, class V>
-std::shared_ptr<any_matrix<T, V> > dense_matrix<T, V>::clone() const {
-    return std::shared_ptr<any_matrix<T, V> >(new dense_matrix<T, V>(*this));
+std::unique_ptr<any_matrix<T, V> > dense_matrix<T, V>::clone() const {
+    return std::unique_ptr<any_matrix<T, V> >(new dense_matrix<T, V>(*this));
 }
 
 template <typename T, class V>
@@ -207,8 +207,8 @@ template <typename T, class V, const T& Z>
 Csparse_matrix<T, V, Z>::~Csparse_matrix () {}
 
 template<typename T, class V, const T& Z>
-std::shared_ptr<any_matrix<T, V> > Csparse_matrix<T, V, Z>::clone() const {
-    return std::shared_ptr<any_matrix<T, V> >(new Csparse_matrix<T, V, Z>(*this));
+std::unique_ptr<any_matrix<T, V> > Csparse_matrix<T, V, Z>::clone() const {
+    return std::unique_ptr<any_matrix<T, V> >(new Csparse_matrix<T, V, Z>(*this));
 }
 
 template <typename T, class V, const T& Z>
@@ -372,8 +372,8 @@ template <typename T, class V>
 Psymm_matrix<T, V>::~Psymm_matrix () {}
 
 template<typename T, class V>
-std::shared_ptr<any_matrix<T, V> > Psymm_matrix<T, V>::clone() const {
-    return std::shared_ptr<any_matrix<T, V> >(new Psymm_matrix<T, V>(*this));
+std::unique_ptr<any_matrix<T, V> > Psymm_matrix<T, V>::clone() const {
+    return std::unique_ptr<any_matrix<T, V> >(new Psymm_matrix<T, V>(*this));
 }
 
 template <typename T, class V>
@@ -536,13 +536,11 @@ HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realiz
     col_count[1]=NR;
     row_count[0]=NC;
     row_count[1]=1;
-    rowspace=H5::DataSpace(1, row_count);
-    colspace=H5::DataSpace(1, col_count+1);
 
     zero_start[0]=0;
     one_count[0]=1;
     one_count[1]=1;
-    onespace=H5::DataSpace(1, one_count);
+    onespace.setExtentSimple(1, one_count);
     onespace.selectAll();
     return;
 }
@@ -551,8 +549,8 @@ template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
 HDF5_matrix<T, V, HTC, HPT>::~HDF5_matrix() {}
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-std::shared_ptr<any_matrix<T, V> > HDF5_matrix<T, V, HTC, HPT>::clone() const {
-    return std::shared_ptr<any_matrix<T, V> >(new HDF5_matrix<T, V, HTC, HPT>(*this));
+std::unique_ptr<any_matrix<T, V> > HDF5_matrix<T, V, HTC, HPT>::clone() const {
+    return std::unique_ptr<any_matrix<T, V> >(new HDF5_matrix<T, V, HTC, HPT>(*this));
 }
 
 template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>

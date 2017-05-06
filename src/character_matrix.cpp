@@ -18,8 +18,8 @@ HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HD
 
 HDF5_character_matrix::~HDF5_character_matrix() {}
 
-std::shared_ptr<character_matrix> HDF5_character_matrix::clone() const {
-    return std::shared_ptr<character_matrix>(new HDF5_character_matrix(*this));
+std::unique_ptr<character_matrix> HDF5_character_matrix::clone() const {
+    return std::unique_ptr<character_matrix>(new HDF5_character_matrix(*this));
 }
     
 void HDF5_character_matrix::get_row(int r, Rcpp::StringVector::iterator out, int start, int end) { 
@@ -57,12 +57,12 @@ Rcpp::String HDF5_character_matrix::get(int r, int c) {
 
 /* Dispatch definition */
 
-std::shared_ptr<character_matrix> create_character_matrix(const Rcpp::RObject& incoming) { 
+std::unique_ptr<character_matrix> create_character_matrix(const Rcpp::RObject& incoming) { 
     if (incoming.isS4()) { 
         std::string ctype=get_class(incoming);
         if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
 #ifdef BEACHMAT_USE_HDF5
-            return std::shared_ptr<character_matrix>(new HDF5_character_matrix(incoming));
+            return std::unique_ptr<character_matrix>(new HDF5_character_matrix(incoming));
 #else
             throw std::runtime_error("'beachmat' not compiled with HDF5 support");
 #endif            
@@ -71,7 +71,7 @@ std::shared_ptr<character_matrix> create_character_matrix(const Rcpp::RObject& i
         err << "unsupported class '" << ctype << "' for character_matrix";
         throw std::runtime_error(err.str().c_str());
     } 
-    return std::shared_ptr<character_matrix>(new simple_character_matrix(incoming));
+    return std::unique_ptr<character_matrix>(new simple_character_matrix(incoming));
 }
 
 }

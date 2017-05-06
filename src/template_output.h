@@ -106,23 +106,17 @@ Rcpp::RObject simple_output<T, V>::yield() {
 /* Methods for HDF5 output matrix. */
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>(nr, nc) {
-    // Initializing file name (not using getHDF5DumpName, to avoid file handle conflicts
-    // and problems with concurrent read/write).
-    Rcpp::Environment baseenv("package:base");
-    Rcpp::Function tempfun=baseenv["tempfile"];
-    fname = Rcpp::as<std::string>(tempfun()) + ".h5";
-    hfile=H5::H5File(fname, H5F_ACC_TRUNC);
-   
+HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>(nr, nc), 
+        fname(generate_HDF5Matrix_filename()), hfile(fname, H5F_ACC_TRUNC) {
+
     H5::DSetCreatPropList plist;
     plist.setFillValue(HPT, &FILL);
-    
     dname="/HDF5ArrayAUTO00001";
     hsize_t dims[2];
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
     dims[1]=this->nrow; 
-    hspace=H5::DataSpace(2, dims);
-    hdata=H5::DataSet(hfile.createDataSet(dname, HPT, hspace, plist)); // Creating the data set.
+    hspace.setExtentSimple(2, dims);
+    hdata=hfile.createDataSet(dname, HPT, hspace, plist); // Creating the data set.
 
     h5_start[0]=0;
     h5_start[1]=0;
@@ -130,8 +124,6 @@ HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>
     col_count[1]=this->nrow;
     row_count[0]=this->ncol;
     row_count[1]=1;
-    rowspace=H5::DataSpace(1, row_count);
-    colspace=H5::DataSpace(1, col_count+1);
     
     zero_start[0]=0;
     one_count[0]=1;

@@ -76,9 +76,9 @@ public:
 
     /* Returns a deep copy of itself. 
      *
-     * @ return A shared pointer to a deep copy of itself.
+     * @ return A unique pointer to a deep copy of itself.
      */
-    virtual std::shared_ptr<any_matrix<T, V> > clone() const=0;
+    virtual std::unique_ptr<any_matrix<T, V> > clone() const=0;
 
 protected:
     int nrow, ncol;
@@ -92,7 +92,7 @@ class simple_matrix : public any_matrix<T, V> {
 public:    
     simple_matrix(const Rcpp::RObject&);
     ~simple_matrix();
-    std::shared_ptr<any_matrix<T, V> > clone() const;
+    std::unique_ptr<any_matrix<T, V> > clone() const;
 
     T get(int, int);
     void get_row(int, typename V::iterator, int, int);
@@ -109,7 +109,7 @@ class dense_matrix : public any_matrix<T, V> {
 public:    
     dense_matrix(const Rcpp::RObject&);
     ~dense_matrix();
-    std::shared_ptr<any_matrix<T, V> > clone() const;
+    std::unique_ptr<any_matrix<T, V> > clone() const;
 
     T get(int, int);
     void get_row(int, typename V::iterator, int, int);
@@ -126,7 +126,7 @@ class Csparse_matrix : public any_matrix<T, V> {
 public:    
     Csparse_matrix(const Rcpp::RObject&);
     ~Csparse_matrix();
-    std::shared_ptr<any_matrix<T, V> > clone() const;
+    std::unique_ptr<any_matrix<T, V> > clone() const;
 
     T get(int, int);
     void get_row(int, typename V::iterator, int, int);
@@ -149,7 +149,7 @@ class Psymm_matrix : public any_matrix<T, V> {
 public:    
     Psymm_matrix(const Rcpp::RObject&);
     ~Psymm_matrix();
-    std::shared_ptr<any_matrix<T, V> > clone() const;
+    std::unique_ptr<any_matrix<T, V> > clone() const;
 
     T get(int, int);   
     void get_row(int, typename V::iterator, int, int);
@@ -169,7 +169,7 @@ class HDF5_matrix : public any_matrix<T, V> {
 public:
     HDF5_matrix(const Rcpp::RObject&);
     ~HDF5_matrix();
-    std::shared_ptr<any_matrix<T, V> > clone() const;
+    std::unique_ptr<any_matrix<T, V> > clone() const;
 
     T get(int, int);
     void get_row(int, typename V::iterator, int, int);

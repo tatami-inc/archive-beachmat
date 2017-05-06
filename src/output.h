@@ -9,7 +9,7 @@ template<typename T, class V>
 class output_matrix {
 public:
     output_matrix(int, int);
-    ~output_matrix();
+    virtual ~output_matrix();
     output_matrix(output_matrix<T, V> const&) = delete;
     output_matrix<T, V>& operator=(output_matrix<T, V> const&) = delete;
 

@@ -36,7 +36,7 @@ typedef HDF5_matrix<double, Rcpp::NumericVector, H5T_FLOAT, H5::PredType::NATIVE
 
 /* Dispatcher */
 
-std::shared_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
+std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
 
 /***************************************************
  * Virtual base class for output numeric matrices. *
@@ -58,9 +58,9 @@ typedef HDF5_output<double, Rcpp::NumericVector, H5::PredType::NATIVE_DOUBLE, nu
 
 /* Output dispatchers */
 
-std::shared_ptr<numeric_output> create_numeric_output(int, int, bool=true);
+std::unique_ptr<numeric_output> create_numeric_output(int, int, bool=true);
 
-std::shared_ptr<numeric_output> create_numeric_output(int, int, const Rcpp::RObject&, bool);
+std::unique_ptr<numeric_output> create_numeric_output(int, int, const Rcpp::RObject&, bool);
 
 }
 
