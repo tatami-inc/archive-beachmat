@@ -461,7 +461,9 @@ HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realiz
     std::string ctype=get_class(incoming);
     if (incoming.isS4()) {
         if (ctype=="DelayedMatrix") { 
-            realized=realize_DelayedMatrix(incoming);
+            Rcpp::Environment delayenv("package:DelayedArray");
+            Rcpp::Function realfun=delayenv["realize"];
+            realized=realfun(incoming, "HDF5Array");
         } else if (ctype=="HDF5Matrix") {
             realized=incoming;
         }
