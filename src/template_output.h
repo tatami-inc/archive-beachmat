@@ -55,6 +55,11 @@ template<typename T, class V>
 simple_output<T, V>::~simple_output() {}
 
 template<typename T, class V>
+std::unique_ptr<output_matrix<T, V> > simple_output<T, V>::clone() const {
+    return std::unique_ptr<output_matrix<T, V> >(new simple_output<T, V>(*this));
+}
+
+template<typename T, class V>
 void simple_output<T, V>::fill_col(int c, typename V::iterator in, int start, int end) {
     std::copy(in, in + end - start, data.begin()+c*(this->nrow)+start); 
     return;
@@ -105,6 +110,8 @@ Rcpp::RObject simple_output<T, V>::yield() {
 
 /* Methods for HDF5 output matrix. */
 
+#ifdef BEACHMAT_USE_HDF5
+
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>(nr, nc), 
         fname(generate_HDF5Matrix_filename()), hfile(fname, H5F_ACC_TRUNC) {
@@ -145,6 +152,11 @@ HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 HDF5_output<T, V, HPT, FILL>::~HDF5_output() {}
+
+template<typename T, class V, const H5::PredType& HPT, const T& FILL>
+std::unique_ptr<output_matrix<T, V> > HDF5_output<T, V, HPT, FILL>::clone() const {
+    return std::unique_ptr<output_matrix<T, V> >(new HDF5_output<T, V, HPT, FILL>(*this));
+}
 
 template<typename T, class V, const H5::PredType& HPT, const T& FILL>
 void HDF5_output<T, V, HPT, FILL>::select_col(int c, int start, int end) {
@@ -256,6 +268,8 @@ Rcpp::RObject HDF5_output<T, V, HPT, FILL>::yield() {
 
     return SEXP(h5mat);
 }
+
+#endif
 
 #endif
 
