@@ -109,6 +109,12 @@ importFrom(Rcpp, sourceRcpp)
 (The exact function to be imported doesn't matter, as long as the namespace is loaded.)
 Check out the `r CRANpkg("Rcpp")` documentation for more details.
 
+If you intend to accept instances of `r CRANpkg("Matrix")`, `r Biocpkg("HDF5Array")` or `r Biocpkg("DelayedArray")` classes, these packages should be listed in the `Suggests` field, if they are not already in `Imports` or `Depends`:
+
+```
+Suggests: Matrix, HDF5Array, DelayedArray
+```
+
 # Overview of the API (input)
 
 ## An example with a numeric matrix
