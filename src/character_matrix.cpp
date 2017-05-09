@@ -1,7 +1,12 @@
 #include "character_matrix.h"
+
+#ifdef BEACHMAT_USE_HDF5
 #include "hdf5.h"
+#endif
 
 namespace beachmat {
+
+#ifdef BEACHMAT_USE_HDF5
 
 /* Methods for the HDF5 character matrix. */
 
@@ -54,6 +59,8 @@ Rcpp::String HDF5_character_matrix::get(int r, int c) {
     hdata.read(out, str_type, onespace, hspace);
     return out;
 }
+
+#endif
 
 /* Dispatch definition */
 
