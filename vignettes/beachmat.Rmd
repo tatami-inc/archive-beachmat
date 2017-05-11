@@ -129,7 +129,7 @@ First, we include the relevant header file:
 A double-precision matrix object `dmat` is handled in C++ by passing the `SEXP` struct from `.Call` to `create_numeric_matrix`:
 
 ```
-std::unique_dptr<beachmat::numeric_matrix> dptr = beachmat::create_numeric_matrix(dmat);
+std::unique_ptr<beachmat::numeric_matrix> dptr = beachmat::create_numeric_matrix(dmat);
 ```
 
 This creates a unique pointer that points to an object of the `numeric_matrix` virtual class.
