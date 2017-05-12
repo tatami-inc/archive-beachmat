@@ -1,18 +1,18 @@
 #include "character_matrix.h"
 
-#ifdef BEACHMAT_USE_HDF5
-#include "hdf5.h"
-#endif
-
 namespace beachmat {
 
 #ifdef BEACHMAT_USE_HDF5
 
 /* Methods for the HDF5 character matrix. */
 
-HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : HDF5_matrix<Rcpp::String, Rcpp::StringVector, H5T_STRING, H5::PredType::C_S1>(incoming), 
-    str_type(hdata) {
-    if (!H5Tis_variable_str(str_type.getId())) {
+HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : 
+        HDF5_matrix<Rcpp::String, Rcpp::StringVector>(incoming, H5T_STRING, H5::PredType::NATIVE_INT32), 
+        str_type(hdata) {
+    // H5::PredType::NATIVE_INT32 just to give it something to work with.
+    // Not really necessary here, as we override get* methods anyway, so it never actually gets used. 
+            
+    if (!str_type.isVariableStr()) { 
         auto bufsize=str_type.getSize(); 
         row_buf.resize(bufsize*(this->ncol));
         col_buf.resize(bufsize*(this->nrow));

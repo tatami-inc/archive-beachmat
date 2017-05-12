@@ -14,4 +14,8 @@
 
 @DEF_HDF_CPP@
 
+#ifdef BEACHMAT_USE_HDF5
+#include "c++/H5Cpp.h"
+#endif
+
 #endif

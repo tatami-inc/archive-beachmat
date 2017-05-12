@@ -1,4 +1,4 @@
-PKG_LIBS=@PKG_LIBS@
+PKG_LIBS=-L${R_PACKAGE_DIR}/library/Rhdf5lib/lib/ -lhdf5_cpp -lhdf5 -ldl -lz
 
 .PHONY: all libbeachmat
 

@@ -105,6 +105,8 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
     return incoming.sexp_type();
 }
 
+/* Constants for use as template parameters. */
+
 const double numeric_zero=0;
                                
 const int integer_zero=0;

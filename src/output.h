@@ -4,10 +4,6 @@
 #include "beachmat.h"
 #include "utils.h"
 
-#ifdef BEACHMAT_USE_HDF5
-#include "H5Cpp.h"
-#endif
-
 namespace beachmat {
 
 template<typename T, class V>
@@ -57,10 +53,10 @@ private:
 
 #ifdef BEACHMAT_USE_HDF5
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
+template<typename T, class V, const T& FILL>
 class HDF5_output : public output_matrix<T, V> {
 public:
-    HDF5_output(int, int);
+    HDF5_output(int, int, const H5::PredType&);
     ~HDF5_output();
     
     void fill_row(int, typename V::iterator, int, int);
@@ -79,7 +75,8 @@ protected:
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
-    
+   
+    const H5::PredType& HPT; 
     void select_row(int, int, int);
     void select_col(int, int, int);
     void select_one(int, int);

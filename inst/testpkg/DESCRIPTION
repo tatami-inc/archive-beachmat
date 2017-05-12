@@ -11,4 +11,4 @@ Description: For testing beachmat compilation settings.
 License: GPL-3
 NeedsCompilation: yes
 SystemRequirements: C++11
-LinkingTo: Rcpp, beachmat
+LinkingTo: Rcpp, beachmat, Rhdf5lib

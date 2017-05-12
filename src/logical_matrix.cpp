@@ -2,6 +2,25 @@
 
 namespace beachmat {
 
+#ifdef BEACHMAT_USE_HDF5
+
+HDF5_logical_matrix::HDF5_logical_matrix(const Rcpp::RObject& incoming) : 
+    HDF5_matrix<int, Rcpp::LogicalVector>(incoming, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
+
+HDF5_logical_matrix::~HDF5_logical_matrix() {}
+
+HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_output<int, Rcpp::LogicalVector, logical_false>(nr, nc, H5::PredType::NATIVE_INT32) {
+    H5::StrType str_type(0, H5T_VARIABLE);
+    H5::DataSpace att_space(1, one_count);
+    H5::Attribute att = hdata.createAttribute("storage.mode", str_type, att_space);
+    att.write(str_type, std::string("logical"));
+    return;
+}
+
+HDF5_logical_output::~HDF5_logical_output() {}
+
+#endif
+    
 /* Dispatch definition */
 
 std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incoming) { 

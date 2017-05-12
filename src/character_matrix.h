@@ -19,7 +19,7 @@ typedef simple_matrix<Rcpp::String, Rcpp::StringVector> simple_character_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-class HDF5_character_matrix : public HDF5_matrix<Rcpp::String, Rcpp::StringVector, H5T_STRING, H5::PredType::C_S1> {
+class HDF5_character_matrix : public HDF5_matrix<Rcpp::String, Rcpp::StringVector> {
 public:    
     HDF5_character_matrix(const Rcpp::RObject&);
     ~HDF5_character_matrix();
@@ -32,8 +32,6 @@ protected:
     H5::StrType str_type;
     std::vector<char> row_buf, col_buf;
 };
-
-// H5::PredType::C_S1 not really necessary here, as we override get* methods anyway, so it never actually gets used. 
 
 #endif
 
