@@ -72,10 +72,10 @@ PKG_LIBS=$(RHTSLIB_LIBS) -L/path/to/foolib -lfoo
 
 ## Find headers
 
-In order for the C/C++ compiler to find the _beachmat_ package headers during installation, add `beachmat` and `Rcpp` to the `LinkingTo` field of the `DESCRIPTION` file:
+In order for the C/C++ compiler to find the _beachmat_ package headers during installation, add the following to the `LinkingTo` field of the `DESCRIPTION` file:
 
 ```
-LinkingTo: Rcpp, beachmat
+LinkingTo: Rcpp, Rhdf5lib, beachmat
 ``` 
     
 In C or C++ code files, use standard techniques, e.g., `#include "beachmat/numeric_matrix.h"` (see below for more details). 

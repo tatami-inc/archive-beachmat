@@ -7,13 +7,14 @@ pkgconfig <- function(opt = c("PKG_LIBS", "PKG_CPPFLAGS"))
         arch <- ""
     }
     patharch <- paste0(path, arch)
-    extralib <- ifelse(use.hdf5, "-lhdf5_cpp", "")
+    extralib <- "" 
+#    extralib <- ifelse(use.hdf5, "-lhdf5_cpp", "")
 
     result <- switch(match.arg(opt), PKG_CPPFLAGS={
         sprintf('-I"%s"', system.file("include", package="beachmat"))
     }, PKG_LIBS={
         switch(Sys.info()['sysname'], Linux={
-            sprintf('-L%s -Wl,-rpath,%s -lbeachmat %s -pthread', patharch, patharch, extralib)
+            sprintf('-L%s -Wl,-rpath,%s %s -lbeachmat -pthread', patharch, patharch, extralib)
         }, Darwin={
             sprintf('%s/libbeachmat.a %s -pthread', patharch, extralib)
         }, Windows={
