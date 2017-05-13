@@ -4,10 +4,6 @@
 #include "beachmat.h"
 #include "utils.h"
 
-#ifdef BEACHMAT_USE_HDF5
-#include "H5Cpp.h"
-#endif
-
 #include "bigmemory/MatrixAccessor.hpp"
 
 namespace beachmat { 
@@ -166,10 +162,10 @@ protected:
 
 #ifdef BEACHMAT_USE_HDF5
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
+template<typename T, class V>
 class HDF5_matrix : public any_matrix<T, V> {
 public:
-    HDF5_matrix(const Rcpp::RObject&);
+    HDF5_matrix(const Rcpp::RObject&, const H5T_class_t&, const H5::PredType&);
     ~HDF5_matrix();
     std::unique_ptr<any_matrix<T, V> > clone() const;
 
@@ -184,6 +180,7 @@ protected:
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
 
+    const H5::PredType& HPT;
     void select_row(int, int, int);
     void select_col(int, int, int);
     void select_one(int, int);

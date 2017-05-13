@@ -30,7 +30,11 @@ typedef Psymm_matrix<double, Rcpp::NumericVector> Psymm_numeric_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-typedef HDF5_matrix<double, Rcpp::NumericVector, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE> HDF5_numeric_matrix; 
+class HDF5_numeric_matrix : public HDF5_matrix<double, Rcpp::NumericVector> {
+public:
+    HDF5_numeric_matrix(const Rcpp::RObject&);
+    ~HDF5_numeric_matrix();
+};
 
 #endif
 
@@ -52,7 +56,11 @@ typedef simple_output<double, Rcpp::NumericVector> simple_numeric_output;
 
 #ifdef BEACHMAT_USE_HDF5
 
-typedef HDF5_output<double, Rcpp::NumericVector, H5::PredType::NATIVE_DOUBLE, numeric_zero> HDF5_numeric_output;
+class HDF5_numeric_output : public HDF5_output<double, Rcpp::NumericVector, numeric_zero> {
+public:
+    HDF5_numeric_output(int, int);
+    ~HDF5_numeric_output();
+};
 
 #endif
 

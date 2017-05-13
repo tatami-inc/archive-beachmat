@@ -1,7 +1,8 @@
 #ifndef BEACHMAT_OUTPUT_H
 #define BEACHMAT_OUTPUT_H
 
-#include "matrix.h"
+#include "beachmat.h"
+#include "utils.h"
 
 namespace beachmat {
 
@@ -10,8 +11,6 @@ class output_matrix {
 public:
     output_matrix(int, int);
     virtual ~output_matrix();
-    output_matrix(output_matrix<T, V> const&) = delete;
-    output_matrix<T, V>& operator=(output_matrix<T, V> const&) = delete;
 
     void fill_row(int, typename V::iterator);
     void fill_col(int, typename V::iterator);
@@ -28,6 +27,7 @@ public:
     virtual void get_col(int, typename V::iterator, int, int)=0;
     virtual void get_row(int, typename V::iterator, int, int)=0;
     virtual T get(int, int)=0;
+    virtual std::unique_ptr<output_matrix<T, V> > clone() const=0;
 protected:
     int nrow, ncol;
 };
@@ -46,14 +46,17 @@ public:
     void get_col(int, typename V::iterator, int, int);
     void get_row(int, typename V::iterator, int, int);
     T get(int, int);
+    std::unique_ptr<output_matrix<T, V> > clone() const;
 private:
     V data;    
 };
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
+#ifdef BEACHMAT_USE_HDF5
+
+template<typename T, class V, const T& FILL>
 class HDF5_output : public output_matrix<T, V> {
 public:
-    HDF5_output(int, int);
+    HDF5_output(int, int, const H5::PredType&);
     ~HDF5_output();
     
     void fill_row(int, typename V::iterator, int, int);
@@ -64,6 +67,7 @@ public:
     void get_col(int, typename V::iterator, int, int);
     void get_row(int, typename V::iterator, int, int);
     T get(int, int);
+    std::unique_ptr<output_matrix<T, V> > clone() const;
 protected:
     std::string fname, dname;
 
@@ -71,11 +75,14 @@ protected:
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
-    
+   
+    const H5::PredType& HPT; 
     void select_row(int, int, int);
     void select_col(int, int, int);
     void select_one(int, int);
 };
+
+#endif
 
 #include "template_output.h"
 

@@ -72,10 +72,10 @@ PKG_LIBS=$(RHTSLIB_LIBS) -L/path/to/foolib -lfoo
 
 ## Find headers
 
-In order for the C/C++ compiler to find the _beachmat_ package headers during installation, add `beachmat` and `Rcpp` to the `LinkingTo` field of the `DESCRIPTION` file:
+In order for the C/C++ compiler to find the _beachmat_ package headers during installation, add the following to the `LinkingTo` field of the `DESCRIPTION` file:
 
 ```
-LinkingTo: Rcpp, beachmat
+LinkingTo: Rcpp, Rhdf5lib, beachmat
 ``` 
     
 In C or C++ code files, use standard techniques, e.g., `#include "beachmat/numeric_matrix.h"` (see below for more details). 
@@ -109,6 +109,12 @@ importFrom(Rcpp, sourceRcpp)
 (The exact function to be imported doesn't matter, as long as the namespace is loaded.)
 Check out the `r CRANpkg("Rcpp")` documentation for more details.
 
+If you intend to accept instances of `r CRANpkg("Matrix")`, `r Biocpkg("HDF5Array")` or `r Biocpkg("DelayedArray")` classes, these packages should be listed in the `Suggests` field, if they are not already in `Imports` or `Depends`:
+
+```
+Suggests: Matrix, HDF5Array, DelayedArray
+```
+
 # Overview of the API (input)
 
 ## An example with a numeric matrix
@@ -123,10 +129,10 @@ First, we include the relevant header file:
 A double-precision matrix object `dmat` is handled in C++ by passing the `SEXP` struct from `.Call` to `create_numeric_matrix`:
 
 ```
-std::shared_dptr<beachmat::numeric_matrix> dptr = beachmat::create_numeric_matrix(dmat);
+std::unique_ptr<beachmat::numeric_matrix> dptr = beachmat::create_numeric_matrix(dmat);
 ```
 
-This creates a shared pointer that points to an object of the `numeric_matrix` virtual class.
+This creates a unique pointer that points to an object of the `numeric_matrix` virtual class.
 The exact class depends on the type of matrix in `dmat`, though the behaviour of the user-level functions are not affected by this detail.
 
 The available methods for this object are:
@@ -146,6 +152,7 @@ No value is returned by this method.
 There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
 No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
+- `dptr->clone()` returns a unique pointer to a `numeric_matrix` instance of the same type as that pointed to by `dptr`.
 
 In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
@@ -164,9 +171,9 @@ Logical, integer and character matrices can be handled by including the followin
 The dispatch function changes correspondingly, for logical matrix `lmat`, integer matrix `imat` and character matrix `cmat`:
 
 ```
-std::shared_ptr<beachmat::logical_matrix> lptr=beachmat::create_logical_matrix(lmat);
-std::shared_ptr<beachmat::integer_matrix> iptr=beachmat::create_integer_matrix(imat);
-std::shared_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matrix(cmat);
+std::unique_ptr<beachmat::logical_matrix> lptr=beachmat::create_logical_matrix(lmat);
+std::unique_ptr<beachmat::integer_matrix> iptr=beachmat::create_integer_matrix(imat);
+std::unique_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matrix(cmat);
 ```
 
 Equivalent methods are available for all matrix types with appropriate changes in type.
@@ -192,13 +199,15 @@ Specifically, a pointer to the column could be directly returned rather than cop
 However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
 This would be dangerous as the values in the internal storage will change upon repeated calls to `get_col`.
 Filling a user-supplied array is more intuitive as it is obvious that the array will change when `get_col` is called again.
-- The API is not thread-safe for multiple shared pointers to the same `*_matrix` instance.
-Some intermediate constructs are cached for greater efficiency, and simultaneous calls will cause race conditions. 
-Users should instead create new shared pointers for use in each thread, by copying the `*_matrix` instance via `std::make_shared`.
+- The API is not thread-safe for simultaneous calls to the `get` methods from different threads.
+Some methods use cached class members for greater efficiency, and simultaneous calls will cause race conditions. 
+It is the responsibility of the calling function to lock (and unlock) access to a single `*_matrix` object across threads.
+Alternatively, the `clone` method can be called to generate a unique pointer to a _new_ `*_matrix` instance, which can be used concurrently in another thread.
 This is fairly cheap as the matrix data itself is not copied.
 - When accessing `character_matrix` data, the `Rcpp::String` class is used as it provides a convenient wrapper around the underlying `CHARSXP`. 
 This ensures that the string is stored in R's global cache and is suitably protected against garbage collection. 
-- `DelayedMatrix` objects are automatically realized by the API to `HDF5Matrix` objects via the `realize` method in the `r Biocpkg("DelayedArray")` package.
+- `DelayedMatrix` objects are automatically realized to `HDF5Matrix` objects via the `realize` method in the `r Biocpkg("DelayedArray")` package.
+If the realized matrix is to be reused, it may be more efficient to perform the realization in R and pass the `HDF5Matrix` to `.Call`.
 - The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
 See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
@@ -225,20 +234,20 @@ Two types of output matrices are supported - simple `matrix` and `HDF5Matrix` ob
 A simple numeric output matrix with `nrow` rows and `ncol` columns is created by:
 
 ```
-std::shared_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol);
+std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol);
 ```
 
 A numeric `HDF5Matrix` output matrix is created by setting the last argument (`basic`) to `false`:
 
 ```
-std::shared_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, false);
+std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, false);
 ```
 
 The function is also overloaded so that it can choose the type of output to match an input type.
 For example, if I have a matrix object `dmat`, the output type can be matched to the input type with:
 
 ```
-std::shared_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, dmat, false);
+std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, dmat, false);
 ```
 
 Here, the last argument (`simplify`) indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
@@ -268,8 +277,8 @@ The allowable range of `r`, `c`, `rstart`, `rend`, `cstart` and `cend` is the sa
 Logical and integer output matrices are supported by changing the types in the creator function (and its variants):
 
 ```
-std::shared_ptr<integer_output> oimat=beachmat::create_integer_output(nrow, ncol);
-std::shared_ptr<logical_output> oimat=beachmat::create_logical_output(nrow, ncol);
+std::unique_ptr<integer_output> oimat=beachmat::create_integer_output(nrow, ncol);
+std::unique_ptr<logical_output> olmat=beachmat::create_logical_output(nrow, ncol);
 ```
 
 Equivalent methods are available for these matrix types.
@@ -280,9 +289,13 @@ Currently, character output matrices are not supported.
 ## Important developer information
 
 - Creation of a `HDF5Matrix` will perform a new `tempfile()` call to obtain a new file name for storing the HDF5 output.
-This will be a separate file from what would normally be used by the `r Biocpkg("DelayedArray")` methods via `getHDF5DumpFile()`.
+This will be a separate file from what would normally be used by the `r Biocpkg("HDF5Array")` methods via `getHDF5DumpFile()`.
 This is necessary to avoid multiple file handles being open to the same file at the same time, which may cause problems when some handles have write access.
-- The API is not currently thread-safe.
+- The API is not thread-safe, due to the use of cached class members and the potential for writing to the same location on disk/memory.
+The former can be solved by using `clone` to create `*_output` copies for use in each thread.
+However, each copy will still read from and write to the same disk/memory location.
+It is the responsibility of the calling function to ensure that access is locked and unlocked appropriately across multiple threads.
+(This may not be necessary if access does not overlap, e.g., writing to different rows.)
 
 # Session information
 

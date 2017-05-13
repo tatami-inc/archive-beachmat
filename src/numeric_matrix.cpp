@@ -2,6 +2,20 @@
 
 namespace beachmat { 
 
+#ifdef BEACHMAT_USE_HDF5
+
+HDF5_numeric_matrix::HDF5_numeric_matrix(const Rcpp::RObject& incoming) : 
+    HDF5_matrix<double, Rcpp::NumericVector>(incoming, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE) {} 
+
+HDF5_numeric_matrix::~HDF5_numeric_matrix() {}
+
+HDF5_numeric_output::HDF5_numeric_output(int nr, int nc) : 
+    HDF5_output<double, Rcpp::NumericVector, numeric_zero>(nr, nc, H5::PredType::NATIVE_DOUBLE) {}
+
+HDF5_numeric_output::~HDF5_numeric_output() {}
+
+#endif
+
 /* Dispatch definition */
 
 std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incoming) { 

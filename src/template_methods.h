@@ -456,12 +456,14 @@ T Psymm_matrix<T, V>::get(int r, int c) {
 
 #ifdef BEACHMAT_USE_HDF5
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_NilValue) { 
+template<typename T, class V>
+HDF5_matrix<T, V>::HDF5_matrix(const Rcpp::RObject& incoming, const H5T_class_t& htc, const H5::PredType& hpt) : realized(R_NilValue), HPT(hpt) { 
     std::string ctype=get_class(incoming);
     if (incoming.isS4()) {
         if (ctype=="DelayedMatrix") { 
-            realized=realize_DelayedMatrix(incoming);
+            Rcpp::Environment delayenv("package:DelayedArray");
+            Rcpp::Function realfun=delayenv["realize"];
+            realized=realfun(incoming, "HDF5Array");
         } else if (ctype=="HDF5Matrix") {
             realized=incoming;
         }
@@ -510,11 +512,12 @@ HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realiz
     // Setting up the HDF5 accessors.
     hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);
     hdata = hfile.openDataSet(H5std_string(dataset));
-    if (hdata.getTypeClass()!=HTC) {
+    if (hdata.getTypeClass()!=htc) {
         std::stringstream err;
         err << "data type in HDF5 file is not ";
-        if (HTC==H5T_FLOAT) { err << "floating-point"; }
-        else if (HTC==H5T_INTEGER) { err << "integer"; }
+        if (htc==H5T_FLOAT) { err << "floating-point"; }
+        else if (htc==H5T_INTEGER) { err << "integer"; }
+        else if (htc==H5T_STRING) { err << "character"; }
         else { err << "the specified type"; }
         throw std::runtime_error(err.str().c_str());
     }
@@ -545,16 +548,16 @@ HDF5_matrix<T, V, HTC, HPT>::HDF5_matrix(const Rcpp::RObject& incoming) : realiz
     return;
 }
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-HDF5_matrix<T, V, HTC, HPT>::~HDF5_matrix() {}
+template<typename T, class V>
+HDF5_matrix<T, V>::~HDF5_matrix() {}
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-std::unique_ptr<any_matrix<T, V> > HDF5_matrix<T, V, HTC, HPT>::clone() const {
-    return std::unique_ptr<any_matrix<T, V> >(new HDF5_matrix<T, V, HTC, HPT>(*this));
+template<typename T, class V>
+std::unique_ptr<any_matrix<T, V> > HDF5_matrix<T, V>::clone() const {
+    return std::unique_ptr<any_matrix<T, V> >(new HDF5_matrix<T, V>(*this));
 }
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, V, HTC, HPT>::select_row(int r, int start, int end) {
+template<typename T, class V>
+void HDF5_matrix<T, V>::select_row(int r, int start, int end) {
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -564,15 +567,15 @@ void HDF5_matrix<T, V, HTC, HPT>::select_row(int r, int start, int end) {
     return;
 }
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, V, HTC, HPT>::get_row(int r, typename V::iterator out, int start, int end) { 
+template<typename T, class V>
+void HDF5_matrix<T, V>::get_row(int r, typename V::iterator out, int start, int end) { 
     select_row(r, start, end);
     hdata.read(&(*out), HPT, rowspace, hspace);
     return;
 } 
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, V, HTC, HPT>::select_col(int c, int start, int end) {
+template<typename T, class V>
+void HDF5_matrix<T, V>::select_col(int c, int start, int end) {
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -582,23 +585,23 @@ void HDF5_matrix<T, V, HTC, HPT>::select_col(int c, int start, int end) {
     return;
 }
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, V, HTC, HPT>::get_col(int c, typename V::iterator out, int start, int end) { 
+template<typename T, class V>
+void HDF5_matrix<T, V>::get_col(int c, typename V::iterator out, int start, int end) { 
     select_col(c, start, end);
     hdata.read(&(*out), HPT, colspace, hspace);
     return;
 }
 
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-void HDF5_matrix<T, V, HTC, HPT>::select_one(int r, int c) {
+template<typename T, class V>
+void HDF5_matrix<T, V>::select_one(int r, int c) {
     h5_start[0]=c;
     h5_start[1]=r;
-    hspace.selectHyperslab( H5S_SELECT_SET, one_count, h5_start);
+    hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
     return;
 }
  
-template<typename T, class V, H5T_class_t HTC, const H5::PredType& HPT>
-T HDF5_matrix<T, V, HTC, HPT>::get(int r, int c) { 
+template<typename T, class V>
+T HDF5_matrix<T, V>::get(int r, int c) { 
     select_one(r, c);
     T out;
     hdata.read(&out, HPT, onespace, hspace);

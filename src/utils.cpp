@@ -62,12 +62,6 @@ std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& exp
     return mattype;
 }
 
-Rcpp::RObject realize_DelayedMatrix(const Rcpp::RObject& incoming) {
-    Rcpp::Environment meth_env("package:DelayedArray");
-    Rcpp::Function realfun=meth_env["realize"];
-    return realfun(incoming, "HDF5Array");
-}
-
 std::string generate_HDF5Matrix_filename() {
     // Initializing file name (not using getHDF5DumpName, to avoid file handle conflicts
     // and problems with concurrent read/write).
@@ -80,14 +74,24 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
     if (incoming.isObject()) {
         const std::string classname=get_class(incoming);
         if (classname=="DelayedMatrix") {
-            Rcpp::RObject realized=realize_DelayedMatrix(incoming);
-            Rcpp::RObject h5seed=get_safe_slot(realized, "seed");
-            Rcpp::RObject first_val=get_safe_slot(h5seed, "first_val");
-            return first_val.sexp_type();
+            Rcpp::Environment delayenv("package:DelayedArray");
+            Rcpp::Function typefun=delayenv["type"];
+            std::string curtype=Rcpp::as<std::string>(typefun(incoming));
+            if (curtype=="logical") {
+                return LGLSXP;
+            } else if (curtype=="character") {
+                return STRSXP;
+            } else if (curtype=="integer") {
+                return INTSXP;
+            } else if (curtype=="double") {
+                return REALSXP;
+            }
+            
         } else if (classname=="HDF5Matrix") {
             Rcpp::RObject h5seed=get_safe_slot(incoming, "seed");
             Rcpp::RObject first_val=get_safe_slot(h5seed, "first_val");
             return first_val.sexp_type();
+
         } else if (classname=="big.matrix") {
             Rcpp::RObject address=get_bigmemory_address(incoming);
             Rcpp::XPtr<BigMatrix> xptr(address);
@@ -97,6 +101,7 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
                 case 8:
                     return REALSXP;
             }
+
         } else if (classname.length()==9 && classname.substr(3)=="Matrix") {
             switch(classname[0]) { 
                 case 'd':
@@ -104,11 +109,14 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
                 case 'l':
                     return LGLSXP;
             }
+
         }
         throw_custom_error("unknown SEXP type for ", classname, " object");
     }
     return incoming.sexp_type();
 }
+
+/* Constants for use as template parameters. */
 
 const double numeric_zero=0;
                                

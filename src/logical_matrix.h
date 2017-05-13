@@ -32,7 +32,11 @@ typedef Psymm_matrix<int, Rcpp::LogicalVector> Psymm_logical_matrix;
 
 #ifdef BEACHMAT_USE_HDF5
 
-typedef HDF5_matrix<int, Rcpp::LogicalVector, H5T_INTEGER, H5::PredType::NATIVE_INT32> HDF5_logical_matrix;
+class HDF5_logical_matrix : public HDF5_matrix<int, Rcpp::LogicalVector> {
+public:
+    HDF5_logical_matrix(const Rcpp::RObject&);
+    ~HDF5_logical_matrix();
+};
 
 #endif
 
@@ -54,7 +58,11 @@ typedef simple_output<int, Rcpp::LogicalVector> simple_logical_output;
 
 #ifdef BEACHMAT_USE_HDF5
 
-typedef HDF5_output<int, Rcpp::LogicalVector, H5::PredType::NATIVE_INT32, logical_false> HDF5_logical_output;
+class HDF5_logical_output : public HDF5_output<int, Rcpp::LogicalVector, logical_false> {
+public:
+    HDF5_logical_output(int, int);
+    ~HDF5_logical_output();
+};
 
 #endif
 

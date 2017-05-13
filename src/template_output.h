@@ -55,6 +55,11 @@ template<typename T, class V>
 simple_output<T, V>::~simple_output() {}
 
 template<typename T, class V>
+std::unique_ptr<output_matrix<T, V> > simple_output<T, V>::clone() const {
+    return std::unique_ptr<output_matrix<T, V> >(new simple_output<T, V>(*this));
+}
+
+template<typename T, class V>
 void simple_output<T, V>::fill_col(int c, typename V::iterator in, int start, int end) {
     std::copy(in, in + end - start, data.begin()+c*(this->nrow)+start); 
     return;
@@ -105,8 +110,10 @@ Rcpp::RObject simple_output<T, V>::yield() {
 
 /* Methods for HDF5 output matrix. */
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>(nr, nc), 
+#ifdef BEACHMAT_USE_HDF5
+
+template<typename T, class V, const T& FILL>
+HDF5_output<T, V, FILL>::HDF5_output (int nr, int nc, const H5::PredType& hpt) : output_matrix<T, V>(nr, nc), HPT(hpt),
         fname(generate_HDF5Matrix_filename()), hfile(fname, H5F_ACC_TRUNC) {
 
     H5::DSetCreatPropList plist;
@@ -131,23 +138,19 @@ HDF5_output<T, V, HPT, FILL>::HDF5_output (int nr, int nc) : output_matrix<T, V>
     onespace=H5::DataSpace(1, one_count);
     onespace.selectAll();
 
-    // Specifying it's logical, if that's the case.
-    V tmp;
-    if (tmp.sexp_type()==LGLSXP) {
-        H5::StrType str_type(0, H5T_VARIABLE);
-        H5::DataSpace att_space(1, one_count);
-        H5::Attribute att = hdata.createAttribute("storage.mode", str_type, att_space);
-        att.write(str_type, std::string("logical"));
-    }
-
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-HDF5_output<T, V, HPT, FILL>::~HDF5_output() {}
+template<typename T, class V, const T& FILL>
+HDF5_output<T, V, FILL>::~HDF5_output() {}
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::select_col(int c, int start, int end) {
+template<typename T, class V, const T& FILL>
+std::unique_ptr<output_matrix<T, V> > HDF5_output<T, V, FILL>::clone() const {
+    return std::unique_ptr<output_matrix<T, V> >(new HDF5_output<T, V, FILL>(*this));
+}
+
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::select_col(int c, int start, int end) {
     col_count[1]=end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -157,15 +160,15 @@ void HDF5_output<T, V, HPT, FILL>::select_col(int c, int start, int end) {
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::fill_col(int c, typename V::iterator in, int start, int end) {
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::fill_col(int c, typename V::iterator in, int start, int end) {
     select_col(c, start, end);
     hdata.write(&(*in), HPT, colspace, hspace);
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::select_row(int r, int start, int end) {
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::select_row(int r, int start, int end) {
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -175,52 +178,52 @@ void HDF5_output<T, V, HPT, FILL>::select_row(int r, int start, int end) {
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::fill_row(int c, typename V::iterator in, int start, int end) {
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::fill_row(int c, typename V::iterator in, int start, int end) {
     select_row(c, start, end);
     hdata.write(&(*in), HPT, rowspace, hspace);
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::select_one(int r, int c) {
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::select_one(int r, int c) {
     h5_start[0]=c;
     h5_start[1]=r;
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::fill(int r, int c, T in) {
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::fill(int r, int c, T in) {
     select_one(r, c);
     hdata.write(&in, HPT, onespace, hspace);
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::get_row(int r, typename V::iterator out, int start, int end) { 
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::get_row(int r, typename V::iterator out, int start, int end) { 
     select_row(r, start, end);
     hdata.read(&(*out), HPT, rowspace, hspace);
     return;
 } 
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-void HDF5_output<T, V, HPT, FILL>::get_col(int c, typename V::iterator out, int start, int end) { 
+template<typename T, class V, const T& FILL>
+void HDF5_output<T, V, FILL>::get_col(int c, typename V::iterator out, int start, int end) { 
     select_col(c, start, end);
     hdata.read(&(*out), HPT, colspace, hspace);
     return;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-T HDF5_output<T, V, HPT, FILL>::get(int r, int c) { 
+template<typename T, class V, const T& FILL>
+T HDF5_output<T, V, FILL>::get(int r, int c) { 
     select_one(r, c);
     T out;
     hdata.read(&out, HPT, onespace, hspace);
     return out;
 }
 
-template<typename T, class V, const H5::PredType& HPT, const T& FILL>
-Rcpp::RObject HDF5_output<T, V, HPT, FILL>::yield() {
+template<typename T, class V, const T& FILL>
+Rcpp::RObject HDF5_output<T, V, FILL>::yield() {
     std::string seedclass="HDF5ArraySeed";
     Rcpp::S4 h5seed(seedclass);
 
@@ -256,6 +259,8 @@ Rcpp::RObject HDF5_output<T, V, HPT, FILL>::yield() {
 
     return SEXP(h5mat);
 }
+
+#endif
 
 #endif
 
