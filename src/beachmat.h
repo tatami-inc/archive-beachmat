@@ -12,7 +12,7 @@
 #include "R.h"
 #include "Rinternals.h"
 
-@DEF_HDF_CPP@
+#define BEACHMAT_USE_HDF5
 
 #ifdef BEACHMAT_USE_HDF5
 #include "c++/H5Cpp.h"

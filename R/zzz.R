@@ -1,3 +1,5 @@
+use.hdf5 <- TRUE
+
 pkgconfig <- function(opt = c("PKG_LIBS", "PKG_CPPFLAGS"))
 {
     path <- system.file("lib", package="beachmat", mustWork=TRUE)

@@ -1,3 +1,0 @@
-#!/bin/sh
-
-rm -f config.* autom4te.cache/ src/Makevars src/beachmat.h R/use_hdf.R 
