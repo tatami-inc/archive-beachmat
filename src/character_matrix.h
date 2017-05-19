@@ -25,9 +25,9 @@ public:
     ~HDF5_character_matrix();
     std::unique_ptr<character_matrix> clone() const;
 
-    Rcpp::String get(int, int);
-    void get_row(int, Rcpp::StringVector::iterator, int, int);
-    void get_col(int, Rcpp::StringVector::iterator, int, int);
+    Rcpp::String get(size_t, size_t);
+    void get_row(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
 protected:
     H5::StrType str_type;
     std::vector<char> row_buf, col_buf;

@@ -4,41 +4,41 @@
 /* Methods for the base output class. */
 
 template<typename T, class V>
-output_matrix<T, V>::output_matrix(int nr, int nc) : nrow(nr), ncol(nc) {}
+output_matrix<T, V>::output_matrix(size_t nr, size_t nc) : nrow(nr), ncol(nc) {}
 
 template<typename T, class V>
 output_matrix<T, V>::~output_matrix() {}
 
 template<typename T, class V>
-void output_matrix<T, V>::fill_row(int r, typename V::iterator in) {
+void output_matrix<T, V>::fill_row(size_t r, typename V::iterator in) {
     fill_row(r, in, 0, this->ncol);
     return;
 }
 
 template<typename T, class V>
-void output_matrix<T, V>::fill_col(int c, typename V::iterator in) {
+void output_matrix<T, V>::fill_col(size_t c, typename V::iterator in) {
     fill_col(c, in, 0, this->nrow);
     return;
 }
 
 template<typename T, class V>
-int output_matrix<T, V>::get_nrow() const { 
+size_t output_matrix<T, V>::get_nrow() const { 
     return this->nrow;
 }
 
 template<typename T, class V>
-int output_matrix<T, V>::get_ncol() const { 
+size_t output_matrix<T, V>::get_ncol() const { 
     return this->ncol;
 }
 
 template<typename T, class V>
-void output_matrix<T, V>::get_row(int r, typename V::iterator out) {
+void output_matrix<T, V>::get_row(size_t r, typename V::iterator out) {
     get_row(r, out, 0, ncol);
     return;
 }
 
 template<typename T, class V>
-void output_matrix<T, V>::get_col(int c, typename V::iterator out) {
+void output_matrix<T, V>::get_col(size_t c, typename V::iterator out) {
     get_col(c, out, 0, nrow);
     return;
 }
@@ -46,7 +46,7 @@ void output_matrix<T, V>::get_col(int c, typename V::iterator out) {
 /* Methods for the simple output matrix. */
 
 template<typename T, class V>
-simple_output<T, V>::simple_output(int nr, int nc) : output_matrix<T, V>(nr, nc) { 
+simple_output<T, V>::simple_output(size_t nr, size_t nc) : output_matrix<T, V>(nr, nc) { 
     (this->data)=V(nr*nc);
     return; 
 }
@@ -60,44 +60,44 @@ std::unique_ptr<output_matrix<T, V> > simple_output<T, V>::clone() const {
 }
 
 template<typename T, class V>
-void simple_output<T, V>::fill_col(int c, typename V::iterator in, int start, int end) {
+void simple_output<T, V>::fill_col(size_t c, typename V::iterator in, size_t start, size_t end) {
     std::copy(in, in + end - start, data.begin()+c*(this->nrow)+start); 
     return;
 }
 
 template<typename T, class V>
-void simple_output<T, V>::fill_row(int r, typename V::iterator in, int start, int end) {
-    const int& NR=this->nrow;
+void simple_output<T, V>::fill_row(size_t r, typename V::iterator in, size_t start, size_t end) {
+    const size_t& NR=this->nrow;
     auto mIt=data.begin() + r + start * NR;
-    for (int c=start; c<end; ++c, mIt+=NR, ++in) {
+    for (size_t c=start; c<end; ++c, mIt+=NR, ++in) {
         (*mIt)=*in;        
     }
     return;
 }
 
 template<typename T, class V>
-void simple_output<T, V>::fill(int r, int c, T in) {
+void simple_output<T, V>::fill(size_t r, size_t c, T in) {
     data[r + (this->nrow)*c]=in;
     return;
 }
 
 template<typename T, class V>
-void simple_output<T, V>::get_row(int r, typename V::iterator out, int start, int end) {
-    const int& NR=this->nrow;
+void simple_output<T, V>::get_row(size_t r, typename V::iterator out, size_t start, size_t end) {
+    const size_t& NR=this->nrow;
     auto src=data.begin()+start*NR+r;
-    for (int col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
+    for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
     return;
 }
 
 template<typename T, class V>
-void simple_output<T, V>::get_col(int c, typename V::iterator out, int start, int end) {
+void simple_output<T, V>::get_col(size_t c, typename V::iterator out, size_t start, size_t end) {
     auto src=data.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
 }
 
 template<typename T, class V>
-T simple_output<T, V>::get(int r, int c) {
+T simple_output<T, V>::get(size_t r, size_t c) {
     return data[c*(this->nrow)+r];
 }
 
@@ -113,7 +113,7 @@ Rcpp::RObject simple_output<T, V>::yield() {
 #ifdef BEACHMAT_USE_HDF5
 
 template<typename T, class V, const T& FILL>
-HDF5_output<T, V, FILL>::HDF5_output (int nr, int nc, const H5::PredType& hpt) : output_matrix<T, V>(nr, nc), HPT(hpt) {
+HDF5_output<T, V, FILL>::HDF5_output (size_t nr, size_t nc, const H5::PredType& hpt) : output_matrix<T, V>(nr, nc), HPT(hpt) {
 
     // File opening.
     Rcpp::Environment hdf5env("package:HDF5Array");
@@ -165,7 +165,7 @@ std::unique_ptr<output_matrix<T, V> > HDF5_output<T, V, FILL>::clone() const {
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::select_col(int c, int start, int end) {
+void HDF5_output<T, V, FILL>::select_col(size_t c, size_t start, size_t end) {
     col_count[1]=end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -176,14 +176,14 @@ void HDF5_output<T, V, FILL>::select_col(int c, int start, int end) {
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::fill_col(int c, typename V::iterator in, int start, int end) {
+void HDF5_output<T, V, FILL>::fill_col(size_t c, typename V::iterator in, size_t start, size_t end) {
     select_col(c, start, end);
     hdata.write(&(*in), HPT, colspace, hspace);
     return;
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::select_row(int r, int start, int end) {
+void HDF5_output<T, V, FILL>::select_row(size_t r, size_t start, size_t end) {
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -194,14 +194,14 @@ void HDF5_output<T, V, FILL>::select_row(int r, int start, int end) {
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::fill_row(int c, typename V::iterator in, int start, int end) {
+void HDF5_output<T, V, FILL>::fill_row(size_t c, typename V::iterator in, size_t start, size_t end) {
     select_row(c, start, end);
     hdata.write(&(*in), HPT, rowspace, hspace);
     return;
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::select_one(int r, int c) {
+void HDF5_output<T, V, FILL>::select_one(size_t r, size_t c) {
     h5_start[0]=c;
     h5_start[1]=r;
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
@@ -209,28 +209,28 @@ void HDF5_output<T, V, FILL>::select_one(int r, int c) {
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::fill(int r, int c, T in) {
+void HDF5_output<T, V, FILL>::fill(size_t r, size_t c, T in) {
     select_one(r, c);
     hdata.write(&in, HPT, onespace, hspace);
     return;
 }
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::get_row(int r, typename V::iterator out, int start, int end) { 
+void HDF5_output<T, V, FILL>::get_row(size_t r, typename V::iterator out, size_t start, size_t end) { 
     select_row(r, start, end);
     hdata.read(&(*out), HPT, rowspace, hspace);
     return;
 } 
 
 template<typename T, class V, const T& FILL>
-void HDF5_output<T, V, FILL>::get_col(int c, typename V::iterator out, int start, int end) { 
+void HDF5_output<T, V, FILL>::get_col(size_t c, typename V::iterator out, size_t start, size_t end) { 
     select_col(c, start, end);
     hdata.read(&(*out), HPT, colspace, hspace);
     return;
 }
 
 template<typename T, class V, const T& FILL>
-T HDF5_output<T, V, FILL>::get(int r, int c) { 
+T HDF5_output<T, V, FILL>::get(size_t r, size_t c) { 
     select_one(r, c);
     T out;
     hdata.read(&out, HPT, onespace, hspace);

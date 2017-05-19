@@ -27,33 +27,33 @@ std::unique_ptr<character_matrix> HDF5_character_matrix::clone() const {
     return std::unique_ptr<character_matrix>(new HDF5_character_matrix(*this));
 }
     
-void HDF5_character_matrix::get_row(int r, Rcpp::StringVector::iterator out, int start, int end) { 
+void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
     select_row(r, start, end);
 
     char* ref=row_buf.data();
     hdata.read(ref, str_type, rowspace, hspace);
     auto bufsize=str_type.getSize(); 
 
-    for (int c=start; c<end; ++c, ref+=bufsize, ++out) {
+    for (size_t c=start; c<end; ++c, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
 } 
 
-void HDF5_character_matrix::get_col(int c, Rcpp::StringVector::iterator out, int start, int end) { 
+void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
     select_col(c, start, end);
 
     char* ref=col_buf.data();
     hdata.read(ref, str_type, colspace, hspace);
     auto bufsize=str_type.getSize(); 
 
-    for (int r=start; r<end; ++r, ref+=bufsize, ++out) {
+    for (size_t r=start; r<end; ++r, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
 }
  
-Rcpp::String HDF5_character_matrix::get(int r, int c) { 
+Rcpp::String HDF5_character_matrix::get(size_t r, size_t c) { 
     select_one(r, c);
     std::string out;
     hdata.read(out, str_type, onespace, hspace);

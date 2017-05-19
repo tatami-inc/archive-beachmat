@@ -18,13 +18,13 @@ public:
      *
      * @return Integer, number of rows.
      */
-    int get_nrow() const;
+    size_t get_nrow() const;
 
     /* Returns the number of columns in the matrix.
      * 
      * @return Integer, number of columns.
      */
-    int get_ncol() const;
+    size_t get_ncol() const;
 
     /* Fills an array with values in the specified row.
      *
@@ -32,7 +32,7 @@ public:
      * @param out An iterator pointing to an Rcpp::Vector of T's of length 'ncol'.
      * @return Void. 'out' is filled with values in row 'r'.
      */
-    void get_row(int, typename V::iterator);
+    void get_row(size_t, typename V::iterator);
 
     /* Fills an array with values in the specified row.
      *
@@ -42,7 +42,7 @@ public:
      * @param end One past the index of the last column to store. 
      * @return Void. 'out' is filled with values in row 'r', from 'start' to 'end-1'.
      */
-    virtual void get_row(int, typename V::iterator, int, int)=0;
+    virtual void get_row(size_t, typename V::iterator, size_t, size_t)=0;
 
     /* Fills an array with values in the specified column.
      *
@@ -50,7 +50,7 @@ public:
      * @param out An iterator pointing to an Rcpp::Vector of T's of length 'nrow'.
      * @return Void. 'out' is filled with values in column 'c'.
      */
-    void get_col(int, typename V::iterator);
+    void get_col(size_t, typename V::iterator);
 
     /* Fills an array with values in the specified column.
      *
@@ -60,7 +60,7 @@ public:
      * @param end One past the index of the last column to store. 
      * @return Void. 'out' is filled with values in column 'c', from 'start' to 'end-1'.
      */
-    virtual void get_col(int, typename V::iterator, int, int)=0;
+    virtual void get_col(size_t, typename V::iterator, size_t, size_t)=0;
 
     /* Returns values in the specified cell.
      *
@@ -68,7 +68,7 @@ public:
      * @param c The column index (0-based).
      * @return T, the value of the matrix at row 'r' and column 'c'.
      */
-    virtual T get(int, int)=0;
+    virtual T get(size_t, size_t)=0;
 
     /* Returns a deep copy of itself. 
      *
@@ -77,7 +77,7 @@ public:
     virtual std::unique_ptr<any_matrix<T, V> > clone() const=0;
 
 protected:
-    int nrow, ncol;
+    size_t nrow, ncol;
     void fill_dims(const Rcpp::RObject&);
 };
 
@@ -90,11 +90,11 @@ public:
     ~simple_matrix();
     std::unique_ptr<any_matrix<T, V> > clone() const;
 
-    T get(int, int);
-    void get_row(int, typename V::iterator, int, int);
-    void get_col(int, typename V::iterator, int, int);
+    T get(size_t, size_t);
+    void get_row(size_t, typename V::iterator, size_t, size_t);
+    void get_col(size_t, typename V::iterator, size_t, size_t);
 protected:
-    int get_index(int, int) const;   
+    size_t get_index(size_t, size_t) const;   
     V mat;
 };
 
@@ -107,11 +107,11 @@ public:
     ~dense_matrix();
     std::unique_ptr<any_matrix<T, V> > clone() const;
 
-    T get(int, int);
-    void get_row(int, typename V::iterator, int, int);
-    void get_col(int, typename V::iterator, int, int);
+    T get(size_t, size_t);
+    void get_row(size_t, typename V::iterator, size_t, size_t);
+    void get_col(size_t, typename V::iterator, size_t, size_t);
 protected:
-    int get_index(int, int) const;   
+    size_t get_index(size_t, size_t) const;   
     V x;
 };
 
@@ -124,18 +124,18 @@ public:
     ~Csparse_matrix();
     std::unique_ptr<any_matrix<T, V> > clone() const;
 
-    T get(int, int);
-    void get_row(int, typename V::iterator, int, int);
-    void get_col(int, typename V::iterator, int, int);
+    T get(size_t, size_t);
+    void get_row(size_t, typename V::iterator, size_t, size_t);
+    void get_col(size_t, typename V::iterator, size_t, size_t);
 protected:
     Rcpp::IntegerVector i, p;
     V x;
-    int nx;
-    int get_index(int, int) const;
+    size_t nx;
+    size_t get_index(size_t, size_t) const;
 
-    int currow, curstart, curend;
-    std::vector<int> indices;
-    void update_indices(int, int, int);
+    size_t currow, curstart, curend;
+    std::vector<int> indices; // Left as 'int' to simplify comparisons with 'i' and 'p'.
+    void update_indices(size_t, size_t, size_t);
 };
 
 /* symmetric packed Matrix */
@@ -147,13 +147,13 @@ public:
     ~Psymm_matrix();
     std::unique_ptr<any_matrix<T, V> > clone() const;
 
-    T get(int, int);   
-    void get_row(int, typename V::iterator, int, int);
-    void get_col(int, typename V::iterator, int, int);
+    T get(size_t, size_t);   
+    void get_row(size_t, typename V::iterator, size_t, size_t);
+    void get_col(size_t, typename V::iterator, size_t, size_t);
 protected:
     V x;
     bool upper;
-    int get_index(int, int) const;
+    size_t get_index(size_t, size_t) const;
 };
 
 /* HDF5Matrix */
@@ -167,9 +167,9 @@ public:
     ~HDF5_matrix();
     std::unique_ptr<any_matrix<T, V> > clone() const;
 
-    T get(int, int);
-    void get_row(int, typename V::iterator, int, int);
-    void get_col(int, typename V::iterator, int, int);
+    T get(size_t, size_t);
+    void get_row(size_t, typename V::iterator, size_t, size_t);
+    void get_col(size_t, typename V::iterator, size_t, size_t);
 protected:
     Rcpp::RObject realized;
 
@@ -179,9 +179,9 @@ protected:
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
 
     const H5::PredType& HPT;
-    void select_row(int, int, int);
-    void select_col(int, int, int);
-    void select_one(int, int);
+    void select_row(size_t, size_t, size_t);
+    void select_col(size_t, size_t, size_t);
+    void select_one(size_t, size_t);
 };
 
 #endif
