@@ -17,8 +17,8 @@ Rcpp::RObject pump_out(M ptr, O optr, const Rcpp::IntegerVector& mode, const Rcp
         throw std::runtime_error("'refill' should be a logical scalar");
     }
     const int Mode=mode[0];
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
+    const size_t& nrows=ptr->get_nrow();
+    const size_t& ncols=ptr->get_ncol();
     const bool redo=refill[0];
 
     if (Mode==1) { 

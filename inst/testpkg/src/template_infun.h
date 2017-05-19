@@ -12,8 +12,8 @@ O fill_up (M ptr, const Rcpp::IntegerVector& mode) {
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
     const int Mode=mode[0];
-    const int& nrows=ptr->get_nrow();
-    const int& ncols=ptr->get_ncol();
+    const size_t& nrows=ptr->get_nrow();
+    const size_t& ncols=ptr->get_ncol();
     O output(nrows, ncols);
 
     if (Mode==1) { 

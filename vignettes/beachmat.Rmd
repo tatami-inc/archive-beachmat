@@ -137,8 +137,8 @@ The exact class depends on the type of matrix in `dmat`, though the behaviour of
 
 The available methods for this object are:
 
-- `dptr->get_nrow()` returns an integer number of rows (`nrow`).
-- `dptr->get_ncol()` returns an integer number of columns (`ncol`).
+- `dptr->get_nrow()` returns the number of rows (`nrow`) as a `size_t`.
+- `dptr->get_ncol()` returns the number of columns (`ncol`) as a `size_t`.
 - `dptr->get_col(c, X)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at column `c`.
 There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
 No value is returned by this method.
@@ -154,7 +154,7 @@ No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 - `dptr->clone()` returns a unique pointer to a `numeric_matrix` instance of the same type as that pointed to by `dptr`.
 
-In all cases, `r` and `c` should be non-negative integers in `[0, nrow)` and `[0, ncol)` respectively.
+In all cases, `r` and `c` should be non-negative integers (specificaly `size_t`) in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
 Similar rules apply to `rstart` and `rend`, which should be in `[0, nrow]`; and to `cstart` and `cend`, which should be in `[0, ncol]`.
 
@@ -193,7 +193,6 @@ Please contact the maintainers if you have a class that you would like to see su
 
 ## Important developer information 
 
-- R stores dimensions as integers rather than as `size_t`, so we simply follow suit when calling `get_nrow` and `get_ncol`.
 - In theory, greater efficiency could be obtained when calling `get_col` on column-major base matrices.
 Specifically, a pointer to the column could be directly returned rather than copying the data to a new `Vector` object. 
 However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
@@ -203,7 +202,7 @@ Filling a user-supplied array is more intuitive as it is obvious that the array 
 Some methods use cached class members for greater efficiency, and simultaneous calls will cause race conditions. 
 It is the responsibility of the calling function to lock (and unlock) access to a single `*_matrix` object across threads.
 Alternatively, the `clone` method can be called to generate a unique pointer to a _new_ `*_matrix` instance, which can be used concurrently in another thread.
-This is fairly cheap as the matrix data itself is not copied.
+This is fairly cheap as the underlying matrix data are not copied.
 - When accessing `character_matrix` data, the `Rcpp::String` class is used as it provides a convenient wrapper around the underlying `CHARSXP`. 
 This ensures that the string is stored in R's global cache and is suitably protected against garbage collection. 
 - `DelayedMatrix` objects are automatically realized to `HDF5Matrix` objects via the `realize` method in the `r Biocpkg("DelayedArray")` package.
@@ -288,11 +287,11 @@ Currently, character output matrices are not supported.
 
 ## Important developer information
 
-- Creation of a `HDF5Matrix` will perform a new `tempfile()` call to obtain a new file name for storing the HDF5 output.
-This will be a separate file from what would normally be used by the `r Biocpkg("HDF5Array")` methods via `getHDF5DumpFile()`.
-This is necessary to avoid multiple file handles being open to the same file at the same time, which may cause problems when some handles have write access.
-- The API is not thread-safe, due to the use of cached class members and the potential for writing to the same location on disk/memory.
-The former can be solved by using `clone` to create `*_output` copies for use in each thread.
+- Creation of a `HDF5Matrix` will perform a new `getHDF5DumpFile()` call with `for.use=TRUE` to obtain a new file name for storing the HDF5 output.
+Similarly, the name of the data set is obtained via `getHDF5DumpName()`.
+This mimics the behaviour observed when `HDF5Matrix` instances are created at the R level.
+- The API is not thread-safe, due to (i) the use of cached class members and (ii) the potential for race conditions when writing to the same location on disk/memory.
+The first issue can be solved by using `clone` to create `*_output` copies for use in each thread.
 However, each copy will still read from and write to the same disk/memory location.
 It is the responsibility of the calling function to ensure that access is locked and unlocked appropriately across multiple threads.
 (This may not be necessary if access does not overlap, e.g., writing to different rows.)

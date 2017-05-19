@@ -20,9 +20,9 @@ A <- Matrix(1:50, 5, 10)
 wrong <- A
 expect_fixed_error(storage.mode(wrong@Dim) <- "double")
 wrong@Dim <- c(-1L, 10L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'x' in a dgeMatrix object is inconsistent with its dimensions")
 wrong@Dim <- c(10L, -1L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'x' in a dgeMatrix object is inconsistent with its dimensions")
 wrong@Dim <- c(5L, 5L)
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'x' in a dgeMatrix object is inconsistent with its dimensions")
 
@@ -34,9 +34,9 @@ A <- rsparsematrix(10, 20, 0.5)
 wrong <- A
 expect_fixed_error(storage.mode(wrong@Dim) <- "double")
 wrong@Dim <- c(-1L, 10L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'p' slot in a dgCMatrix object should be equal to 'ncol+1'")
 wrong@Dim <- c(10L, -1L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'p' slot in a dgCMatrix object should be equal to 'ncol+1'")
 
 wrong <- A
 expect_fixed_error(storage.mode(wrong@p) <- "double")
@@ -81,10 +81,10 @@ A <- pack(forceSymmetric(matrix(1:10, 10, 10)))
 
 wrong <- A
 expect_fixed_error(storage.mode(wrong@Dim) <- "double")
-wrong@Dim <- c(-1L, 10L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
-wrong@Dim <- c(10L, -1L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+wrong@Dim <- c(5L, 5L)
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'x' in a dspMatrix object is inconsistent with its dimensions")
+wrong@Dim <- c(1L, 1L)
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "length of 'x' in a dspMatrix object is inconsistent with its dimensions")
 wrong@Dim <- c(10L, 5L)
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L),  "'nrow' and 'ncol' should be equal for a dspMatrix object")
 
@@ -112,9 +112,9 @@ expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "'seed
 wrong <- A
 expect_fixed_error(storage.mode(wrong@seed@dim) <- "double")
 wrong@seed@dim <- c(-1L, 10L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions in HDF5 file do not equal dimensions in the HDF5Matrix object")
 wrong@seed@dim <- c(10L, -1L)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions should be non-negative")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions in HDF5 file do not equal dimensions in the HDF5Matrix object")
 wrong@seed@dim <- c(10L, 5L)
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "dimensions in HDF5 file do not equal dimensions in the HDF5Matrix object")
 
