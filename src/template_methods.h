@@ -1,5 +1,5 @@
-#ifndef TEMPLATE_METHODS_H 
-#define TEMPLATE_METHODS_H 
+#ifndef BEACHMAT_TEMPLATE_METHODS_H 
+#define BEACHMAT_TEMPLATE_METHODS_H 
 
 /* Methods for the virtual base matrix. */
 

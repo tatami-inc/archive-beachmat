@@ -49,25 +49,25 @@ Be careful of the differences.
 Create a `src/Makevars.win` file with the following lines:
 
 ```
-BEACH_LIBS=$(shell echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+BEACHMAT_LIBS=$(shell echo 'beachmat::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)
-PKG_LIBS=$(BEACH_LIBS)
+PKG_LIBS=$(BEACHMAT_LIBS)
 ```
 
 ... and a `src/Makevars` file with the following lines:
 
 ```
-BEACH_LIBS=`echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+BEACHMAT_LIBS=`echo 'beachmat::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave`
-PKG_LIBS=$(BEACH_LIBS)
+PKG_LIBS=$(BEACHMAT_LIBS)
 ```
 
 The statement for each platfrom modifies the `$PKG_LIBS` variable. 
-If your package needs to add to the `$PKG_LIBS` variable, do so by adding to the `PKG_LIBS=$(RHTSLIB_LIBS)` line.
+If your package needs to add to the `$PKG_LIBS` variable, do so by adding to the `PKG_LIBS=$(BEACHMAT_LIBS)` line.
 For example:
 
 ```
-PKG_LIBS=$(RHTSLIB_LIBS) -L/path/to/foolib -lfoo
+PKG_LIBS=$(BEACHMAT_LIBS) -L/path/to/foolib -lfoo
 ```
 
 ## Find headers
@@ -103,7 +103,7 @@ Imports: Rcpp
 ... and a corresponding  `importFrom` specification in the `NAMESPACE` file:
 
 ```
-importFrom(Rcpp, sourceRcpp)
+importFrom(Rcpp, sourceCpp)
 ```
  
 (The exact function to be imported doesn't matter, as long as the namespace is loaded.)

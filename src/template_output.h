@@ -1,5 +1,5 @@
-#ifndef TEMPLATE_OUTPUT_H
-#define TEMPLATE_OUTPUT_H
+#ifndef BEACHMAT_TEMPLATE_OUTPUT_H
+#define BEACHMAT_TEMPLATE_OUTPUT_H
 
 /* Methods for the base output class. */
 
@@ -118,7 +118,7 @@ HDF5_output<T, V, FILL>::HDF5_output (int nr, int nc, const H5::PredType& hpt) :
     // File opening.
     Rcpp::Environment hdf5env("package:HDF5Array");
     Rcpp::Function filenamefun=hdf5env["getHDF5DumpFile"];
-    fname=make_to_string(filenamefun(Rcpp::LogicalVector::create(1)));
+    fname=make_to_string(filenamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
     hfile.openFile(fname, H5F_ACC_RDWR);
 
     H5::DSetCreatPropList plist;
@@ -130,7 +130,7 @@ HDF5_output<T, V, FILL>::HDF5_output (int nr, int nc, const H5::PredType& hpt) :
 
     // Creating the data set.
     Rcpp::Function datanamefun=hdf5env["getHDF5DumpName"];
-    dname=make_to_string(datanamefun(Rcpp::LogicalVector::create(1)));
+    dname=make_to_string(datanamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
     hdata=hfile.createDataSet(dname, HPT, hspace, plist); 
 
 //    Rprintf("getting function\n");
