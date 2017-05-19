@@ -49,17 +49,17 @@ Be careful of the differences.
 Create a `src/Makevars.win` file with the following lines:
 
 ```
-BEACHLIB_LIBS=$(shell echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+BEACH_LIBS=$(shell echo 'beachmat::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)
-PKG_LIBS=$(BEACHLIB_LIBS)
+PKG_LIBS=$(BEACH_LIBS)
 ```
 
 ... and a `src/Makevars` file with the following lines:
 
 ```
-BEACHLIB_LIBS=`echo 'beachmat::pkgconfig("PKG_LIBS")'|\
+BEACH_LIBS=`echo 'beachmat::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave`
-PKG_LIBS=$(BEACHLIB_LIBS)
+PKG_LIBS=$(BEACH_LIBS)
 ```
 
 The statement for each platfrom modifies the `$PKG_LIBS` variable. 
