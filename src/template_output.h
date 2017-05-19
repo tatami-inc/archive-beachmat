@@ -113,17 +113,32 @@ Rcpp::RObject simple_output<T, V>::yield() {
 #ifdef BEACHMAT_USE_HDF5
 
 template<typename T, class V, const T& FILL>
-HDF5_output<T, V, FILL>::HDF5_output (int nr, int nc, const H5::PredType& hpt) : output_matrix<T, V>(nr, nc), HPT(hpt),
-        fname(generate_HDF5Matrix_filename()), hfile(fname, H5F_ACC_TRUNC) {
+HDF5_output<T, V, FILL>::HDF5_output (int nr, int nc, const H5::PredType& hpt) : output_matrix<T, V>(nr, nc), HPT(hpt) {
+
+    // File opening.
+    Rcpp::Environment hdf5env("package:HDF5Array");
+    Rcpp::Function filenamefun=hdf5env["getHDF5DumpFile"];
+    fname=make_to_string(filenamefun(Rcpp::LogicalVector::create(1)));
+    hfile.openFile(fname, H5F_ACC_RDWR);
 
     H5::DSetCreatPropList plist;
     plist.setFillValue(HPT, &FILL);
-    dname="/HDF5ArrayAUTO00001";
     hsize_t dims[2];
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
     dims[1]=this->nrow; 
     hspace.setExtentSimple(2, dims);
-    hdata=hfile.createDataSet(dname, HPT, hspace, plist); // Creating the data set.
+
+    // Creating the data set.
+    Rcpp::Function datanamefun=hdf5env["getHDF5DumpName"];
+    dname=make_to_string(datanamefun(Rcpp::LogicalVector::create(1)));
+    hdata=hfile.createDataSet(dname, HPT, hspace, plist); 
+
+//    Rprintf("getting function\n");
+//    Rcpp::Function appendfun=hdf5env["append_dataset_creation_to_dump_log"];
+//    Rprintf("YAY!\n");
+//    appendfun(Rcpp::StringVector(fname), Rcpp::StringVector(dname), 
+//            Rcpp::IntegerVector::create(this->nrow, this->ncol),
+//            Rcpp::StringVector(translate_type(V().sexp_type())));
 
     h5_start[0]=0;
     h5_start[1]=0;

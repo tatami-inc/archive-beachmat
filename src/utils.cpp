@@ -35,7 +35,7 @@ std::string translate_type(int sexp_type) {
     std::string should_be;
     switch(sexp_type) {
         case REALSXP:
-            should_be="double-precision";
+            should_be="double";
             break;
         case INTSXP:
             should_be="integer";
@@ -60,14 +60,6 @@ std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& exp
         throw_custom_error("matrix should be a *", expected, " object");
     }
     return mattype;
-}
-
-std::string generate_HDF5Matrix_filename() {
-    // Initializing file name (not using getHDF5DumpName, to avoid file handle conflicts
-    // and problems with concurrent read/write).
-    Rcpp::Environment baseenv("package:base");
-    Rcpp::Function tempfun=baseenv["tempfile"];
-    return Rcpp::as<std::string>(tempfun()) + ".h5";
 }
 
 int find_sexp_type (const Rcpp::RObject& incoming) {

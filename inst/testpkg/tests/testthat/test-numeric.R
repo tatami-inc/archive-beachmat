@@ -29,7 +29,7 @@ expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, te
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 1L, c(6L, 8L), c(6L, 8L))) 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 2L, c(6L, 8L), c(6L, 8L)))
 
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, test.mat))
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, test.mat))
 
 # Testing dense matrices:
 
@@ -64,7 +64,7 @@ expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A,
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
 
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
 
 # Testing sparse matrices (dgCMatrix):
 
@@ -123,7 +123,7 @@ expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A,
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
 
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
 
 # Testing dense symmetric matrices (dspMatrix):
 
@@ -166,7 +166,7 @@ expect_identical(test.mat[5:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1
 expect_identical(test.mat[10:15,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(10L, 15L), c(1L, 20L)))
 expect_identical(test.mat[10:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(10L, 20L), c(1L, 20L)))
 
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
 
 # Testing HDF5 matrices:
 
@@ -204,7 +204,7 @@ expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A,
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
 expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
 
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, A))
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
 
 B <- A[1:10,] # Testing delayed operations
 resolved <- as.matrix(B)
@@ -216,7 +216,7 @@ resolved <- as.matrix(B)
 expect_s4_class(B, "DelayedMatrix")
 expect_identical(resolved, .Call(beachtest:::cxx_test_numeric_access, B, 1L))
 
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, B))
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, B))
 B <- A > 0
 expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
 
@@ -304,5 +304,24 @@ simple.mat[chosen.rows, chosen.cols] <- 0
 expect_true(all(simple.mat==0))
 restuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
 expect_identical(test.mat[chosen.rows,rev(chosen.cols)], as.matrix(restuff[chosen.rows,chosen.cols]))
+
+library(HDF5Array)
+test.mat <- matrix(rnorm(150), 15, 10) # Checking that the output is actually writing to a new file, and not overwriting old ones!
+A1 <- as(test.mat, "HDF5Array")
+B1 <- .Call(beachtest:::cxx_test_numeric_output, A1, 1L, FALSE) 
+A2 <- as(test.mat + 1, "HDF5Array")
+B2 <- .Call(beachtest:::cxx_test_numeric_output, A2, 1L, FALSE) 
+A3 <- as(test.mat * 2, "HDF5Array")
+B3 <- .Call(beachtest:::cxx_test_numeric_output, A3, 1L, FALSE) 
+
+expect_identical(as.matrix(A1), test.mat)
+expect_identical(as.matrix(B1), test.mat)
+expect_true(A1@seed@file!=B1@seed@file)
+expect_identical(as.matrix(A2), test.mat + 1)
+expect_identical(as.matrix(B2), test.mat + 1)
+expect_true(A2@seed@file!=B2@seed@file)
+expect_identical(as.matrix(A3), test.mat * 2)
+expect_identical(as.matrix(B3), test.mat * 2)
+expect_true(A3@seed@file!=B3@seed@file)
 
 }

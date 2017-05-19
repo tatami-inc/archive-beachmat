@@ -17,8 +17,6 @@ std::string translate_type(int);
 
 std::string check_Matrix_class (const Rcpp::RObject&, const std::string&);
 
-std::string generate_HDF5Matrix_filename();
-
 int find_sexp_type (const Rcpp::RObject&);
 
 extern const double numeric_zero;

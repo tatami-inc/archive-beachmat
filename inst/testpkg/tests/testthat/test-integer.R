@@ -81,7 +81,7 @@ expect_identical(resolved, .Call(beachtest:::cxx_test_integer_access, B, 1L))
 
 expect_identical("integer", .Call(beachtest:::cxx_test_type_check, B))
 B <- A + 1
-expect_identical("double-precision", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
+expect_identical("double", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
 
 }
 

@@ -133,26 +133,26 @@ expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, wrong, 1L), "'name
 # Numeric checks
 
 b <- matrix(100L, 10, 10)
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, b, 1L), "matrix should be double-precision")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, b, 1L), "matrix should be double")
 
 B <- Matrix(1:50, 5, 10)
 storage.mode(B@x) <- "integer"
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dgeMatrix object should be double-precision")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dgeMatrix object should be double")
 
 set.seed(234234)
 B <- rsparsematrix(10, 20, 0.5)
 storage.mode(B@x) <- "integer"
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dgCMatrix object should be double-precision")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dgCMatrix object should be double")
 
 B <- pack(forceSymmetric(matrix(1:10, 10, 10)))
 storage.mode(B@x) <- "integer"
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dspMatrix object should be double-precision")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'x' slot in a dspMatrix object should be double")
 
 if (beachmat:::use.hdf5) { 
 
 test.mat <- matrix(150L, 15, 10)
 B <- as(test.mat, "HDF5Array")
-expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'first_val' slot in a HDF5ArraySeed object should be double-precision")
+expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'first_val' slot in a HDF5ArraySeed object should be double")
 storage.mode(B@seed@first_val) <- "double"
 expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "data type in HDF5 file is not floating-point")
 
