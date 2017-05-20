@@ -133,12 +133,11 @@ HDF5_output<T, V, FILL>::HDF5_output (size_t nr, size_t nc, const H5::PredType& 
     dname=make_to_string(datanamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
     hdata=hfile.createDataSet(dname, HPT, hspace, plist); 
 
-//    Rprintf("getting function\n");
-//    Rcpp::Function appendfun=hdf5env["append_dataset_creation_to_dump_log"];
-//    Rprintf("YAY!\n");
-//    appendfun(Rcpp::StringVector(fname), Rcpp::StringVector(dname), 
-//            Rcpp::IntegerVector::create(this->nrow, this->ncol),
-//            Rcpp::StringVector(translate_type(V().sexp_type())));
+    Rcpp::Function appendfun=hdf5env["appendDatasetCreationToHDF5DumpLog"];
+    appendfun(Rcpp::StringVector(fname), 
+            Rcpp::StringVector(dname), 
+            Rcpp::IntegerVector::create(this->nrow, this->ncol),
+            Rcpp::StringVector(translate_type(V().sexp_type())));
 
     h5_start[0]=0;
     h5_start[1]=0;

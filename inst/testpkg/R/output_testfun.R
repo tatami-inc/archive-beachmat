@@ -93,7 +93,7 @@ check_logical_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
                         cxxfun=cxx_test_logical_output_slice, fill=FALSE)
 } 
 
-.check_execution_order <- function(FUN, cxxfun) {
+.check_execution_order <- function(FUN, cxxfun, type) {
     # Checking that the output function in '.Call' does not overwrite the 
     # underlying HDF5 file and change the values of other HDF5Matrix objects. 
     mats <- list(FUN(), FUN(), FUN())
@@ -109,18 +109,35 @@ check_logical_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
         testthat::expect_identical(ref, as.matrix(original))
         testthat::expect_true(original@seed@file!=out@seed@file)
     }
+
+    # Checking that the old and realized files are in the log.
+    testthat::expect_message(log <- HDF5Array::showHDF5DumpLog())
+    for (mode in c(TRUE, FALSE)) {
+        for (i in seq_along(mats)) {
+            if (mode) {
+                current <- new.mats[[i]]
+            } else {
+                current <- mats[[i]]
+            }   
+
+            j <- which(log$name==current@seed@name & log$file==current@seed@file)
+            testthat::expect_true(length(j)==1L)
+            testthat::expect_identical(type, log$type[j])
+            testthat::expect_identical(sprintf("%ix%i", nrow(current), ncol(current)), log$dims[j])
+        }
+    }
     return(invisible(NULL))
 }
 
 check_integer_order <- function(FUN, cxxfun) {
-    .check_execution_order(FUN, cxxfun=cxx_test_integer_output)
+    .check_execution_order(FUN, cxxfun=cxx_test_integer_output, type="integer")
 }
 
 check_numeric_order <- function(FUN, cxxfun) {
-    .check_execution_order(FUN, cxxfun=cxx_test_numeric_output)
+    .check_execution_order(FUN, cxxfun=cxx_test_numeric_output, type="double")
 }
 
 check_logical_order <- function(FUN, cxxfun) {
-    .check_execution_order(FUN, cxxfun=cxx_test_logical_output)
+    .check_execution_order(FUN, cxxfun=cxx_test_logical_output, type="logical")
 }
 

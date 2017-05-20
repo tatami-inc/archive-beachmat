@@ -289,6 +289,7 @@ Currently, character output matrices are not supported.
 
 - Creation of a `HDF5Matrix` will perform a new `getHDF5DumpFile()` call with `for.use=TRUE` to obtain a new file name for storing the HDF5 output.
 Similarly, the name of the data set is obtained via `getHDF5DumpName()`.
+Both names are recorded in the dump log via `appendDatasetCreationToHDF5DumpLog()`.
 This mimics the behaviour observed when `HDF5Matrix` instances are created at the R level.
 - The API is not thread-safe, due to (i) the use of cached class members and (ii) the potential for race conditions when writing to the same location on disk/memory.
 The first issue can be solved by using `clone` to create `*_output` copies for use in each thread.
