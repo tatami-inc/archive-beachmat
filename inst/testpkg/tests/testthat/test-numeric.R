@@ -1,327 +1,157 @@
 # This tests the ability of the API to properly access numeric matrices of different types.
-# library(beachtest); library(testthat); source("test-numeric.R")
+# library(testthat); source("test-numeric.R")
+
+#######################################################
 
 # Testing simple matrices:
 
 set.seed(12345)
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 3L))
+sFUN <- function(nr=15, nc=10) {
+    matrix(rnorm(nr*nc), nr, nc)
+}
 
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 5, 30)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 3L))
+test_that("Simple numeric matrix input is okay", {
+    beachtest:::check_numeric_mat(sFUN)
+    beachtest:::check_numeric_mat(sFUN, nr=5, nc=30)
+    beachtest:::check_numeric_mat(sFUN, nr=30, nc=5)
 
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 30, 5)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, test.mat, 3L))
+    beachtest:::check_numeric_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
 
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10) # slices
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, test.mat, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, test.mat))
+    beachtest:::check_type(sFUN, expected="double")
+})
 
 # Testing dense matrices:
 
 set.seed(13579)
 library(Matrix)
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10)
-A <- Matrix(test.mat)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+dFUN <- function(nr=15, nc=10) {
+    Matrix(sFUN(nr, nc), sparse=FALSE, doDiag=FALSE)
+}
 
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 5, 30)
-A <- Matrix(test.mat)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+test_that("Dense numeric matrix input is okay", {
+    expect_s4_class(dFUN(), "dgeMatrix")
 
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 30, 5)
-A <- Matrix(test.mat)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+    beachtest:::check_numeric_mat(dFUN)
+    beachtest:::check_numeric_mat(dFUN, nr=5, nc=30)
+    beachtest:::check_numeric_mat(dFUN, nr=30, nc=5)
 
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10) # slices
-A <- Matrix(test.mat)
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
+    beachtest:::check_numeric_slice(dFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
 
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
+    beachtest:::check_type(dFUN, expected="double")
+})
 
 # Testing sparse matrices (dgCMatrix):
 
 set.seed(23456)
-A <- rsparsematrix(nrow=15, 10, density=0.1)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+csFUN <- function(nr=15, nc=10, d=0.1) {
+    rsparsematrix(nrow=nr, ncol=nc, density=d)
+}
 
-A <- rsparsematrix(nrow=15, 10, density=0.2)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-A <- rsparsematrix(nrow=30, 5, density=0.1)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-A <- rsparsematrix(nrow=30, 5, density=0.2)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-A <- rsparsematrix(nrow=5, 30, density=0.1)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-A <- rsparsematrix(nrow=5, 30, density=0.2)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-A <- rsparsematrix(nrow=15, 10, density=0.1) # slices
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
+test_that("Sparse numeric matrix input is okay", {
+    expect_s4_class(csFUN(), "dgCMatrix")
+    
+    beachtest:::check_numeric_mat(csFUN)
+    beachtest:::check_numeric_mat(csFUN, nr=5, nc=30)
+    beachtest:::check_numeric_mat(csFUN, nr=30, nc=5)
+    
+    beachtest:::check_numeric_mat(csFUN, d=0.2)
+    beachtest:::check_numeric_mat(csFUN, nr=5, nc=30, d=0.2)
+    beachtest:::check_numeric_mat(csFUN, nr=30, nc=5, d=0.2)
+    
+    beachtest:::check_numeric_slice(csFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(csFUN, expected="double")
+})
 
 # Testing dense symmetric matrices (dspMatrix):
 
 set.seed(45678)
-A <- pack(forceSymmetric(matrix(as.double(rpois(100, lambda=5)), 10, 10)))
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+spFUN <- function(nr=10, mode="U") {
+    pack(forceSymmetric(sFUN(nr, nr), uplo=mode))
+}
 
-A <- pack(forceSymmetric(matrix(as.double(rpois(100, lambda=5)), 20, 20), "L"))
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
+test_that("Symmetric numeric matrix input is okay", {
+    expect_s4_class(spFUN(), "dspMatrix")
 
-A <- pack(forceSymmetric(matrix(as.double(rpois(100, lambda=5)), 20, 20))) # slices (mode=1L fills by column, so only testing row slices).
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat[1:5,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(1L, 20L)))
-expect_identical(test.mat[1:10,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 10L), c(1L, 20L)))
-expect_identical(test.mat[1:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 20L), c(1L, 20L)))
-expect_identical(test.mat[5:10,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(5L, 10L), c(1L, 20L)))
-expect_identical(test.mat[5:15,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(5L, 15L), c(1L, 20L)))
-expect_identical(test.mat[5:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(5L, 20L), c(1L, 20L)))
-expect_identical(test.mat[10:15,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(10L, 15L), c(1L, 20L)))
-expect_identical(test.mat[10:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(10L, 20L), c(1L, 20L)))
-
-A <- pack(forceSymmetric(matrix(as.double(rpois(100, lambda=5)), 20, 20), "L")) # more slices
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat[1:5,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(1L, 20L)))
-expect_identical(test.mat[1:10,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 10L), c(1L, 20L)))
-expect_identical(test.mat[1:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 20L), c(1L, 20L)))
-expect_identical(test.mat[5:10,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(5L, 10L), c(1L, 20L)))
-expect_identical(test.mat[5:15,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(5L, 15L), c(1L, 20L)))
-expect_identical(test.mat[5:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(5L, 20L), c(1L, 20L)))
-expect_identical(test.mat[10:15,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(10L, 15L), c(1L, 20L)))
-expect_identical(test.mat[10:20,], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(10L, 20L), c(1L, 20L)))
-
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
+    beachtest:::check_numeric_mat(spFUN)
+    beachtest:::check_numeric_mat(spFUN, nr=5)
+    beachtest:::check_numeric_mat(spFUN, nr=30)
+    
+    beachtest:::check_numeric_mat(spFUN, mode="L")
+    beachtest:::check_numeric_mat(spFUN, nr=5, mode="L")
+    beachtest:::check_numeric_mat(spFUN, nr=30, mode="L")
+    
+    beachtest:::check_numeric_slice(spFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    beachtest:::check_numeric_slice(spFUN, mode="L", by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(spFUN, expected="double")
+    beachtest:::check_type(spFUN, mode="L", expected="double")
+})
 
 # Testing HDF5 matrices:
 
-if (beachmat:::use.hdf5) { 
-
 set.seed(34567)
 library(HDF5Array)
-
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 6, 25)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 25, 6)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_access, A, 3L))
-
-test.mat <- matrix(as.double(rpois(150, lambda=5)), 15, 10) # slices
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_numeric_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, A))
-
-B <- A[1:10,] # Testing delayed operations
-resolved <- as.matrix(B)
-expect_s4_class(B, "DelayedMatrix")
-expect_identical(resolved, .Call(beachtest:::cxx_test_numeric_access, B, 1L))
-
-B <- A + 1
-resolved <- as.matrix(B)
-expect_s4_class(B, "DelayedMatrix")
-expect_identical(resolved, .Call(beachtest:::cxx_test_numeric_access, B, 1L))
-
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, B))
-B <- A > 0
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
-
+hFUN <- function(nr=15, nc=10) {
+    as(sFUN(nr, nc), "HDF5Array")
 }
+
+test_that("HDF5 numeric matrix input is okay", {
+    expect_s4_class(hFUN(), "HDF5Matrix")
+
+    beachtest:::check_numeric_mat(hFUN)
+    beachtest:::check_numeric_mat(hFUN, nr=5, nc=30)
+    beachtest:::check_numeric_mat(hFUN, nr=30, nc=5)
+    
+    beachtest:::check_numeric_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(hFUN, expected="double")
+})
+
+# Testing delayed operations
+
+sub_hFUN <- function() {
+    A <- hFUN(15, 10)    
+    A[1:10,]
+}
+
+add_hFUN <- function() {
+    hFUN(15, 10) + 1
+}
+
+test_that("Delayed numeric matrix input is okay", {
+    expect_s4_class(sub_hFUN(), "DelayedMatrix")
+    beachtest:::check_numeric_mat(sub_hFUN) 
+    beachtest:::check_type(sub_hFUN, expected="double")
+    
+    expect_s4_class(add_hFUN(), "DelayedMatrix")
+    beachtest:::check_numeric_mat(add_hFUN) 
+    beachtest:::check_type(add_hFUN, expected="double")
+    
+    expect_identical("logical", .Call(beachtest:::cxx_test_type_check, hFUN() > 0)) # Proper type check!
+})
+
+#######################################################
 
 # Testing simple numeric output:
 
 set.seed(12345)
-test.mat <- matrix(rnorm(150), 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_output, test.mat, 1L, FALSE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_output, test.mat, 2L, FALSE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_output, test.mat, 3L, FALSE))
 
-flip.rows <- nrow(test.mat):1 # Refilling, to test getters.
-flip.cols <- ncol(test.mat):1
-expect_identical(test.mat[flip.rows,], .Call(beachtest:::cxx_test_numeric_output, test.mat, 1L, TRUE))
-expect_identical(test.mat[,flip.cols], .Call(beachtest:::cxx_test_numeric_output, test.mat, 2L, TRUE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_numeric_output, test.mat, 3L, TRUE))
-
-test.mat <- matrix(rnorm(150), 15, 10) # slices
-chosen.rows <- 1:12
-chosen.cols <- 3:7
-
-stuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_identical(test.mat[chosen.rows, chosen.cols], stuff[chosen.rows, chosen.cols]) 
-tmp <- stuff
-tmp[chosen.rows, chosen.cols] <- 0L
-expect_true(all(tmp==0L))
-restuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(stuff[rev(chosen.rows),], restuff[chosen.rows,])
-
-stuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_identical(test.mat[chosen.rows, chosen.cols], stuff[chosen.rows, chosen.cols]) 
-tmp <- stuff
-tmp[chosen.rows, chosen.cols] <- 0L
-expect_true(all(tmp==0L))
-restuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(stuff[,rev(chosen.cols)], restuff[,chosen.cols])
+test_that("Simple numeric matrix output is okay", {
+    beachtest:::check_numeric_output_mat(sFUN, hdf5.out=FALSE)
+    
+    beachtest:::check_numeric_output_slice(sFUN, by.row=1:12, by.col=3:7, hdf5.out=FALSE)
+})
 
 # Testing HDF5 numeric output:
 
-if (beachmat:::use.hdf5) { 
+test_that("HDF5 numeric matrix output is okay", {
+    beachtest:::check_numeric_output_mat(hFUN, hdf5.out=TRUE)
+    
+    beachtest:::check_numeric_output_slice(hFUN, by.row=1:2, by.col=2:10, hdf5.out=TRUE)
+    
+    beachtest:::check_numeric_order(hFUN)
+})
 
-library(HDF5Array)
-test.mat <- matrix(rnorm(150), 15, 10)
-A <- as(test.mat, "HDF5Array")
+#######################################################
 
-B <- .Call(beachtest:::cxx_test_numeric_output, A, 1L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_numeric_output, A, 1L, TRUE)
-expect_identical(test.mat[flip.rows,], as.matrix(C))
-
-B <- .Call(beachtest:::cxx_test_numeric_output, A, 2L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_numeric_output, A, 2L, TRUE)
-expect_identical(test.mat[,flip.cols], as.matrix(C))
-
-B <- .Call(beachtest:::cxx_test_numeric_output, A, 3L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_numeric_output, A, 3L, TRUE)
-expect_identical(test.mat, as.matrix(C))
-
-test.mat <- matrix(rnorm(150), 15, 10) # slices
-A <- as(test.mat, "HDF5Array")
-chosen.rows <- 1:2
-chosen.cols <- 2:10
-
-stuff <- .Call(beachtest:::cxx_test_numeric_output_slice, A, 1L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_s4_class(stuff, "HDF5Matrix")
-simple.mat <- as.matrix(stuff)
-expect_identical(test.mat[chosen.rows, chosen.cols], simple.mat[chosen.rows, chosen.cols]) 
-simple.mat[chosen.rows, chosen.cols] <- 0
-expect_true(all(simple.mat==0))
-restuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(test.mat[rev(chosen.rows),chosen.cols], as.matrix(restuff[chosen.rows,chosen.cols]))
-
-stuff <- .Call(beachtest:::cxx_test_numeric_output_slice, A, 2L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_s4_class(stuff, "HDF5Matrix")
-simple.mat <- as.matrix(stuff)
-expect_identical(test.mat[chosen.rows, chosen.cols], simple.mat[chosen.rows, chosen.cols])
-simple.mat[chosen.rows, chosen.cols] <- 0
-expect_true(all(simple.mat==0))
-restuff <- .Call(beachtest:::cxx_test_numeric_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(test.mat[chosen.rows,rev(chosen.cols)], as.matrix(restuff[chosen.rows,chosen.cols]))
-
-library(HDF5Array)
-test.mat <- matrix(rnorm(150), 15, 10) # Checking that the output is actually writing to a new file, and not overwriting old ones!
-A1 <- as(test.mat, "HDF5Array")
-B1 <- .Call(beachtest:::cxx_test_numeric_output, A1, 1L, FALSE) 
-A2 <- as(test.mat + 1, "HDF5Array")
-B2 <- .Call(beachtest:::cxx_test_numeric_output, A2, 1L, FALSE) 
-A3 <- as(test.mat * 2, "HDF5Array")
-B3 <- .Call(beachtest:::cxx_test_numeric_output, A3, 1L, FALSE) 
-
-expect_identical(as.matrix(A1), test.mat)
-expect_identical(as.matrix(B1), test.mat)
-expect_true(A1@seed@file!=B1@seed@file)
-expect_identical(as.matrix(A2), test.mat + 1)
-expect_identical(as.matrix(B2), test.mat + 1)
-expect_true(A2@seed@file!=B2@seed@file)
-expect_identical(as.matrix(A3), test.mat * 2)
-expect_identical(as.matrix(B3), test.mat * 2)
-expect_true(A3@seed@file!=B3@seed@file)
-
-}

@@ -1,309 +1,157 @@
 # This tests the ability of the API to properly access logical matrices of different types.
-# library(beachtest); library(testthat); source("test-logical.R")
+# library(testthat); source("test-logical.R")
+
+#######################################################
 
 # Testing simple matrices:
 
 set.seed(12345)
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 3L))
+sFUN <- function(nr=15, nc=10) {
+    matrix(rbinom(nr*nc, 1, 0.5)==0, nr, nc)
+}
 
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 5, 30)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 30, 5)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, test.mat, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10) # slices
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, test.mat, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, test.mat, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, test.mat, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, test.mat, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, test.mat, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, test.mat, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, test.mat, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, test.mat, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, test.mat))
+test_that("Simple logical matrix input is okay", {
+    beachtest:::check_logical_mat(sFUN)
+    beachtest:::check_logical_mat(sFUN, nr=5, nc=30)
+    beachtest:::check_logical_mat(sFUN, nr=30, nc=5)
+    
+    beachtest:::check_logical_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(sFUN, expected="logical")
+})
 
 # Testing dense matrices:
 
-set.seed(13579)
 library(Matrix)
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10)
-A <- Matrix(test.mat)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
+set.seed(13579)
+dFUN <- function(nr=15, nc=10) {
+    Matrix(sFUN(nr, nc), sparse=FALSE, doDiag=FALSE)
+}
 
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 5, 30)
-A <- Matrix(test.mat)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 30, 5)
-A <- Matrix(test.mat)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10) # slices
-A <- Matrix(test.mat)
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, A))
+test_that("Dense logical matrix input is okay", {
+    expect_s4_class(dFUN(), "lgeMatrix")
+    
+    beachtest:::check_logical_mat(dFUN)
+    beachtest:::check_logical_mat(dFUN, nr=5, nc=30)
+    beachtest:::check_logical_mat(dFUN, nr=30, nc=5)
+    
+    beachtest:::check_logical_slice(dFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(dFUN, expected="logical")
+})
 
 # Testing sparse matrices (lgCMatrix):
 
 set.seed(23456)
-A <- rsparsematrix(nrow=15, 10, density=0.1)!=0
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
+csFUN <- function(nr=15, nc=10, d=0.1) {
+    rsparsematrix(nrow=nr, ncol=nc, density=d)!=0
+}
 
-A <- rsparsematrix(nrow=15, 10, density=0.2)!=0
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
+test_that("Sparse logical matrix input is okay", {
+    expect_s4_class(csFUN(), "lgCMatrix")
 
-A <- rsparsematrix(nrow=30, 5, density=0.1)!=0
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
+    beachtest:::check_logical_mat(csFUN)
+    beachtest:::check_logical_mat(csFUN, nr=5, nc=30)
+    beachtest:::check_logical_mat(csFUN, nr=30, nc=5)
+    
+    beachtest:::check_logical_mat(csFUN, d=0.2)
+    beachtest:::check_logical_mat(csFUN, nr=5, nc=30, d=0.2)
+    beachtest:::check_logical_mat(csFUN, nr=30, nc=5, d=0.2)
+    
+    beachtest:::check_logical_slice(csFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
 
-A <- rsparsematrix(nrow=30, 5, density=0.2)!=0
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-A <- rsparsematrix(nrow=5, 30, density=0.1)!=0
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-A <- rsparsematrix(nrow=5, 30, density=0.2)!=0
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-A <- rsparsematrix(nrow=15, 10, density=0.1)!=0 # slices
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, A))
+    beachtest:::check_type(csFUN, expected="logical")
+})
 
 # Testing dense symmetric matrices (lspMatrix):
 
 set.seed(45678)
-A <- pack(forceSymmetric(matrix(rbinom(100, 1, 0.5)==0, 10, 10)))
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
+spFUN <- function(nr=10, mode="U") {
+    pack(forceSymmetric(sFUN(nr, nr), uplo=mode))
+}
 
-A <- pack(forceSymmetric(matrix(rbinom(400, 1, 0.5)==0, 20, 20), "L"))
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-A <- pack(forceSymmetric(matrix(rbinom(400, 1, 0.5)==0, 20, 20))) # slices (mode=1L fills by column, so only testing row slices).
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat[1:5,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(1L, 20L)))
-expect_identical(test.mat[1:10,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 10L), c(1L, 20L)))
-expect_identical(test.mat[1:20,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 20L), c(1L, 20L)))
-expect_identical(test.mat[5:10,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(5L, 10L), c(1L, 20L)))
-expect_identical(test.mat[5:15,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(5L, 15L), c(1L, 20L)))
-expect_identical(test.mat[5:20,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(5L, 20L), c(1L, 20L)))
-expect_identical(test.mat[10:15,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(10L, 15L), c(1L, 20L)))
-expect_identical(test.mat[10:20,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(10L, 20L), c(1L, 20L)))
-
-A <- pack(forceSymmetric(matrix(rbinom(400, 1, 0.5)==0, 20, 20), "L")) # more slices
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-expect_identical(test.mat[1:5,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(1L, 20L)))
-expect_identical(test.mat[1:10,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 10L), c(1L, 20L)))
-expect_identical(test.mat[1:20,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 20L), c(1L, 20L)))
-expect_identical(test.mat[5:10,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(5L, 10L), c(1L, 20L)))
-expect_identical(test.mat[5:15,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(5L, 15L), c(1L, 20L)))
-expect_identical(test.mat[5:20,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(5L, 20L), c(1L, 20L)))
-expect_identical(test.mat[10:15,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(10L, 15L), c(1L, 20L)))
-expect_identical(test.mat[10:20,], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(10L, 20L), c(1L, 20L)))
-
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, A))
+test_that("Symmetric logical matrix input is okay", {
+    expect_s4_class(spFUN(), "lspMatrix")
+    
+    beachtest:::check_logical_mat(spFUN)
+    beachtest:::check_logical_mat(spFUN, nr=5)
+    beachtest:::check_logical_mat(spFUN, nr=30)
+    
+    beachtest:::check_logical_mat(spFUN, mode="L")
+    beachtest:::check_logical_mat(spFUN, nr=5, mode="L")
+    beachtest:::check_logical_mat(spFUN, nr=30, mode="L")
+    
+    beachtest:::check_logical_slice(spFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    beachtest:::check_logical_slice(spFUN, mode="L", by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(spFUN, expected="logical")
+    beachtest:::check_type(spFUN, mode="L", expected="logical")
+})
 
 # Testing HDF5 matrices:
 
-if (beachmat:::use.hdf5) { 
-
 set.seed(34567)
 library(HDF5Array)
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 6, 25)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 25, 6)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_access, A, 3L))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10) # slices
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_logical_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, A))
-
-B <- A[1:10,] # Testing delayed operations
-resolved <- as.matrix(B)
-expect_s4_class(B, "DelayedMatrix")
-expect_identical(resolved, .Call(beachtest:::cxx_test_logical_access, B, 1L))
-
-B <- A | TRUE
-resolved <- as.matrix(B)
-expect_s4_class(B, "DelayedMatrix")
-expect_identical(resolved, .Call(beachtest:::cxx_test_logical_access, B, 1L))
-
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B))
-B <- A + 1L
-expect_identical("integer", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
-
+hFUN <- function(nr=15, nc=10) {
+    as(sFUN(nr, nc), "HDF5Array")
 }
+
+test_that("HDF5 logical matrix input is okay", {
+    expect_s4_class(hFUN(), "HDF5Matrix")
+    
+    beachtest:::check_logical_mat(hFUN)
+    beachtest:::check_logical_mat(hFUN, nr=5, nc=30)
+    beachtest:::check_logical_mat(hFUN, nr=30, nc=5)
+    
+    beachtest:::check_logical_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(hFUN, expected="logical")
+})
+
+# Testing delayed operations
+
+sub_hFUN <- function() {
+    A <- hFUN(15, 10)    
+    A[1:10,]
+}
+
+alt_hFUN <- function() {
+    !hFUN(15, 10)
+}
+
+test_that("Delayed logical matrix input is okay", {
+    expect_s4_class(sub_hFUN(), "DelayedMatrix")
+    beachtest:::check_logical_mat(sub_hFUN) 
+    beachtest:::check_type(sub_hFUN, expected="logical")
+    
+    expect_s4_class(alt_hFUN(), "DelayedMatrix")
+    beachtest:::check_logical_mat(alt_hFUN) 
+    beachtest:::check_type(alt_hFUN, expected="logical")
+    
+    expect_identical("integer", .Call(beachtest:::cxx_test_type_check, hFUN()+1L)) # Proper type check!
+})
+
+#######################################################
 
 # Testing simple logical output:
 
 set.seed(12345)
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_output, test.mat, 1L, FALSE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_output, test.mat, 2L, FALSE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_output, test.mat, 3L, FALSE))
 
-flip.rows <- nrow(test.mat):1 # Refilling, to test getters.
-flip.cols <- ncol(test.mat):1
-expect_identical(test.mat[flip.rows,], .Call(beachtest:::cxx_test_logical_output, test.mat, 1L, TRUE))
-expect_identical(test.mat[,flip.cols], .Call(beachtest:::cxx_test_logical_output, test.mat, 2L, TRUE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_logical_output, test.mat, 3L, TRUE))
+test_that("Simple logical matrix output is okay", {
+    beachtest:::check_logical_output_mat(sFUN, hdf5.out=FALSE)
 
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10) # slices
-chosen.rows <- 10:13
-chosen.cols <- 2:5
-
-stuff <- .Call(beachtest:::cxx_test_logical_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_identical(test.mat[chosen.rows, chosen.cols], stuff[chosen.rows, chosen.cols]) 
-tmp <- stuff
-tmp[chosen.rows, chosen.cols] <- FALSE
-expect_true(all(tmp==FALSE))
-restuff <- .Call(beachtest:::cxx_test_logical_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(stuff[rev(chosen.rows),], restuff[chosen.rows,])
-
-stuff <- .Call(beachtest:::cxx_test_logical_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_identical(test.mat[chosen.rows, chosen.cols], stuff[chosen.rows, chosen.cols]) 
-tmp <- stuff
-tmp[chosen.rows, chosen.cols] <- FALSE
-expect_true(all(tmp==FALSE))
-restuff <- .Call(beachtest:::cxx_test_logical_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(stuff[,rev(chosen.cols)], restuff[,chosen.cols])
+    beachtest:::check_logical_output_slice(sFUN, by.row=10:13, by.col=2:5, hdf5.out=FALSE)
+})
 
 # Testing HDF5 logical output:
 
-if (beachmat:::use.hdf5) { 
+test_that("HDF5 logical matrix output is okay", {
+    beachtest:::check_logical_output_mat(hFUN, hdf5.out=TRUE)
 
-library(HDF5Array)
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10) 
-A <- as(test.mat, "HDF5Array")
+    beachtest:::check_logical_output_slice(hFUN, by.row=12:15, by.col=1:5, hdf5.out=TRUE)
 
-B <- .Call(beachtest:::cxx_test_logical_output, A, 1L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_logical_output, A, 1L, TRUE)
-expect_identical(test.mat[flip.rows,], as.matrix(C))
+    beachtest:::check_logical_order(hFUN)
+})
 
-B <- .Call(beachtest:::cxx_test_logical_output, A, 2L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_logical_output, A, 2L, TRUE)
-expect_identical(test.mat[,flip.cols], as.matrix(C))
-
-B <- .Call(beachtest:::cxx_test_logical_output, A, 3L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_logical_output, A, 3L, TRUE)
-expect_identical(test.mat, as.matrix(C))
-
-test.mat <- matrix(rbinom(150, 1, 0.5)==0, 15, 10) # slices
-A <- as(test.mat, "HDF5Array")
-chosen.rows <- 12:15
-chosen.cols <- 1:5
-
-stuff <- .Call(beachtest:::cxx_test_logical_output_slice, A, 1L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_s4_class(stuff, "HDF5Matrix")
-simple.mat <- as.matrix(stuff)
-expect_identical(test.mat[chosen.rows, chosen.cols], simple.mat[chosen.rows, chosen.cols]) 
-simple.mat[chosen.rows, chosen.cols] <- FALSE
-expect_true(all(simple.mat==0L))
-restuff <- .Call(beachtest:::cxx_test_logical_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(test.mat[rev(chosen.rows),chosen.cols], as.matrix(restuff[chosen.rows,chosen.cols]))
-
-stuff <- .Call(beachtest:::cxx_test_logical_output_slice, A, 2L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_s4_class(stuff, "HDF5Matrix")
-simple.mat <- as.matrix(stuff)
-expect_identical(test.mat[chosen.rows, chosen.cols], simple.mat[chosen.rows, chosen.cols])
-simple.mat[chosen.rows, chosen.cols] <- FALSE
-expect_true(all(simple.mat==0L))
-restuff <- .Call(beachtest:::cxx_test_logical_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(test.mat[chosen.rows,rev(chosen.cols)], as.matrix(restuff[chosen.rows,chosen.cols]))
-
-}
+#######################################################
 

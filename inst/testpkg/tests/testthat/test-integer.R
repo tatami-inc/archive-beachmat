@@ -1,171 +1,89 @@
 # This tests the ability of the API to properly access integer matrices of different types.
-# library(beachtest); library(testthat); source("test-integer.R")
+# library(testthat); source("test-integer.R")
+
+#######################################################
 
 # Testing simple matrices:
 
 set.seed(12345)
-test.mat <- matrix(rpois(150, lambda=5), 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 3L))
+sFUN <- function(nr=15, nc=10) {
+    matrix(rpois(nr*nc, lambda=5), nr, nc)
+}
 
-test.mat <- matrix(rpois(150, lambda=5), 5, 30)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 3L))
-
-test.mat <- matrix(rpois(150, lambda=5), 30, 5)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, test.mat, 3L))
-
-test.mat <- matrix(rpois(150, lambda=5), 15, 10) # slices
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_integer_slice, test.mat, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_integer_slice, test.mat, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_integer_slice, test.mat, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_integer_slice, test.mat, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, test.mat, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, test.mat, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, test.mat, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, test.mat, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("integer", .Call(beachtest:::cxx_test_type_check, test.mat))
+test_that("Simple integer matrix input is okay", {
+    beachtest:::check_integer_mat(sFUN)
+    beachtest:::check_integer_mat(sFUN, nr=5, nc=30)
+    beachtest:::check_integer_mat(sFUN, nr=30, nc=5)
+    
+    beachtest:::check_integer_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(sFUN, expected="integer")
+})
 
 # Testing HDF5 matrices:
 
-if (beachmat:::use.hdf5) { 
-
 set.seed(34567)
 library(HDF5Array)
-
-test.mat <- matrix(rpois(150, lambda=5), 15, 10)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 3L))
-
-test.mat <- matrix(rpois(150, lambda=5), 6, 25)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 3L))
-
-test.mat <- matrix(rpois(150, lambda=5), 25, 6)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_access, A, 3L))
-
-test.mat <- matrix(rpois(150, lambda=5), 15, 10)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_integer_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("integer", .Call(beachtest:::cxx_test_type_check, A))
-
-B <- A[1:10,] # Testing delayed operations
-resolved <- as.matrix(B)
-expect_s4_class(B, "DelayedMatrix")
-expect_identical(resolved, .Call(beachtest:::cxx_test_integer_access, B, 1L))
-
-B <- A + 1L
-resolved <- as.matrix(B)
-expect_s4_class(B, "DelayedMatrix")
-expect_identical(resolved, .Call(beachtest:::cxx_test_integer_access, B, 1L))
-
-expect_identical("integer", .Call(beachtest:::cxx_test_type_check, B))
-B <- A + 1
-expect_identical("double", .Call(beachtest:::cxx_test_type_check, B)) # Proper type check!
-
+hFUN <- function(nr=15, nc=10) {
+    as(sFUN(nr, nc), "HDF5Array")
 }
+
+test_that("HDF5 integer matrix input is okay", {
+    expect_s4_class(hFUN(), "HDF5Matrix")
+
+    beachtest:::check_integer_mat(hFUN)
+    beachtest:::check_integer_mat(hFUN, nr=5, nc=30)
+    beachtest:::check_integer_mat(hFUN, nr=30, nc=5)
+    
+    beachtest:::check_integer_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(hFUN, expected="integer")
+})
+
+# Testing delayed operations:
+
+sub_hFUN <- function() {
+    A <- hFUN(15, 10)    
+    A[1:10,]
+}
+
+add_hFUN <- function() {
+    hFUN(15, 10) + 1L
+}
+
+test_that("Delayed integer matrix input is okay", {
+    expect_s4_class(sub_hFUN(), "DelayedMatrix")
+    beachtest:::check_integer_mat(sub_hFUN) 
+    beachtest:::check_type(sub_hFUN, expected="integer")
+
+    expect_s4_class(add_hFUN(), "DelayedMatrix")
+    beachtest:::check_integer_mat(add_hFUN)
+    beachtest:::check_type(add_hFUN, expected="integer")
+    
+    expect_identical("double", .Call(beachtest:::cxx_test_type_check, hFUN()+1)) # Proper type check!
+})
+
+#######################################################
 
 # Testing simple integer output:
 
 set.seed(12345)
-test.mat <- matrix(rpois(150, lambda=5), 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_output, test.mat, 1L, FALSE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_output, test.mat, 2L, FALSE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_output, test.mat, 3L, FALSE))
 
-flip.rows <- nrow(test.mat):1 # Refilling, to test getters.
-flip.cols <- ncol(test.mat):1
-expect_identical(test.mat[flip.rows,], .Call(beachtest:::cxx_test_integer_output, test.mat, 1L, TRUE))
-expect_identical(test.mat[,flip.cols], .Call(beachtest:::cxx_test_integer_output, test.mat, 2L, TRUE))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_integer_output, test.mat, 3L, TRUE))
+test_that("Simple integer matrix output is okay", {
+    beachtest:::check_integer_output_mat(sFUN, hdf5.out=FALSE)
 
-test.mat <- matrix(rpois(150, lambda=5), 15, 10) # slices
-chosen.rows <- 2:11
-chosen.cols <- 4:8
-
-stuff <- .Call(beachtest:::cxx_test_integer_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_identical(test.mat[chosen.rows, chosen.cols], stuff[chosen.rows, chosen.cols]) 
-tmp <- stuff
-tmp[chosen.rows, chosen.cols] <- 0L
-expect_true(all(tmp==0L))
-restuff <- .Call(beachtest:::cxx_test_integer_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(stuff[rev(chosen.rows),], restuff[chosen.rows,])
-
-stuff <- .Call(beachtest:::cxx_test_integer_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_identical(test.mat[chosen.rows, chosen.cols], stuff[chosen.rows, chosen.cols]) 
-tmp <- stuff
-tmp[chosen.rows, chosen.cols] <- 0L
-expect_true(all(tmp==0L))
-restuff <- .Call(beachtest:::cxx_test_integer_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(stuff[,rev(chosen.cols)], restuff[,chosen.cols])
+    beachtest:::check_integer_output_slice(sFUN, by.row=2:11, by.col=4:8, hdf5.out=FALSE)
+})
 
 # Testing HDF5 integer output:
 
-if (beachmat:::use.hdf5) { 
+test_that("HDF5 integer matrix output is okay", {
+    beachtest:::check_integer_output_mat(hFUN, hdf5.out=TRUE)
 
-library(HDF5Array)
-test.mat <- matrix(rpois(150, lambda=5), 15, 10)
-A <- as(test.mat, "HDF5Array")
+    beachtest:::check_integer_output_slice(hFUN, by.row=5:15, by.col=8:10, hdf5.out=TRUE)
 
-B <- .Call(beachtest:::cxx_test_integer_output, A, 1L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_integer_output, A, 1L, TRUE)
-expect_identical(test.mat[flip.rows,], as.matrix(C))
+    beachtest:::check_integer_order(hFUN)
+})
 
-B <- .Call(beachtest:::cxx_test_integer_output, A, 2L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_integer_output, A, 2L, TRUE)
-expect_identical(test.mat[,flip.cols], as.matrix(C))
+#######################################################
 
-B <- .Call(beachtest:::cxx_test_integer_output, A, 3L, FALSE)
-expect_s4_class(B, "HDF5Matrix")
-expect_identical(test.mat, as.matrix(B))
-C <- .Call(beachtest:::cxx_test_integer_output, A, 3L, TRUE)
-expect_identical(test.mat, as.matrix(C))
-
-test.mat <- matrix(rpois(150, lambda=5), 15, 10) # slices
-A <- as(test.mat, "HDF5Array")
-chosen.rows <- 5:15
-chosen.cols <- 8:10
-
-stuff <- .Call(beachtest:::cxx_test_integer_output_slice, A, 1L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_s4_class(stuff, "HDF5Matrix")
-simple.mat <- as.matrix(stuff)
-expect_identical(test.mat[chosen.rows, chosen.cols], simple.mat[chosen.rows, chosen.cols]) 
-simple.mat[chosen.rows, chosen.cols] <- 0L
-expect_true(all(simple.mat==0L))
-restuff <- .Call(beachtest:::cxx_test_integer_output_slice, test.mat, 1L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(test.mat[rev(chosen.rows),chosen.cols], as.matrix(restuff[chosen.rows,chosen.cols]))
-
-stuff <- .Call(beachtest:::cxx_test_integer_output_slice, A, 2L, range(chosen.rows), range(chosen.cols), FALSE)
-expect_s4_class(stuff, "HDF5Matrix")
-simple.mat <- as.matrix(stuff)
-expect_identical(test.mat[chosen.rows, chosen.cols], simple.mat[chosen.rows, chosen.cols])
-simple.mat[chosen.rows, chosen.cols] <- 0L
-expect_true(all(simple.mat==0L))
-restuff <- .Call(beachtest:::cxx_test_integer_output_slice, test.mat, 2L, range(chosen.rows), range(chosen.cols), TRUE)
-expect_identical(test.mat[chosen.rows,rev(chosen.cols)], as.matrix(restuff[chosen.rows,chosen.cols]))
-
-}

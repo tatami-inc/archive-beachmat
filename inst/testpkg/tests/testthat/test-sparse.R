@@ -1,48 +1,30 @@
 # This tests the ability of the API to efficiently access sparse matrices by row.
- library(beachtest); library(testthat); #source("test-sparse.R")
+# library(testthat); source("test-sparse.R")
+
+library(Matrix)
+check_numeric_indexing <- function(nr, nc, d) {
+    A <- rsparsematrix(nrow=nr, ncol=nc, density=d)
+    test.mat <- as.matrix(A)
+    dimnames(test.mat) <- NULL
+    
+    testthat::expect_identical(test.mat, .Call(beachtest:::cxx_test_sparse_numeric, A, 1:nrows)) # forward
+    testthat::expect_identical(test.mat[nrows:1,], .Call(beachtest:::cxx_test_sparse_numeric, A, nrows:1)) # reverse
+    for (it in 1:3) {
+        o <- sample(nrows) # random directions
+        testthat::expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
+    }
+    
+    return(invisible(NULL))
+}
 
 set.seed(23456)
 nrows <- 1000
 
-library(Matrix)
-A <- rsparsematrix(nrow=nrows, 10, density=0.1)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-
-expect_identical(test.mat, .Call(beachtest:::cxx_test_sparse_numeric, A, 1:nrows)) # forward
-expect_identical(test.mat[nrows:1,], .Call(beachtest:::cxx_test_sparse_numeric, A, nrows:1)) # reverse
-o <- sample(nrows) # random directions
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-o <- sample(nrows)
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-o <- sample(nrows)
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-
-A <- rsparsematrix(nrow=nrows, 20, density=0.1)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-
-expect_identical(test.mat, .Call(beachtest:::cxx_test_sparse_numeric, A, 1:nrows)) # forward
-expect_identical(test.mat[nrows:1,], .Call(beachtest:::cxx_test_sparse_numeric, A, nrows:1)) # reverse
-o <- sample(nrows) # random directions
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-o <- sample(nrows)
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-o <- sample(nrows)
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-
-A <- rsparsematrix(nrow=nrows, 20, density=0.2)
-test.mat <- as.matrix(A)
-dimnames(test.mat) <- NULL
-
-expect_identical(test.mat, .Call(beachtest:::cxx_test_sparse_numeric, A, 1:nrows)) # forward
-expect_identical(test.mat[nrows:1,], .Call(beachtest:::cxx_test_sparse_numeric, A, nrows:1)) # reverse
-o <- sample(nrows) # random directions
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-o <- sample(nrows)
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
-o <- sample(nrows)
-expect_identical(test.mat[o,], .Call(beachtest:::cxx_test_sparse_numeric, A, o))
+test_that("Sparse numeric indexing is okay", {
+    check_numeric_indexing(nr=nrows, nc=10, d=0.1)
+    check_numeric_indexing(nr=nrows, nc=20, d=0.1)
+    check_numeric_indexing(nr=nrows, nc=20, d=0.2)
+})
 
 # Checking random column slices behave correctly.
 
@@ -57,7 +39,10 @@ ref <- vector('list', nrow(A))
 for (x in seq_along(ref)) { 
      ref[[x]] <- A[x,slice.start[x]:slice.end[x]]
 }
-expect_identical(out, ref)
+
+test_that("Sparse numeric indexing with slices is okay", {
+    expect_identical(out, ref)
+})
 
 # # Benchmarking with a huge matrix.
 # library(microbenchmark); library(beachmat); library(Matrix); library(beachtest)

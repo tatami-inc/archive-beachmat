@@ -1,5 +1,5 @@
 # This tests the ability of the API to properly access character matrices of different types.
-# library(beachtest); library(testthat); source("test-character.R")
+# library(testthat); source("test-character.R")
 
 genwords <- function(n = 5000) {
     all.choices <- c(rep("", 4), LETTERS) # to get variable length strings.
@@ -7,79 +7,59 @@ genwords <- function(n = 5000) {
     paste0(a, sprintf("%04d", sample(9999, n, TRUE)), sample(LETTERS, n, TRUE))
 }
 
+#######################################################
+
 # Testing simple matrices:
 
 set.seed(12345)
-test.mat <- matrix(genwords(150), 15, 10)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 3L))
+sFUN <- function(nr=15, nc=10) {
+    matrix(genwords(nr*nc), nr, nc)
+}
 
-test.mat <- matrix(genwords(150), 5, 30)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 3L))
-
-test.mat <- matrix(genwords(150), 30, 5)
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, test.mat, 3L))
-
-test.mat <- matrix(genwords(150), 15, 10) # slices
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_character_slice, test.mat, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_character_slice, test.mat, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_character_slice, test.mat, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_character_slice, test.mat, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_character_slice, test.mat, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_character_slice, test.mat, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_character_slice, test.mat, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_character_slice, test.mat, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("character", .Call(beachtest:::cxx_test_type_check, test.mat))
+test_that("Simple character matrix input is okay", {
+    beachtest:::check_character_mat(sFUN)
+    beachtest:::check_character_mat(sFUN, nr=5, nc=30)
+    beachtest:::check_character_mat(sFUN, nr=30, nc=5)
+    
+    beachtest:::check_character_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(sFUN, expected="character")
+})
 
 # Testing HDF5 matrices:
 
-if (beachmat:::use.hdf5) { 
-
 set.seed(34567)
 library(HDF5Array)
-
-test.mat <- matrix(genwords(150), 15, 10)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 3L))
-
-test.mat <- matrix(genwords(150), 6, 25)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 3L))
-
-test.mat <- matrix(genwords(150), 25, 6)
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 1L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 2L))
-expect_identical(test.mat, .Call(beachtest:::cxx_test_character_access, A, 3L))
-
-test.mat <- matrix(genwords(150), 15, 10) # slices
-A <- as(test.mat, "HDF5Array")
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_character_slice, A, 1L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,1:5], .Call(beachtest:::cxx_test_character_slice, A, 2L, c(1L, 5L), c(1L, 5L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_character_slice, A, 1L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[1:5,6:8], .Call(beachtest:::cxx_test_character_slice, A, 2L, c(1L, 5L), c(6L, 8L)))
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_character_slice, A, 1L, c(6L, 8L), c(1L, 5L))) 
-expect_identical(test.mat[6:8,1:5], .Call(beachtest:::cxx_test_character_slice, A, 2L, c(6L, 8L), c(1L, 5L)))
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_character_slice, A, 1L, c(6L, 8L), c(6L, 8L))) 
-expect_identical(test.mat[6:8,6:8], .Call(beachtest:::cxx_test_character_slice, A, 2L, c(6L, 8L), c(6L, 8L)))
-
-expect_identical("character", .Call(beachtest:::cxx_test_type_check, A))
-
-B <- A[1:10,] # Testing delayed operations
-resolved <- as.matrix(B)
-expect_identical(resolved, .Call(beachtest:::cxx_test_character_access, B, 1L))
-expect_identical("character", .Call(beachtest:::cxx_test_type_check, B))
-expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B=="A"))
-
-
+hFUN <- function(nr=15, nc=10) {
+    as(sFUN(nr, nc), "HDF5Array")
 }
+
+test_that("HDF5 character matrix input is okay", {
+    expect_s4_class(hFUN(), "HDF5Matrix")
+    beachtest:::check_character_mat(hFUN)
+    beachtest:::check_character_mat(hFUN, nr=5, nc=30)
+    beachtest:::check_character_mat(hFUN, nr=30, nc=5)
+    
+    beachtest:::check_character_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(hFUN, expected="character")
+})
+
+# Testing delayed operations:
+
+sub_hFUN <- function() {
+    A <- hFUN(15, 10)    
+    A[1:10,]
+}
+
+test_that("Delayed character matrix input is okay", {
+    expect_s4_class(sub_hFUN(), "DelayedMatrix")
+    beachtest:::check_character_mat(sub_hFUN)
+    beachtest:::check_type(sub_hFUN, expected="character")
+    
+    B <- hFUN()
+    expect_identical("logical", .Call(beachtest:::cxx_test_type_check, B=="A")) # Proper type check
+})
+
+#######################################################
+
