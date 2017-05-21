@@ -84,7 +84,7 @@ protected:
 
 #endif
 
-#include "template_output.h"
+#include "Output_methods.h"
 
 }
 

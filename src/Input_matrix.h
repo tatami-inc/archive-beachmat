@@ -119,7 +119,7 @@ protected:
     void select_one(size_t, size_t);
 };
 
-#include "template_methods.h"
+#include "Input_methods.h"
 
 }
 

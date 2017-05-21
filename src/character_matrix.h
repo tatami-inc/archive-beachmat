@@ -1,7 +1,7 @@
 #ifndef BEACHMAT_CHARACTER_MATRIX_H
 #define BEACHMAT_CHARACTER_MATRIX_H
 
-#include "matrix.h"
+#include "Input_matrix.h"
 
 namespace beachmat { 
 

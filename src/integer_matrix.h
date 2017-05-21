@@ -1,8 +1,8 @@
 #ifndef BEACHMAT_INTEGER_MATRIX_H
 #define BEACHMAT_INTEGER_MATRIX_H
 
-#include "lin_matrix.h"
-#include "output.h"
+#include "LIN_matrix.h"
+#include "Output_matrix.h"
 
 namespace beachmat {
 

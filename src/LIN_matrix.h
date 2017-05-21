@@ -1,7 +1,7 @@
 #ifndef BEACHMAT_LIN_MATRIX_H
 #define BEACHMAT_LIN_MATRIX_H
 
-#include "matrix.h"
+#include "Input_matrix.h"
 
 namespace beachmat { 
 
@@ -154,7 +154,7 @@ protected:
     std::vector<T> rowtmp, coltmp;
 };
 
-#include "lin_methods.h"
+#include "LIN_methods.h"
 
 }
 
