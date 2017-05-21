@@ -10,11 +10,11 @@ HDF5_integer_matrix::HDF5_integer_matrix(const Rcpp::RObject& incoming) :
 HDF5_integer_matrix::~HDF5_integer_matrix() {}
 
 void HDF5_integer_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), start, end);
+    mat.extract_row(r, &(*out), HPT, start, end);
 }
 
 void HDF5_integer_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), start, end);
+    mat.extract_col(c, &(*out), HPT, start, end);
 }
 
 std::unique_ptr<integer_matrix> HDF5_integer_matrix::clone() const {

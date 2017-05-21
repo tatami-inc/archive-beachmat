@@ -93,18 +93,17 @@ protected:
 
 /* HDF5Matrix */
 
-class HDF5_character_matrix;
-
 template<typename T>
 class HDF5_matrix : public any_matrix {
-friend class HDF5_character_matrix; // Getting access to h5file.
 public:
-    HDF5_matrix(const Rcpp::RObject&, int, const H5T_class_t&, const H5::PredType&);
+    HDF5_matrix(const Rcpp::RObject&, int, const H5T_class_t&);
     ~HDF5_matrix();
 
-    T get(size_t, size_t);   
-    void extract_row(size_t, T*, size_t, size_t);
-    void extract_col(size_t, T*, size_t, size_t);
+    void extract_row(size_t, T*, const H5::DataType&, size_t, size_t);
+    void extract_col(size_t, T*, const H5::DataType&, size_t, size_t);
+    void extract_one(size_t, size_t, T*, const H5::DataType&);  
+
+    const H5::DataSet& get_dataset() const;
 protected:
     Rcpp::RObject realized;
 
@@ -112,11 +111,6 @@ protected:
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
-
-    const H5::PredType& HPT;
-    void select_row(size_t, size_t, size_t);
-    void select_col(size_t, size_t, size_t);
-    void select_one(size_t, size_t);
 };
 
 #include "Input_methods.h"

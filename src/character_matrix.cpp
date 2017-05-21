@@ -48,15 +48,12 @@ std::unique_ptr<character_matrix> simple_character_matrix::clone() const {
 
 /* Methods for the HDF5 character matrix. */
 
-HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : 
-        mat(incoming, STRSXP, H5T_STRING, H5::PredType::NATIVE_INT32), str_type(mat.hdata) {
-    // H5::PredType::NATIVE_INT32 just to give it something to work with.
-    // Not really necessary here, as we override get* methods anyway, so it never actually gets used. 
-            
+HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : mat(incoming, STRSXP, H5T_STRING), str_type(mat.get_dataset()) {
     if (!str_type.isVariableStr()) { 
         auto bufsize=str_type.getSize(); 
         row_buf.resize(bufsize*(mat.get_ncol()));
         col_buf.resize(bufsize*(mat.get_nrow()));
+        one_buf.resize(bufsize);
     } else {
         throw std::runtime_error("variable-length strings not supported for HDF5_character_matrix");
     }
@@ -73,12 +70,9 @@ size_t HDF5_character_matrix::get_ncol() const {
 }
 
 void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.select_row(r, start, end);
-
     char* ref=row_buf.data();
-    mat.hdata.read(ref, str_type, mat.rowspace, mat.hspace);
+    mat.extract_row(r, ref, str_type, start, end);
     auto bufsize=str_type.getSize(); 
-
     for (size_t c=start; c<end; ++c, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
@@ -86,12 +80,9 @@ void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, 
 } 
 
 void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.select_col(c, start, end);
-
     char* ref=col_buf.data();
-    mat.hdata.read(ref, str_type, mat.colspace, mat.hspace);
+    mat.extract_col(c, ref, str_type, start, end);
     auto bufsize=str_type.getSize(); 
-
     for (size_t r=start; r<end; ++r, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
@@ -99,10 +90,9 @@ void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, 
 }
  
 Rcpp::String HDF5_character_matrix::get(size_t r, size_t c) { 
-    mat.select_one(r, c);
-    std::string out;
-    mat.hdata.read(out, str_type, mat.onespace, mat.hspace);
-    return out;
+    char* ref=one_buf.data();
+    mat.extract_one(r, c, ref, str_type);
+    return ref;
 }
 
 std::unique_ptr<character_matrix> HDF5_character_matrix::clone() const {

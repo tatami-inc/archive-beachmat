@@ -391,7 +391,7 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
 /* Methods for a HDF5 matrix. */
 
 template<typename T>
-HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H5T_class_t& htc, const H5::PredType& hpt) : realized(R_NilValue), HPT(hpt) { 
+HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H5T_class_t& htc) : realized(R_NilValue) { 
     std::string ctype=get_class(incoming);
     if (incoming.isS4()) {
         if (ctype=="DelayedMatrix") { 
@@ -485,55 +485,41 @@ template<typename T>
 HDF5_matrix<T>::~HDF5_matrix() {}
 
 template<typename T>
-void HDF5_matrix<T>::select_row(size_t r, size_t start, size_t end) {
+void HDF5_matrix<T>::extract_row(size_t r, T* out, const H5::DataType& dt, size_t start, size_t end) { 
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
     h5_start[0] = start;
     h5_start[1] = r;
     hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
-    return;
-}
-
-template<typename T>
-void HDF5_matrix<T>::extract_row(size_t r, T* out, size_t start, size_t end) { 
-    select_row(r, start, end);
-    hdata.read(out, HPT, rowspace, hspace);
+    hdata.read(out, dt, rowspace, hspace);
     return;
 } 
 
 template<typename T>
-void HDF5_matrix<T>::select_col(size_t c, size_t start, size_t end) {
+void HDF5_matrix<T>::extract_col(size_t c, T* out, const H5::DataType& dt, size_t start, size_t end) { 
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
     h5_start[0] = c;
     h5_start[1] = start;
     hspace.selectHyperslab(H5S_SELECT_SET, col_count, h5_start);
+    hdata.read(out, dt, colspace, hspace);
     return;
 }
 
 template<typename T>
-void HDF5_matrix<T>::extract_col(size_t c, T* out, size_t start, size_t end) { 
-    select_col(c, start, end);
-    hdata.read(out, HPT, colspace, hspace);
-    return;
-}
-
-template<typename T>
-void HDF5_matrix<T>::select_one(size_t r, size_t c) {
+void HDF5_matrix<T>::extract_one(size_t r, size_t c, T* out, const H5::DataType& dt) { 
     h5_start[0]=c;
-    h5_start[1]=r;
+    h5_start[1]=r;  
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
+    hdata.read(out, dt, onespace, hspace);
     return;
 }
- 
+
 template<typename T>
-T HDF5_matrix<T>::get(size_t r, size_t c) { 
-    select_one(r, c);
-    T out;
-    hdata.read(&out, HPT, onespace, hspace);
-    return out;
+const H5::DataSet& HDF5_matrix<T>::get_dataset() const {
+    return hdata;
 }
 
 #endif

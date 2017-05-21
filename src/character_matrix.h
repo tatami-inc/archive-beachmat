@@ -63,9 +63,9 @@ public:
 
     std::unique_ptr<character_matrix> clone() const;
 protected:
-    HDF5_matrix<Rcpp::String> mat; // Type doesn't really matter here, as we override all methods anyway.
+    HDF5_matrix<char> mat; 
     H5::StrType str_type;
-    std::vector<char> row_buf, col_buf;
+    std::vector<char> row_buf, col_buf, one_buf;
 };
 
 /* Dispatcher */

@@ -156,6 +156,7 @@ public:
     std::unique_ptr<lin_matrix<T> > clone() const;
 protected:
     HDF5_matrix<T> mat;
+    const H5::PredType& HPT;
     std::vector<T> rowtmp, coltmp;
 };
 
