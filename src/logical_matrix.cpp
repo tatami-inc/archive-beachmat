@@ -2,12 +2,34 @@
 
 namespace beachmat {
 
-#ifdef BEACHMAT_USE_HDF5
+/* Column-sparse logical methods. */
+
+Csparse_logical_matrix::Csparse_logical_matrix(const Rcpp::RObject& incoming) : Csparse_lin_matrix<int, Rcpp::LogicalVector>(incoming, 0) {}
+
+Csparse_logical_matrix::~Csparse_logical_matrix() {}
+
+std::unique_ptr<logical_matrix> Csparse_logical_matrix::clone() const {
+    return std::unique_ptr<logical_matrix>(new Csparse_logical_matrix(*this));
+}
+
+/* HDF5 logical methods. */
 
 HDF5_logical_matrix::HDF5_logical_matrix(const Rcpp::RObject& incoming) : 
-    HDF5_matrix<int, Rcpp::LogicalVector>(incoming, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
+    HDF5_lin_matrix<int>(incoming, LGLSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
 
 HDF5_logical_matrix::~HDF5_logical_matrix() {}
+
+void HDF5_logical_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_row(r, &(*out), start, end);
+}
+
+void HDF5_logical_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_col(c, &(*out), start, end);
+}
+
+std::unique_ptr<logical_matrix> HDF5_logical_matrix::clone() const {
+    return std::unique_ptr<logical_matrix>(new HDF5_logical_matrix(*this));
+}
 
 HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_output<int, Rcpp::LogicalVector, logical_false>(nr, nc, H5::PredType::NATIVE_INT32) {
     H5::StrType str_type(0, H5T_VARIABLE);
@@ -19,8 +41,6 @@ HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_output<int, Rcpp
 
 HDF5_logical_output::~HDF5_logical_output() {}
 
-#endif
-    
 /* Dispatch definition */
 
 std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incoming) { 

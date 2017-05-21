@@ -1,42 +1,46 @@
 #ifndef BEACHMAT_NUMERIC_MATRIX_H
 #define BEACHMAT_NUMERIC_MATRIX_H
 
-#include "matrix.h"
+#include "lin_matrix.h"
 #include "output.h"
 
 namespace beachmat { 
 
 /* Virtual base class for numeric matrices. */
 
-typedef any_matrix<double, Rcpp::NumericVector> numeric_matrix;
+typedef lin_matrix<double> numeric_matrix;
 
 /* Simple numeric matrix */
 
-typedef simple_matrix<double, Rcpp::NumericVector> simple_numeric_matrix;
+typedef simple_lin_matrix<double, Rcpp::NumericVector> simple_numeric_matrix;
 
 /* dgeMatrix */
 
-typedef dense_matrix<double, Rcpp::NumericVector> dense_numeric_matrix;
+typedef dense_lin_matrix<double, Rcpp::NumericVector> dense_numeric_matrix;
 
 /* dgCMatrix */
 
-typedef Csparse_matrix<double, Rcpp::NumericVector, numeric_zero> Csparse_numeric_matrix;
+class Csparse_numeric_matrix : public Csparse_lin_matrix<double, Rcpp::NumericVector> {
+public:
+    Csparse_numeric_matrix(const Rcpp::RObject&);
+    ~Csparse_numeric_matrix();
+    std::unique_ptr<numeric_matrix> clone() const;
+};
 
 /* dspMatrix */
 
-typedef Psymm_matrix<double, Rcpp::NumericVector> Psymm_numeric_matrix;
+typedef Psymm_lin_matrix<double, Rcpp::NumericVector> Psymm_numeric_matrix;
 
 /* HDF5Matrix */
 
-#ifdef BEACHMAT_USE_HDF5
-
-class HDF5_numeric_matrix : public HDF5_matrix<double, Rcpp::NumericVector> {
+class HDF5_numeric_matrix : public HDF5_lin_matrix<double> {
 public:
     HDF5_numeric_matrix(const Rcpp::RObject&);
     ~HDF5_numeric_matrix();
+    void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    std::unique_ptr<numeric_matrix> clone() const;
 };
-
-#endif
 
 /* Dispatcher */
 

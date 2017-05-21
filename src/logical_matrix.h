@@ -1,7 +1,7 @@
 #ifndef BEACHMAT_LOGICAL_MATRIX_H
 #define BEACHMAT_LOGICAL_MATRIX_H
 
-#include "matrix.h"
+#include "lin_matrix.h"
 #include "output.h"
 
 namespace beachmat {
@@ -10,35 +10,39 @@ namespace beachmat {
  * Virtual base class for logical matrices. *
  ********************************************/
 
-typedef any_matrix<int, Rcpp::LogicalVector> logical_matrix;
+typedef lin_matrix<int> logical_matrix;
 
 /* Simple logical matrix */
 
-typedef simple_matrix<int, Rcpp::LogicalVector> simple_logical_matrix;
+typedef simple_lin_matrix<int, Rcpp::LogicalVector> simple_logical_matrix;
 
 /* lgeMatrix */
 
-typedef dense_matrix<int, Rcpp::LogicalVector> dense_logical_matrix;
+typedef dense_lin_matrix<int, Rcpp::LogicalVector> dense_logical_matrix;
 
 /* lgCMatrix */
 
-typedef Csparse_matrix<int, Rcpp::LogicalVector, logical_false> Csparse_logical_matrix;
+class Csparse_logical_matrix : public Csparse_lin_matrix<int, Rcpp::LogicalVector> {
+public:
+    Csparse_logical_matrix(const Rcpp::RObject&);
+    ~Csparse_logical_matrix();
+    std::unique_ptr<logical_matrix> clone() const;
+};
 
 /* lspMatrix */
 
-typedef Psymm_matrix<int, Rcpp::LogicalVector> Psymm_logical_matrix;
+typedef Psymm_lin_matrix<int, Rcpp::LogicalVector> Psymm_logical_matrix;
 
 /* HDF5Matrix */
 
-#ifdef BEACHMAT_USE_HDF5
-
-class HDF5_logical_matrix : public HDF5_matrix<int, Rcpp::LogicalVector> {
+class HDF5_logical_matrix : public HDF5_lin_matrix<int> {
 public:
     HDF5_logical_matrix(const Rcpp::RObject&);
     ~HDF5_logical_matrix();
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    std::unique_ptr<logical_matrix> clone() const;
 };
-
-#endif
 
 /* Dispatcher */
 

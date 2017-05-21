@@ -1,5 +1,5 @@
-#ifndef BEACHMAT_OUTPUT_H
-#define BEACHMAT_OUTPUT_H
+#ifndef BEACHMAT_OUTPUT_MATRIX_H
+#define BEACHMAT_OUTPUT_MATRIX_H
 
 #include "beachmat.h"
 #include "utils.h"

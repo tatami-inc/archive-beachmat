@@ -2,19 +2,29 @@
 
 namespace beachmat {
 
-#ifdef BEACHMAT_USE_HDF5
+/* HDF5 integer methods. */
 
 HDF5_integer_matrix::HDF5_integer_matrix(const Rcpp::RObject& incoming) : 
-    HDF5_matrix<int, Rcpp::IntegerVector>(incoming, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
+    HDF5_lin_matrix(incoming, INTSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
 
 HDF5_integer_matrix::~HDF5_integer_matrix() {}
+
+void HDF5_integer_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_row(r, &(*out), start, end);
+}
+
+void HDF5_integer_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_col(c, &(*out), start, end);
+}
+
+std::unique_ptr<integer_matrix> HDF5_integer_matrix::clone() const {
+    return std::unique_ptr<integer_matrix>(new HDF5_integer_matrix(*this));
+}
 
 HDF5_integer_output::HDF5_integer_output(int nr, int nc) : 
     HDF5_output<int, Rcpp::IntegerVector, integer_zero>(nr, nc, H5::PredType::NATIVE_INT32) {}
 
 HDF5_integer_output::~HDF5_integer_output() {}
-
-#endif
 
 /* Dispatch definition */
 

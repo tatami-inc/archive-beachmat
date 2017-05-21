@@ -1,5 +1,5 @@
-#ifndef BEACHMAT_TEMPLATE_OUTPUT_H
-#define BEACHMAT_TEMPLATE_OUTPUT_H
+#ifndef BEACHMAT_OUTPUT_METHODS_H
+#define BEACHMAT_OUTPUT_METHODS_H
 
 /* Methods for the base output class. */
 

@@ -1,7 +1,7 @@
 #ifndef BEACHMAT_INTEGER_MATRIX_H
 #define BEACHMAT_INTEGER_MATRIX_H
 
-#include "matrix.h"
+#include "lin_matrix.h"
 #include "output.h"
 
 namespace beachmat {
@@ -10,23 +10,22 @@ namespace beachmat {
  * Virtual base class for integer matrices. *
  ********************************************/
 
-typedef any_matrix<int, Rcpp::IntegerVector> integer_matrix;
+typedef lin_matrix<int> integer_matrix;
 
 /* Simple integer matrix */
 
-typedef simple_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
+typedef simple_lin_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
 
 /* HDF5Matrix */
 
-#ifdef BEACHMAT_USE_HDF5
-
-class HDF5_integer_matrix : public HDF5_matrix<int, Rcpp::IntegerVector> {
+class HDF5_integer_matrix : public HDF5_lin_matrix<int> {
 public:    
     HDF5_integer_matrix(const Rcpp::RObject&);
     ~HDF5_integer_matrix();
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    std::unique_ptr<integer_matrix> clone() const;
 };
-
-#endif
 
 /* Dispatcher */
 

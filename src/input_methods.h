@@ -1,43 +1,5 @@
-#ifndef BEACHMAT_TEMPLATE_METHODS_H 
-#define BEACHMAT_TEMPLATE_METHODS_H 
-
-/* Methods for the virtual base matrix. */
-
-template<typename T, class V>
-any_matrix<T, V>::any_matrix() : nrow(0), ncol(0) {}
-
-template<typename T, class V>
-any_matrix<T, V>::~any_matrix() {}
-
-template<typename T, class V>
-size_t any_matrix<T, V>::get_nrow() const { return nrow; }
-
-template<typename T, class V>
-size_t any_matrix<T, V>::get_ncol() const { return ncol; }
-
-template<typename T, class V>
-void any_matrix<T, V>::get_row(size_t r, typename V::iterator out) {
-    get_row(r, out, 0, ncol);
-    return;
-}
-
-template<typename T, class V>
-void any_matrix<T, V>::get_col(size_t c, typename V::iterator out) {
-    get_col(c, out, 0, nrow);
-    return;
-}
-
-template<typename T, class V>
-void any_matrix<T, V>::fill_dims(const Rcpp::RObject& dims) {
-    Rcpp::IntegerVector d;
-    if (dims.sexp_type()!=d.sexp_type() || (d=dims).size()!=2) { 
-        throw std::runtime_error("matrix dimensions should be an integer vector of length 2");
-    }
-    nrow=d[0];
-    ncol=d[1];
-    if (nrow<0 || ncol<0) { throw std::runtime_error("dimensions should be non-negative"); }
-    return;
-}
+#ifndef BEACHMAT_INPUT_METHODS_H 
+#define BEACHMAT_INPUT_METHODS_H 
 
 /* Methods for a simple matrix. */
 
@@ -63,15 +25,11 @@ template<typename T, class V>
 simple_matrix<T, V>::~simple_matrix () {}
 
 template<typename T, class V>
-std::unique_ptr<any_matrix<T, V> > simple_matrix<T, V>::clone() const {
-    return std::unique_ptr<any_matrix<T, V> >(new simple_matrix<T, V>(*this));
-}
+T simple_matrix<T, V>::get(size_t r, size_t c) { return mat[r + c*(this->nrow)]; }
 
 template<typename T, class V>
-size_t simple_matrix<T, V>::get_index(size_t r, size_t c) const { return r + c*(this->nrow); }
-
-template<typename T, class V>
-void simple_matrix<T, V>::get_row(size_t r, typename V::iterator out, size_t start, size_t end) {
+template<class Iter>
+void simple_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
     const size_t& NR=this->nrow;
     auto src=mat.begin()+start*NR+r;
     for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
@@ -79,15 +37,11 @@ void simple_matrix<T, V>::get_row(size_t r, typename V::iterator out, size_t sta
 }
 
 template<typename T, class V>
-void simple_matrix<T, V>::get_col(size_t c, typename V::iterator out, size_t start, size_t end) {
+template<class Iter>
+void simple_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
     auto src=mat.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
-}
-
-template<typename T, class V>
-T simple_matrix<T, V>::get(size_t r, size_t c) {
-    return mat[get_index(r, c)];
 }
 
 /* Methods for a dense Matrix. */
@@ -114,16 +68,12 @@ dense_matrix<T, V>::dense_matrix(const Rcpp::RObject& incoming) {
 template <typename T, class V>
 dense_matrix<T, V>::~dense_matrix() {}
 
-template<typename T, class V>
-std::unique_ptr<any_matrix<T, V> > dense_matrix<T, V>::clone() const {
-    return std::unique_ptr<any_matrix<T, V> >(new dense_matrix<T, V>(*this));
-}
+template <typename T, class V>
+T dense_matrix<T, V>::get(size_t r, size_t c) { return x[r + c*(this->nrow)]; }
 
 template <typename T, class V>
-size_t dense_matrix<T, V>::get_index(size_t r, size_t c) const { return r + c*(this->nrow); }
-
-template <typename T, class V>
-void dense_matrix<T, V>::get_row(size_t r, typename V::iterator out, size_t start, size_t end) {
+template <class Iter>
+void dense_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
     const size_t& NR=this->nrow;
     auto src=x.begin()+start*NR+r;
     for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=*src; }
@@ -131,21 +81,17 @@ void dense_matrix<T, V>::get_row(size_t r, typename V::iterator out, size_t star
 }
 
 template <typename T, class V>
-void dense_matrix<T, V>::get_col(size_t c, typename V::iterator out, size_t start, size_t end) {
+template <class Iter>
+void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
     auto src=x.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
 }
 
-template <typename T, class V>
-T dense_matrix<T, V>::get(size_t r, size_t c) {
-    return x[get_index(r, c)];
-}
-
 /* Methods for a Csparse matrix. */
 
-template <typename T, class V, const T& Z>
-Csparse_matrix<T, V, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : nx(0), currow(0), curstart(0), curend(this->ncol) {
+template <typename T, class V>
+Csparse_matrix<T, V>::Csparse_matrix(const Rcpp::RObject& incoming, T f) : fill(f), currow(0), curstart(0), curend(this->ncol) {
     std::string ctype=check_Matrix_class(incoming, "gCMatrix");  
     this->fill_dims(get_safe_slot(incoming, "Dim"));
     const size_t& NC=this->ncol;
@@ -166,12 +112,11 @@ Csparse_matrix<T, V, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : nx(0), 
         throw std::runtime_error(err.str().c_str());
     }
     x=temp_x;
-    nx=x.size();
 
-    if (nx!=i.size()) { throw_custom_error("'x' and 'i' slots in a ", ctype, " object should have the same length"); }
+    if (x.size()!=i.size()) { throw_custom_error("'x' and 'i' slots in a ", ctype, " object should have the same length"); }
     if (NC+1!=p.size()) { throw_custom_error("length of 'p' slot in a ", ctype, " object should be equal to 'ncol+1'"); }
     if (p[0]!=0) { throw_custom_error("first element of 'p' in a ", ctype, " object should be 0"); }
-    if (p[NC]!=nx) { throw_custom_error("last element of 'p' in a ", ctype, " object should be 'length(x)'"); }
+    if (p[NC]!=x.size()) { throw_custom_error("last element of 'p' in a ", ctype, " object should be 'length(x)'"); }
 
     // Checking all the indices.
     indices.resize(NC);
@@ -206,27 +151,22 @@ Csparse_matrix<T, V, Z>::Csparse_matrix(const Rcpp::RObject& incoming) : nx(0), 
     return;
 }
 
-template <typename T, class V, const T& Z>
-Csparse_matrix<T, V, Z>::~Csparse_matrix () {}
+template <typename T, class V>
+Csparse_matrix<T, V>::~Csparse_matrix () {}
 
-template<typename T, class V, const T& Z>
-std::unique_ptr<any_matrix<T, V> > Csparse_matrix<T, V, Z>::clone() const {
-    return std::unique_ptr<any_matrix<T, V> >(new Csparse_matrix<T, V, Z>(*this));
-}
-
-template <typename T, class V, const T& Z>
-size_t Csparse_matrix<T, V, Z>::get_index(size_t r, size_t c) const {
+template <typename T, class V>
+T Csparse_matrix<T, V>::get(size_t r, size_t c) {
     auto iend=i.begin() + p[c+1];
     auto loc=std::lower_bound(i.begin() + p[c], iend, r);
     if (loc!=iend && *loc==r) { 
-        return loc - i.begin();
+        return x[loc - i.begin()];
     } else {
-        return nx;
+        return fill;
     }
 }
 
-template <typename T, class V, const T& Z>
-void Csparse_matrix<T, V, Z>::update_indices(size_t r, size_t start, size_t end) {
+template <typename T, class V>
+void Csparse_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
     /* If left/right slice are not equal to what is stored, we reset the indices,
      * so that the code below will know to recompute them. It's too much effort
      * to try to figure out exactly which columns need recomputing; just do them all.
@@ -288,10 +228,11 @@ void Csparse_matrix<T, V, Z>::update_indices(size_t r, size_t start, size_t end)
     return;
 }
 
-template <typename T, class V, const T& Z>
-void Csparse_matrix<T, V, Z>::get_row(size_t r, typename V::iterator out, size_t start, size_t end) {
+template <typename T, class V>
+template <class Iter>
+void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
     update_indices(r, start, end);
-    std::fill(out, out+end-start, Z);
+    std::fill(out, out+end-start, fill);
 
     auto pIt=p.begin()+start+1; // Points to first-past-the-end for each 'c'.
     for (size_t c=start; c<end; ++c, ++pIt, ++out) { 
@@ -301,8 +242,9 @@ void Csparse_matrix<T, V, Z>::get_row(size_t r, typename V::iterator out, size_t
     return;  
 }
 
-template <typename T, class V, const T& Z>
-void Csparse_matrix<T, V, Z>::get_col(size_t c, typename V::iterator out, size_t start, size_t end) {
+template <typename T, class V>
+template <class Iter>
+void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
     const int& pstart=p[c]; 
     auto iIt=i.begin()+pstart, 
          eIt=i.begin()+p[c+1]; 
@@ -317,17 +259,11 @@ void Csparse_matrix<T, V, Z>::get_col(size_t c, typename V::iterator out, size_t
         eIt=std::lower_bound(iIt, eIt, end);
     }
 
-    std::fill(out, out+end-start, Z);
+    std::fill(out, out+end-start, fill);
     for (; iIt!=eIt; ++iIt, ++xIt) {
         *(out + (*iIt - int(start)))=*xIt;
     }
     return;
-}
-
-template <typename T, class V, const T& Z>
-T Csparse_matrix<T, V, Z>::get(size_t r, size_t c) {
-    const size_t index=get_index(r, c);
-    return (index!=nx ? x[index] : Z);
 }
 
 /* Methods for a Psymm matrix. */
@@ -374,11 +310,6 @@ Psymm_matrix<T, V>::Psymm_matrix(const Rcpp::RObject& incoming) : upper(true) {
 template <typename T, class V>
 Psymm_matrix<T, V>::~Psymm_matrix () {}
 
-template<typename T, class V>
-std::unique_ptr<any_matrix<T, V> > Psymm_matrix<T, V>::clone() const {
-    return std::unique_ptr<any_matrix<T, V> >(new Psymm_matrix<T, V>(*this));
-}
-
 template <typename T, class V>
 size_t Psymm_matrix<T, V>::get_index(size_t r, size_t c) const {
     if (upper) {
@@ -397,7 +328,13 @@ size_t Psymm_matrix<T, V>::get_index(size_t r, size_t c) const {
 }
 
 template <typename T, class V>
-void Psymm_matrix<T, V>::get_col (size_t c, typename V::iterator out, size_t start, size_t end) {
+T Psymm_matrix<T, V>::get(size_t r, size_t c) {
+    return x[get_index(r, c)];
+}
+
+template <typename T, class V>
+template <class Iter>
+void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t start, size_t end) {
     auto xIt=x.begin();
     if (upper) {
         xIt+=(c*(c+1))/2;
@@ -445,22 +382,16 @@ void Psymm_matrix<T, V>::get_col (size_t c, typename V::iterator out, size_t sta
 }
 
 template <typename T, class V>
-void Psymm_matrix<T, V>::get_row (size_t r, typename V::iterator out, size_t start, size_t end) {
+template <class Iter>
+void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) {
     get_col(r, out, start, end);
     return;
 }
 
-template <typename T, class V>
-T Psymm_matrix<T, V>::get(size_t r, size_t c) {
-    return x[get_index(r, c)];
-}
-
 /* Methods for a HDF5 matrix. */
 
-#ifdef BEACHMAT_USE_HDF5
-
-template<typename T, class V>
-HDF5_matrix<T, V>::HDF5_matrix(const Rcpp::RObject& incoming, const H5T_class_t& htc, const H5::PredType& hpt) : realized(R_NilValue), HPT(hpt) { 
+template<typename T>
+HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H5T_class_t& htc, const H5::PredType& hpt) : realized(R_NilValue), HPT(hpt) { 
     std::string ctype=get_class(incoming);
     if (incoming.isS4()) {
         if (ctype=="DelayedMatrix") { 
@@ -483,10 +414,9 @@ HDF5_matrix<T, V>::HDF5_matrix(const Rcpp::RObject& incoming, const H5T_class_t&
 
     // Checking first value.
     const Rcpp::RObject& firstval=get_safe_slot(h5_seed, "first_val");
-    V temp;
-    if (firstval.sexp_type()!=temp.sexp_type()) { 
+    if (firstval.sexp_type()!=expected) { 
         std::stringstream err;
-        err << "'first_val' slot in a " << get_class(h5_seed) << " object should be " << translate_type(temp.sexp_type());
+        err << "'first_val' slot in a " << get_class(h5_seed) << " object should be " << translate_type(expected);
         throw std::runtime_error(err.str().c_str());
     }
 
@@ -551,16 +481,11 @@ HDF5_matrix<T, V>::HDF5_matrix(const Rcpp::RObject& incoming, const H5T_class_t&
     return;
 }
 
-template<typename T, class V>
-HDF5_matrix<T, V>::~HDF5_matrix() {}
+template<typename T>
+HDF5_matrix<T>::~HDF5_matrix() {}
 
-template<typename T, class V>
-std::unique_ptr<any_matrix<T, V> > HDF5_matrix<T, V>::clone() const {
-    return std::unique_ptr<any_matrix<T, V> >(new HDF5_matrix<T, V>(*this));
-}
-
-template<typename T, class V>
-void HDF5_matrix<T, V>::select_row(size_t r, size_t start, size_t end) {
+template<typename T>
+void HDF5_matrix<T>::select_row(size_t r, size_t start, size_t end) {
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -570,15 +495,15 @@ void HDF5_matrix<T, V>::select_row(size_t r, size_t start, size_t end) {
     return;
 }
 
-template<typename T, class V>
-void HDF5_matrix<T, V>::get_row(size_t r, typename V::iterator out, size_t start, size_t end) { 
+template<typename T>
+void HDF5_matrix<T>::extract_row(size_t r, T* out, size_t start, size_t end) { 
     select_row(r, start, end);
-    hdata.read(&(*out), HPT, rowspace, hspace);
+    hdata.read(out, HPT, rowspace, hspace);
     return;
 } 
 
-template<typename T, class V>
-void HDF5_matrix<T, V>::select_col(size_t c, size_t start, size_t end) {
+template<typename T>
+void HDF5_matrix<T>::select_col(size_t c, size_t start, size_t end) {
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -588,29 +513,27 @@ void HDF5_matrix<T, V>::select_col(size_t c, size_t start, size_t end) {
     return;
 }
 
-template<typename T, class V>
-void HDF5_matrix<T, V>::get_col(size_t c, typename V::iterator out, size_t start, size_t end) { 
+template<typename T>
+void HDF5_matrix<T>::extract_col(size_t c, T* out, size_t start, size_t end) { 
     select_col(c, start, end);
-    hdata.read(&(*out), HPT, colspace, hspace);
+    hdata.read(out, HPT, colspace, hspace);
     return;
 }
 
-template<typename T, class V>
-void HDF5_matrix<T, V>::select_one(size_t r, size_t c) {
+template<typename T>
+void HDF5_matrix<T>::select_one(size_t r, size_t c) {
     h5_start[0]=c;
     h5_start[1]=r;
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
     return;
 }
  
-template<typename T, class V>
-T HDF5_matrix<T, V>::get(size_t r, size_t c) { 
+template<typename T>
+T HDF5_matrix<T>::get(size_t r, size_t c) { 
     select_one(r, c);
     T out;
     hdata.read(&out, HPT, onespace, hspace);
     return out;
 }
-
-#endif
 
 #endif
