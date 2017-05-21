@@ -39,7 +39,7 @@ class HDF5_logical_matrix : public HDF5_lin_matrix<int> {
 public:
     HDF5_logical_matrix(const Rcpp::RObject&);
     ~HDF5_logical_matrix();
-    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t); // see LIN_matrix.h for why we use IntegerVector.
     void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
     std::unique_ptr<logical_matrix> clone() const;
 };

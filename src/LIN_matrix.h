@@ -19,6 +19,11 @@ public:
     void get_row(size_t, Rcpp::IntegerVector::iterator);
     void get_row(size_t, Rcpp::NumericVector::iterator);
 
+    /* We can't add a LogicalVector::iterator method because IntegerVector::iterator==LogicalVector::iterator
+     * under the hood in Rcpp. The compiler then complains that overloading is not possible. Thus, for all 
+     * references here to LogicalVector, we will consider the use of IntegerVector in its place.
+     */
+
     virtual void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t)=0;
     virtual void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t)=0;
 
