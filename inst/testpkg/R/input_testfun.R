@@ -60,3 +60,44 @@ check_logical_slice <- function(FUN, ..., by.row, by.col) {
 check_type <- function(FUN, ..., expected) {
     testthat::expect_identical(expected, .Call(cxx_test_type_check, FUN(...)))
 }
+
+.check_conversion <- function(FUN, ..., cxxfun, rfun) {
+    for (it in 1:2) {
+        test.mat <- FUN(...)
+        ref <- as.matrix(test.mat)
+        dimnames(ref) <- NULL
+        testthat::expect_identical(rfun(ref), .Call(cxxfun, test.mat, it))
+    }
+    return(invisible(NULL))
+}
+
+check_numeric_conversion  <- function(FUN, ...) {
+    .check_conversion(FUN=FUN, ..., cxxfun=cxx_test_numeric_to_integer,
+                      rfun=function(x) {
+                          storage.mode(x) <- "integer" 
+                          return(x)
+                      })
+}
+
+check_integer_conversion <- function(FUN, ...) {
+    .check_conversion(FUN=FUN, ..., cxxfun=cxx_test_integer_to_numeric, 
+                      rfun=function(x) { 
+                          storage.mode(x) <- "double"
+                          return(x)
+                      })
+}
+
+check_logical_conversion <- function(FUN, ...) {
+    .check_conversion(FUN=FUN, ..., cxxfun=cxx_test_logical_to_numeric, 
+                      rfun=function(x) { 
+                          storage.mode(x) <- "double"
+                          return(x)
+                      })
+    .check_conversion(FUN=FUN, ..., cxxfun=cxx_test_logical_to_integer, 
+                      rfun=function(x) { 
+                          storage.mode(x) <- "integer"
+                          return(x)
+                      })
+}
+
+

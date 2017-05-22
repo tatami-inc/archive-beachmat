@@ -87,3 +87,12 @@ test_that("HDF5 integer matrix output is okay", {
 
 #######################################################
 
+# Testing conversions.
+
+test_that("Integer matrix input conversions are okay", {
+    beachtest:::check_integer_conversion(sFUN)
+    beachtest:::check_integer_conversion(hFUN)
+})
+
+#######################################################
+

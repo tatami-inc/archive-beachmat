@@ -155,3 +155,15 @@ test_that("HDF5 numeric matrix output is okay", {
 
 #######################################################
 
+# Testing conversions.
+
+test_that("Numeric matrix input conversions are okay", {
+    beachtest:::check_numeric_conversion(sFUN)
+    beachtest:::check_numeric_conversion(dFUN)
+    beachtest:::check_numeric_conversion(csFUN)
+    beachtest:::check_numeric_conversion(spFUN)
+    beachtest:::check_numeric_conversion(hFUN)
+})
+
+#######################################################
+

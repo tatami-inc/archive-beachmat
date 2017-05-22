@@ -1,6 +1,8 @@
 #include "beachtest.h"
 #include "template_infun.h"
 
+/* Realized access functions. */
+
 SEXP test_numeric_access (SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
@@ -29,6 +31,8 @@ SEXP test_character_access (SEXP in, SEXP mode) {
     END_RCPP
 }
 
+/* Realized slice-access functions. */
+
 SEXP test_numeric_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
@@ -56,6 +60,8 @@ SEXP test_character_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     return fill_up_slice<Rcpp::StringVector, Rcpp::StringMatrix>(ptr.get(), mode, rx, cx);
     END_RCPP
 }
+
+/* Sparse access functions. */
 
 SEXP test_sparse_numeric(SEXP in, SEXP rorder) {
     BEGIN_RCPP
@@ -106,6 +112,8 @@ SEXP test_sparse_numeric_slice(SEXP in, SEXP Inx) {
     END_RCPP
 }
 
+/* Type check and conversion functions. */
+
 SEXP test_type_check(SEXP in) {
     BEGIN_RCPP
     std::string out=beachmat::translate_type(beachmat::find_sexp_type(in));
@@ -113,4 +121,45 @@ SEXP test_type_check(SEXP in) {
     END_RCPP
 }
 
+SEXP test_numeric_to_logical (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_numeric_to_integer (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_logical_to_numeric (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_logical_to_integer (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_integer_to_numeric (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_integer_to_logical (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), mode);
+    END_RCPP
+}
 

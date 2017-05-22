@@ -263,28 +263,28 @@ size_t HDF5_lin_matrix<T>::get_ncol() const {
 template<typename T>
 void HDF5_lin_matrix<T>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     mat.extract_col(c, coltmp.data(), HPT, start, end);
-    std::copy(coltmp.begin(), coltmp.end(), out);
+    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 
 template<typename T>
 void HDF5_lin_matrix<T>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
     mat.extract_col(c, coltmp.data(), HPT, start, end);
-    std::copy(coltmp.begin(), coltmp.end(), out);
+    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 
 template<typename T>
 void HDF5_lin_matrix<T>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     mat.extract_row(r, rowtmp.data(), HPT, start, end);
-    std::copy(rowtmp.begin(), rowtmp.end(), out);
+    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 
 template<typename T>
 void HDF5_lin_matrix<T>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
     mat.extract_row(r, rowtmp.data(), HPT, start, end);
-    std::copy(rowtmp.begin(), rowtmp.end(), out);
+    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 

@@ -28,6 +28,13 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_logical_output_slice, 5),
 
     REGISTER(test_type_check, 1),
+    REGISTER(test_numeric_to_logical, 2), 
+    REGISTER(test_numeric_to_integer, 2),
+    REGISTER(test_integer_to_logical, 2),
+    REGISTER(test_integer_to_numeric, 2),
+    REGISTER(test_logical_to_integer, 2),
+    REGISTER(test_logical_to_numeric, 2),
+
     {NULL, NULL, 0}
 };
 

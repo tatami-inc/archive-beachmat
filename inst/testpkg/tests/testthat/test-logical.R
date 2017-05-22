@@ -155,3 +155,15 @@ test_that("HDF5 logical matrix output is okay", {
 
 #######################################################
 
+# Testing conversions.
+
+test_that("Logical matrix input conversions are okay", {
+    beachtest:::check_logical_conversion(sFUN)
+    beachtest:::check_logical_conversion(dFUN)
+    beachtest:::check_logical_conversion(csFUN)
+    beachtest:::check_logical_conversion(spFUN)
+    beachtest:::check_logical_conversion(hFUN)
+})
+
+#######################################################
+

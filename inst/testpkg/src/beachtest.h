@@ -30,6 +30,18 @@ SEXP test_sparse_numeric_slice(SEXP, SEXP);
 
 SEXP test_type_check(SEXP);
 
+SEXP test_numeric_to_logical (SEXP, SEXP);
+
+SEXP test_numeric_to_integer (SEXP, SEXP);
+
+SEXP test_integer_to_logical (SEXP, SEXP);
+
+SEXP test_integer_to_numeric (SEXP, SEXP);
+
+SEXP test_logical_to_integer (SEXP, SEXP);
+
+SEXP test_logical_to_numeric (SEXP, SEXP);
+
 // Output functions.
 
 SEXP test_integer_output(SEXP, SEXP, SEXP);
