@@ -35,7 +35,7 @@ void any_matrix::check_colargs(size_t c, size_t start, size_t end) const {
         throw std::runtime_error("column index out of range");
     } else if (end < start) {
         throw std::runtime_error("row start index is greater than row end index");
-    } else if (end > ncol) {
+    } else if (end > nrow) {
         throw std::runtime_error("row end index out of range");
     }
     return;

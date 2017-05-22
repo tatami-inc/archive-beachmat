@@ -163,3 +163,37 @@ SEXP test_integer_to_logical (SEXP in, SEXP mode) {
     END_RCPP
 }
 
+/* Edge case error checking. */
+
+SEXP test_integer_edge (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    input_edge<Rcpp::IntegerVector>(ptr.get(), mode);
+    return Rf_ScalarLogical(1);
+    END_RCPP
+}
+
+SEXP test_logical_edge (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    input_edge<Rcpp::LogicalVector>(ptr.get(), mode);
+    return Rf_ScalarLogical(1);
+    END_RCPP
+}
+
+SEXP test_numeric_edge (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    input_edge<Rcpp::NumericVector>(ptr.get(), mode);
+    return Rf_ScalarLogical(1);
+    END_RCPP
+}
+
+SEXP test_character_edge (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    input_edge<Rcpp::StringVector>(ptr.get(), mode);
+    return Rf_ScalarLogical(1);
+    END_RCPP
+}
+

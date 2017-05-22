@@ -65,6 +65,22 @@ test_that("Delayed integer matrix input is okay", {
 
 #######################################################
 
+# Testing conversions.
+
+test_that("Integer matrix input conversions are okay", {
+    beachtest:::check_integer_conversion(sFUN)
+    beachtest:::check_integer_conversion(hFUN)
+})
+
+# Testing errors.
+
+test_that("Integer matrix input error generation is okay", {
+    beachtest:::check_integer_edge_errors(sFUN)
+    beachtest:::check_integer_edge_errors(hFUN)
+})
+
+#######################################################
+
 # Testing simple integer output:
 
 set.seed(12345)
@@ -83,15 +99,6 @@ test_that("HDF5 integer matrix output is okay", {
     beachtest:::check_integer_output_slice(hFUN, by.row=5:15, by.col=8:10, hdf5.out=TRUE)
 
     beachtest:::check_integer_order(hFUN)
-})
-
-#######################################################
-
-# Testing conversions.
-
-test_that("Integer matrix input conversions are okay", {
-    beachtest:::check_integer_conversion(sFUN)
-    beachtest:::check_integer_conversion(hFUN)
 })
 
 #######################################################

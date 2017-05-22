@@ -63,3 +63,12 @@ test_that("Delayed character matrix input is okay", {
 
 #######################################################
 
+# Testing errors.
+
+test_that("Character matrix input error generation is okay", {
+    beachtest:::check_character_edge_errors(sFUN)
+    beachtest:::check_character_edge_errors(hFUN)
+})
+
+#######################################################
+

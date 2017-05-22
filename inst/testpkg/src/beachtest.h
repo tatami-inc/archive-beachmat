@@ -42,6 +42,14 @@ SEXP test_logical_to_integer (SEXP, SEXP);
 
 SEXP test_logical_to_numeric (SEXP, SEXP);
 
+SEXP test_integer_edge (SEXP, SEXP);
+
+SEXP test_logical_edge (SEXP, SEXP);
+
+SEXP test_numeric_edge (SEXP, SEXP);
+
+SEXP test_character_edge (SEXP, SEXP);
+
 // Output functions.
 
 SEXP test_integer_output(SEXP, SEXP, SEXP);
