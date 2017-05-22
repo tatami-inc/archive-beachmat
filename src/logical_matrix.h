@@ -52,23 +52,24 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject&);
  * Virtual base class for output logical matrices. *
  ***************************************************/
 
-typedef output_matrix<int, Rcpp::LogicalVector> logical_output;
+typedef lin_output<int> logical_output;
 
 /* Simple output logical matrix */
 
-typedef simple_output<int, Rcpp::LogicalVector> simple_logical_output;
+typedef simple_lin_output<int, Rcpp::LogicalVector> simple_logical_output;
 
 /* HDF5 output logical matrix */
 
-#ifdef BEACHMAT_USE_HDF5
-
-class HDF5_logical_output : public HDF5_output<int, Rcpp::LogicalVector, logical_false> {
+class HDF5_logical_output : public HDF5_lin_output<int, Rcpp::LogicalVector> {
 public:
     HDF5_logical_output(int, int);
     ~HDF5_logical_output();
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    std::unique_ptr<logical_output> clone() const;
 };
-
-#endif
 
 /* Output dispatchers */
 

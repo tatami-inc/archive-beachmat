@@ -50,23 +50,25 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject&);
  * Virtual base class for output numeric matrices. *
  ***************************************************/
 
-typedef output_matrix<double, Rcpp::NumericVector> numeric_output;
+typedef lin_output<double> numeric_output;
 
 /* Simple output numeric matrix */
 
-typedef simple_output<double, Rcpp::NumericVector> simple_numeric_output;
+typedef simple_lin_output<double, Rcpp::NumericVector> simple_numeric_output;
 
 /* HDF5 output numeric matrix */
 
-#ifdef BEACHMAT_USE_HDF5
-
-class HDF5_numeric_output : public HDF5_output<double, Rcpp::NumericVector, numeric_zero> {
+class HDF5_numeric_output : public HDF5_lin_output<double, Rcpp::NumericVector> {
 public:
     HDF5_numeric_output(int, int);
     ~HDF5_numeric_output();
-};
+    void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void fill_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void fill_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    std::unique_ptr<numeric_output> clone() const;
 
-#endif
+};
 
 /* Output dispatchers */
 

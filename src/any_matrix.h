@@ -8,6 +8,7 @@
 class any_matrix {
 public:
     any_matrix();
+    any_matrix(size_t, size_t);
     virtual ~any_matrix();
     size_t get_nrow() const;
     size_t get_ncol() const;

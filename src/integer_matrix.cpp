@@ -2,7 +2,7 @@
 
 namespace beachmat {
 
-/* HDF5 integer methods. */
+/* HDF5 integer input methods. */
 
 HDF5_integer_matrix::HDF5_integer_matrix(const Rcpp::RObject& incoming) : 
     HDF5_lin_matrix(incoming, INTSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
@@ -21,10 +21,32 @@ std::unique_ptr<integer_matrix> HDF5_integer_matrix::clone() const {
     return std::unique_ptr<integer_matrix>(new HDF5_integer_matrix(*this));
 }
 
+/* HDF5 integer output methods. */
+
 HDF5_integer_output::HDF5_integer_output(int nr, int nc) : 
-    HDF5_output<int, Rcpp::IntegerVector, integer_zero>(nr, nc, H5::PredType::NATIVE_INT32) {}
+    HDF5_lin_output(nr, nc, H5::PredType::NATIVE_INT32, 0) {}
 
 HDF5_integer_output::~HDF5_integer_output() {}
+
+void HDF5_integer_output::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, &(*out), HPT, start, end);
+}
+
+void HDF5_integer_output::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, &(*out), HPT, start, end);
+}
+
+void HDF5_integer_output::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.fill_row(r, &(*out), HPT, start, end);
+}
+
+void HDF5_integer_output::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.fill_col(c, &(*out), HPT, start, end);
+}
+
+std::unique_ptr<integer_output> HDF5_integer_output::clone() const {
+    return std::unique_ptr<integer_output>(new HDF5_integer_output(*this));
+}
 
 /* Dispatch definition */
 

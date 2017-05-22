@@ -12,7 +12,7 @@ std::unique_ptr<numeric_matrix> Csparse_numeric_matrix::clone() const {
     return std::unique_ptr<numeric_matrix>(new Csparse_numeric_matrix(*this));
 }
 
-/* HDF5 numeric methods. */
+/* HDF5 numeric input methods. */
 
 HDF5_numeric_matrix::HDF5_numeric_matrix(const Rcpp::RObject& incoming) : 
     HDF5_lin_matrix<double>(incoming, REALSXP, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE) {}
@@ -30,11 +30,33 @@ void HDF5_numeric_matrix::get_col(size_t c, Rcpp::NumericVector::iterator out, s
 std::unique_ptr<numeric_matrix> HDF5_numeric_matrix::clone() const {
     return std::unique_ptr<numeric_matrix>(new HDF5_numeric_matrix(*this));
 }
-    
+
+/* HDF5 integer output methods. */
+
 HDF5_numeric_output::HDF5_numeric_output(int nr, int nc) : 
-    HDF5_output<double, Rcpp::NumericVector, numeric_zero>(nr, nc, H5::PredType::NATIVE_DOUBLE) {}
+    HDF5_lin_output(nr, nc, H5::PredType::NATIVE_DOUBLE, 0) {}
 
 HDF5_numeric_output::~HDF5_numeric_output() {}
+
+void HDF5_numeric_output::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, &(*out), HPT, start, end);
+}
+
+void HDF5_numeric_output::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, &(*out), HPT, start, end);
+}
+
+void HDF5_numeric_output::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.fill_row(r, &(*out), HPT, start, end);
+}
+
+void HDF5_numeric_output::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.fill_col(c, &(*out), HPT, start, end);
+}
+
+std::unique_ptr<numeric_output> HDF5_numeric_output::clone() const {
+    return std::unique_ptr<numeric_output>(new HDF5_numeric_output(*this));
+}
 
 /* Dispatch definition */
 

@@ -2,6 +2,8 @@
 
 any_matrix::any_matrix() : nrow(0), ncol(0) {}
 
+any_matrix::any_matrix(size_t nr, size_t nc) : nrow(nr), ncol(nc) {}
+
 any_matrix::~any_matrix() {}
 
 size_t any_matrix::get_nrow() const { return nrow; }

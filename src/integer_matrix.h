@@ -35,23 +35,24 @@ std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject&);
  * Virtual base class for output integer matrices. *
  ***************************************************/
 
-typedef output_matrix<int, Rcpp::IntegerVector> integer_output;
+typedef lin_output<int> integer_output;
 
 /* Simple output integer matrix */
 
-typedef simple_output<int, Rcpp::IntegerVector> simple_integer_output;
+typedef simple_lin_output<int, Rcpp::IntegerVector> simple_integer_output;
 
 /* HDF5 output integer matrix */
 
-#ifdef BEACHMAT_USE_HDF5
-
-class HDF5_integer_output : public HDF5_output<int, Rcpp::IntegerVector, integer_zero> {
+class HDF5_integer_output : public HDF5_lin_output<int, Rcpp::IntegerVector> {
 public:    
     HDF5_integer_output(int, int);
     ~HDF5_integer_output();
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    std::unique_ptr<integer_output> clone() const;
 };
-
-#endif
 
 /* Output dispatchers */
 

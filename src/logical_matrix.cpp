@@ -12,7 +12,7 @@ std::unique_ptr<logical_matrix> Csparse_logical_matrix::clone() const {
     return std::unique_ptr<logical_matrix>(new Csparse_logical_matrix(*this));
 }
 
-/* HDF5 logical methods. */
+/* HDF5 logical input methods. */
 
 HDF5_logical_matrix::HDF5_logical_matrix(const Rcpp::RObject& incoming) : 
     HDF5_lin_matrix<int>(incoming, LGLSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
@@ -31,15 +31,34 @@ std::unique_ptr<logical_matrix> HDF5_logical_matrix::clone() const {
     return std::unique_ptr<logical_matrix>(new HDF5_logical_matrix(*this));
 }
 
-HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_output<int, Rcpp::LogicalVector, logical_false>(nr, nc, H5::PredType::NATIVE_INT32) {
-    H5::StrType str_type(0, H5T_VARIABLE);
-    H5::DataSpace att_space(1, one_count);
-    H5::Attribute att = hdata.createAttribute("storage.mode", str_type, att_space);
-    att.write(str_type, std::string("logical"));
+/* HDF5 logical output methods. */
+
+HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_lin_output(nr, nc, H5::PredType::NATIVE_INT32, 0) {
+    mat.set_logical();
     return;
 }
 
 HDF5_logical_output::~HDF5_logical_output() {}
+
+void HDF5_logical_output::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, &(*out), HPT, start, end);
+}
+
+void HDF5_logical_output::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, &(*out), HPT, start, end);
+}
+
+void HDF5_logical_output::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.fill_row(r, &(*out), HPT, start, end);
+}
+
+void HDF5_logical_output::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.fill_col(c, &(*out), HPT, start, end);
+}
+
+std::unique_ptr<logical_output> HDF5_logical_output::clone() const {
+    return std::unique_ptr<logical_output>(new HDF5_logical_output(*this));
+}
 
 /* Dispatch definition */
 
