@@ -88,6 +88,10 @@ public:
 protected:
     V x;
     bool upper;
+
+    template <class Iter>
+    void get_rowcol(size_t, Iter, size_t, size_t);
+
     size_t get_index(size_t, size_t) const;
 };
 

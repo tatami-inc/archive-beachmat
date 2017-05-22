@@ -348,8 +348,7 @@ T Psymm_matrix<T, V>::get(size_t r, size_t c) {
 
 template <typename T, class V>
 template <class Iter>
-void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void Psymm_matrix<T, V>::get_rowcol (size_t c, Iter out, size_t start, size_t end) {
     auto xIt=x.begin();
     if (upper) {
         xIt+=(c*(c+1))/2;
@@ -398,8 +397,17 @@ void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t start, size_t end) 
 
 template <typename T, class V>
 template <class Iter>
+void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end); // Split up to ensure we get the right error messages.
+    get_rowcol(c, out, start, end);
+    return;
+}
+
+template <typename T, class V>
+template <class Iter>
 void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) {
-    get_col(r, out, start, end);
+    check_rowargs(r, start, end);
+    get_rowcol(r, out, start, end);
     return;
 }
 
