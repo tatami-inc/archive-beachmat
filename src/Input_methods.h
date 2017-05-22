@@ -25,11 +25,15 @@ template<typename T, class V>
 simple_matrix<T, V>::~simple_matrix () {}
 
 template<typename T, class V>
-T simple_matrix<T, V>::get(size_t r, size_t c) { return mat[r + c*(this->nrow)]; }
+T simple_matrix<T, V>::get(size_t r, size_t c) { 
+    check_oneargs(r, c);
+    return mat[r + c*(this->nrow)]; 
+}
 
 template<typename T, class V>
 template<class Iter>
 void simple_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
+    check_rowargs(r, start, end);
     const size_t& NR=this->nrow;
     auto src=mat.begin()+start*NR+r;
     for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
@@ -39,6 +43,7 @@ void simple_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) 
 template<typename T, class V>
 template<class Iter>
 void simple_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end);
     auto src=mat.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
@@ -69,11 +74,15 @@ template <typename T, class V>
 dense_matrix<T, V>::~dense_matrix() {}
 
 template <typename T, class V>
-T dense_matrix<T, V>::get(size_t r, size_t c) { return x[r + c*(this->nrow)]; }
+T dense_matrix<T, V>::get(size_t r, size_t c) { 
+    check_oneargs(r, c);
+    return x[r + c*(this->nrow)]; 
+}
 
 template <typename T, class V>
 template <class Iter>
 void dense_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
+    check_rowargs(r, start, end);
     const size_t& NR=this->nrow;
     auto src=x.begin()+start*NR+r;
     for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=*src; }
@@ -83,6 +92,7 @@ void dense_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
 template <typename T, class V>
 template <class Iter>
 void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end);
     auto src=x.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
@@ -156,6 +166,7 @@ Csparse_matrix<T, V>::~Csparse_matrix () {}
 
 template <typename T, class V>
 T Csparse_matrix<T, V>::get(size_t r, size_t c) {
+    check_oneargs(r, c);
     auto iend=i.begin() + p[c+1];
     auto loc=std::lower_bound(i.begin() + p[c], iend, r);
     if (loc!=iend && *loc==r) { 
@@ -231,6 +242,7 @@ void Csparse_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
 template <typename T, class V>
 template <class Iter>
 void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
+    check_rowargs(r, start, end);
     update_indices(r, start, end);
     std::fill(out, out+end-start, fill);
 
@@ -245,6 +257,7 @@ void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end)
 template <typename T, class V>
 template <class Iter>
 void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end);
     const int& pstart=p[c]; 
     auto iIt=i.begin()+pstart, 
          eIt=i.begin()+p[c+1]; 
@@ -312,6 +325,7 @@ Psymm_matrix<T, V>::~Psymm_matrix () {}
 
 template <typename T, class V>
 size_t Psymm_matrix<T, V>::get_index(size_t r, size_t c) const {
+    check_oneargs(r, c);
     if (upper) {
         if (c > r) { 
             return (c*(c+1))/2 + r;            
@@ -335,6 +349,7 @@ T Psymm_matrix<T, V>::get(size_t r, size_t c) {
 template <typename T, class V>
 template <class Iter>
 void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end);
     auto xIt=x.begin();
     if (upper) {
         xIt+=(c*(c+1))/2;
@@ -486,6 +501,7 @@ HDF5_matrix<T>::~HDF5_matrix() {}
 
 template<typename T>
 void HDF5_matrix<T>::extract_row(size_t r, T* out, const H5::DataType& dt, size_t start, size_t end) { 
+    check_rowargs(r, start, end);
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -498,6 +514,7 @@ void HDF5_matrix<T>::extract_row(size_t r, T* out, const H5::DataType& dt, size_
 
 template<typename T>
 void HDF5_matrix<T>::extract_col(size_t c, T* out, const H5::DataType& dt, size_t start, size_t end) { 
+    check_colargs(c, start, end);
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -510,6 +527,7 @@ void HDF5_matrix<T>::extract_col(size_t c, T* out, const H5::DataType& dt, size_
 
 template<typename T>
 void HDF5_matrix<T>::extract_one(size_t r, size_t c, T* out, const H5::DataType& dt) { 
+    check_oneargs(r, c);
     h5_start[0]=c;
     h5_start[1]=r;  
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);

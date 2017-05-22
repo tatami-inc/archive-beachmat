@@ -14,6 +14,9 @@ public:
 protected:
     size_t nrow, ncol;
     void fill_dims(const Rcpp::RObject&);
+    void check_rowargs(size_t, size_t, size_t) const;
+    void check_colargs(size_t, size_t, size_t) const;
+    void check_oneargs(size_t, size_t) const;
 };
 
 #endif

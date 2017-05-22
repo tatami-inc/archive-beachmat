@@ -139,16 +139,16 @@ The available methods for this object are:
 
 - `dptr->get_nrow()` returns the number of rows (`nrow`) as a `size_t`.
 - `dptr->get_ncol()` returns the number of columns (`ncol`) as a `size_t`.
-- `dptr->get_col(c, X)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at column `c`.
+- `dptr->get_col(c, X)` takes an `iterator`-type object `X` and fills it with values at column `c`.
 There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_col(c, X, rstart, rend)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at column `c` from row `rstart` to `rend-1`.
+- `dptr->get_col(c, X, rstart, rend)` takes an `iterator`-type object `X` and fills it with values at column `c` from row `rstart` to `rend-1`.
 There should be at least `rend-rstart` accessible elements, i.e., `*X` and `*(X+rend-rstart-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_row(r, X)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at row `r`.
+- `dptr->get_row(r, X)` takes an `iterator`-type object `X` and fills it with values at row `r`.
 There should be at least `ncol` accessible elements, i.e., `*X` and `*(X+ncol-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_row(r, X, cstart, cend)` takes a `Rcpp::NumericVector::iterator` (`X`) and fills it with values at row `r` from column `cstart` to `cend-1`.
+- `dptr->get_row(r, X, cstart, cend)` takes an `iterator`-type object `X` and fills it with values at row `r` from column `cstart` to `cend-1`.
 There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
 No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
@@ -157,6 +157,11 @@ No value is returned by this method.
 In all cases, `r` and `c` should be non-negative integers (specificaly `size_t`) in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
 Similar rules apply to `rstart` and `rend`, which should be in `[0, nrow]`; and to `cstart` and `cend`, which should be in `[0, ncol]`.
+Furthermore, `rend >= rstart` and `cend >= cstart` should be true.
+
+If the object `X` is a `Rcpp::NumericVector::iterator` instance, matrix entries will be extracted as double-precision values.
+If it is a `Rcpp::IntegerVector::iterator` instance, matrix entries will be extracted as integers with implicit conversion.
+It is also _possible_ to use a `Rcpp::LogicalVector::iterator`, though this will not behave as expected - see notes below.
 
 ## Other matrix types
 
@@ -177,7 +182,7 @@ std::unique_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matr
 ```
 
 Equivalent methods are available for all matrix types with appropriate changes in type.
-For integer and logical matrices, `X` should be of type `Rcpp::IntegerVector::iterator` and `Rcpp::LogicalVector::iterator`, respectively, and `get` will return an integer.
+For integer and logical matrices, `get` will return an integer, and `X` can be an `interator` of `Rcpp::IntegerVector`, `Rcpp::LogicalVector` or `Rcpp::NumericVector`.
 For character matrices, `X` should be of type `Rcpp::StringVector::iterator`, and `get` will return a `Rcpp::String`.
 
 The following matrix classes are supported:
@@ -198,6 +203,11 @@ Specifically, a pointer to the column could be directly returned rather than cop
 However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
 This would be dangerous as the values in the internal storage will change upon repeated calls to `get_col`.
 Filling a user-supplied array is more intuitive as it is obvious that the array will change when `get_col` is called again.
+- For non-`logical` matrices, using a `Rcpp::LogicalVector::iterator` in the `get_*` methods is not recommended.
+For `numeric_matrix` instances, double-to-integer conversion is performed such that values in `(-1, 1)` are converted to integer `0`.
+This would be interpreted as a logical `FALSE`, which is not correct for all non-zero double-precision values.
+For `integer_matrix` instances, integer values are not coerced to `{0, 1}`.
+Thus, even though the interpretation is correct, the vector produced will not be equivalent to the result of an `as.logical` call.
 - The API is not thread-safe for simultaneous calls to the `get` methods from different threads.
 Some methods use cached class members for greater efficiency, and simultaneous calls will cause race conditions. 
 It is the responsibility of the calling function to lock (and unlock) access to a single `*_matrix` object across threads.

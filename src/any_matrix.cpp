@@ -19,4 +19,31 @@ void any_matrix::fill_dims(const Rcpp::RObject& dims) {
     return;
 }
 
+void any_matrix::check_rowargs(size_t r, size_t start, size_t end) const {
+    if (r>=nrow) {
+        throw std::runtime_error("row index out of range");
+    } else if (end < start) {
+        throw std::runtime_error("column start index is greater than column end index");
+    } else if (end > ncol) {
+        throw std::runtime_error("column end index out of range");
+    }
+    return;    
+}
 
+void any_matrix::check_colargs(size_t c, size_t start, size_t end) const {
+    if (c>=ncol) {
+        throw std::runtime_error("column index out of range");
+    } else if (end < start) {
+        throw std::runtime_error("row start index is greater than row end index");
+    } else if (end > ncol) {
+        throw std::runtime_error("row end index out of range");
+    }
+    return;
+}
+
+void any_matrix::check_oneargs(size_t r, size_t c) const {
+    if (c>=ncol || r>=nrow) {
+        throw std::runtime_error("column or row indices out of range");
+    }
+    return;
+}
