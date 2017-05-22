@@ -181,8 +181,9 @@ std::unique_ptr<beachmat::integer_matrix> iptr=beachmat::create_integer_matrix(i
 std::unique_ptr<beachmat::character_matrix> cptr=beachmat::create_character_matrix(cmat);
 ```
 
-Equivalent methods are available for all matrix types with appropriate changes in type.
-For integer and logical matrices, `get` will return an integer, and `X` can be an `interator` of `Rcpp::IntegerVector`, `Rcpp::LogicalVector` or `Rcpp::NumericVector`.
+Equivalent methods are available for each matrix types with appropriate changes in type.
+For integer and logical matrices, `get` will return an integer,
+while `X` can be an `iterator` object of a `Rcpp::IntegerVector`, `Rcpp::LogicalVector` or `Rcpp::NumericVector` instance (type conversions are implicitly performed as necessary).
 For character matrices, `X` should be of type `Rcpp::StringVector::iterator`, and `get` will return a `Rcpp::String`.
 
 The following matrix classes are supported:
@@ -206,7 +207,7 @@ Filling a user-supplied array is more intuitive as it is obvious that the array 
 - For non-`logical` matrices, using a `Rcpp::LogicalVector::iterator` in the `get_*` methods is not recommended.
 For `numeric_matrix` instances, double-to-integer conversion is performed such that values in `(-1, 1)` are converted to integer `0`.
 This would be interpreted as a logical `FALSE`, which is not correct for all non-zero double-precision values.
-For `integer_matrix` instances, integer values are not coerced to `{0, 1}`.
+For `integer_matrix` instances, integer values are not coerced to `{0, 1}` when they are assigned into the `Rcpp::LogicalVector`.
 Thus, even though the interpretation is correct, the vector produced will not be equivalent to the result of an `as.logical` call.
 - The API is not thread-safe for simultaneous calls to the `get` methods from different threads.
 Some methods use cached class members for greater efficiency, and simultaneous calls will cause race conditions. 
@@ -224,15 +225,18 @@ See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with the
 <!--
 Advanced comments:
 
-- If any class has pointers to SEXP data, the data that each pointer points to should be contained within a RObject that is also a member of the class. 
-This ensures that the data is PROTECTed for the lifetime of the class instance. 
-Otherwise, one could imagine a situation where the class is instantiated from an RObject; the RObject is destroyed; and garbage collection occurs.
+- If any class has pointers to `SEXP` data, the data that each pointer points to should be contained within a `RObject` that is also a member of the class. 
+This ensures that the data is `PROTECT`ed for the lifetime of the class instance. 
+Otherwise, one could imagine a situation where the class is instantiated from a `RObject`; the `RObject` is destroyed; and garbage collection occurs.
 This would invalidate the pointers in the class instance.
-- The two major templated values are 'T' and 'V'; 'T' for the return type of 'get', 'V' for the Rcpp::Vector class used for internal storage and iterators.
-Any combination of template arguments is permitted where an indexed of 'V' can be successfully converted to type 'T'.
-- It would be nice to allow the fill_* methods to take any random access iterator; however, virtual methods cannot be templated.
+- The two major templated values are `T` and `V`; `T` for the return type of `get`, `V` for the Rcpp::Vector class used for internal storage and iterators.
+Any combination of template arguments is permitted where an indexed of `V` can be successfully converted to type `T`.
+- It would be nice to allow the get_* methods to take any random access iterator; however, virtual methods cannot be templated.
 We could add a template argument to the entire class, but this would only allow it to take either a random access iterator or a pointer (not both).
-Overloading seems like the best approach, but would be a pain if I have to rewrite every fill_* method.
+- We have used inheritance to define the `_matrix` interface, so that run-time polymorphism is possible for different matrix classes.
+However, value extraction is executed by separate classes that are _contained_ within the interface, i.e., are data members of the user-visible `_matrix` object.
+This allows us to re-use extraction methods for different interfaces.
+In particular, the `character_matrix` interface differs from the others, so a single set of inheritance templates is not possible.
 -->
 
 # Overview of the API (output)
