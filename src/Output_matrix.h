@@ -34,17 +34,16 @@ class HDF5_output : public any_matrix {
 public:
     HDF5_output(size_t, size_t, const H5::DataType&, T);
     ~HDF5_output();
-    void set_logical();
     
-    void fill_row(size_t, T*, const H5::DataType&, size_t, size_t);
-    void fill_col(size_t, T*, const H5::DataType&, size_t, size_t);
-    void fill(size_t, size_t, T, const H5::DataType&);
+    void fill_row(size_t, T*, size_t, size_t);
+    void fill_col(size_t, T*, size_t, size_t);
+    void fill(size_t, size_t, T);
 
-    void get_col(size_t, T*, const H5::DataType&, size_t, size_t);
-    void get_row(size_t, T*, const H5::DataType&, size_t, size_t);
-    T get(size_t, size_t, const H5::DataType&);
+    void get_col(size_t, T*, size_t, size_t);
+    void get_row(size_t, T*, size_t, size_t);
+    T get(size_t, size_t);
 
-    Rcpp::RObject yield(const H5::DataType&);
+    Rcpp::RObject yield();
 protected:
     std::string fname, dname;
 
@@ -52,7 +51,8 @@ protected:
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
-   
+
+    H5::DataType HDT;
     const T FILL;
     void select_row(size_t, size_t, size_t);
     void select_col(size_t, size_t, size_t);

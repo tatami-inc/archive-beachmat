@@ -18,14 +18,7 @@ typedef simple_lin_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
 
 /* HDF5Matrix */
 
-class HDF5_integer_matrix : public HDF5_lin_matrix<int> {
-public:    
-    HDF5_integer_matrix(const Rcpp::RObject&);
-    ~HDF5_integer_matrix();
-    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    std::unique_ptr<integer_matrix> clone() const;
-};
+typedef HDF5_lin_matrix<int, INTSXP> HDF5_integer_matrix;
 
 /* Dispatcher */
 

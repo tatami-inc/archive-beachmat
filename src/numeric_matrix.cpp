@@ -2,33 +2,37 @@
 
 namespace beachmat { 
 
-/* Column-sparse numeric methods. */
+/* Csparse logical input methods. */
 
-Csparse_numeric_matrix::Csparse_numeric_matrix(const Rcpp::RObject& incoming) : Csparse_lin_matrix<double, Rcpp::NumericVector>(incoming, 0) {}
+template<>
+double Csparse_matrix<double, Rcpp::NumericVector>::get_empty() const { return 0; }
 
-Csparse_numeric_matrix::~Csparse_numeric_matrix() {}
+/* HDF5 integer input methods. */
 
-std::unique_ptr<numeric_matrix> Csparse_numeric_matrix::clone() const {
-    return std::unique_ptr<numeric_matrix>(new Csparse_numeric_matrix(*this));
+template<>
+void HDF5_numeric_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_col(c, coltmp.data(), start, end);
+    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
+    return;
 }
 
-/* HDF5 numeric input methods. */
-
-HDF5_numeric_matrix::HDF5_numeric_matrix(const Rcpp::RObject& incoming) : 
-    HDF5_lin_matrix<double>(incoming, REALSXP, H5T_FLOAT, H5::PredType::NATIVE_DOUBLE) {}
-
-HDF5_numeric_matrix::~HDF5_numeric_matrix() {}
-
-void HDF5_numeric_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), HPT, start, end);
-}
-
+template<>
 void HDF5_numeric_matrix::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), HPT, start, end);
+    mat.extract_col(c, &(*out), start, end);
+    return;
 }
 
-std::unique_ptr<numeric_matrix> HDF5_numeric_matrix::clone() const {
-    return std::unique_ptr<numeric_matrix>(new HDF5_numeric_matrix(*this));
+template<>
+void HDF5_numeric_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_row(r, rowtmp.data(), start, end);
+    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
+    return;
+}
+
+template<>
+void HDF5_numeric_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.extract_row(r, &(*out), start, end);
+    return;
 }
 
 /* HDF5 integer output methods. */
@@ -39,19 +43,19 @@ HDF5_numeric_output::HDF5_numeric_output(int nr, int nc) :
 HDF5_numeric_output::~HDF5_numeric_output() {}
 
 void HDF5_numeric_output::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, &(*out), HPT, start, end);
+    mat.get_row(r, &(*out), start, end);
 }
 
 void HDF5_numeric_output::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, &(*out), HPT, start, end);
+    mat.get_col(c, &(*out), start, end);
 }
 
 void HDF5_numeric_output::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, &(*out), HPT, start, end);
+    mat.fill_row(r, &(*out), start, end);
 }
 
 void HDF5_numeric_output::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, &(*out), HPT, start, end);
+    mat.fill_col(c, &(*out), start, end);
 }
 
 std::unique_ptr<numeric_output> HDF5_numeric_output::clone() const {

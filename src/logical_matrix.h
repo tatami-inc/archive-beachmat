@@ -22,12 +22,7 @@ typedef dense_lin_matrix<int, Rcpp::LogicalVector> dense_logical_matrix;
 
 /* lgCMatrix */
 
-class Csparse_logical_matrix : public Csparse_lin_matrix<int, Rcpp::LogicalVector> {
-public:
-    Csparse_logical_matrix(const Rcpp::RObject&);
-    ~Csparse_logical_matrix();
-    std::unique_ptr<logical_matrix> clone() const;
-};
+typedef Csparse_lin_matrix<int, Rcpp::LogicalVector> Csparse_logical_matrix;
 
 /* lspMatrix */
 
@@ -35,14 +30,7 @@ typedef Psymm_lin_matrix<int, Rcpp::LogicalVector> Psymm_logical_matrix;
 
 /* HDF5Matrix */
 
-class HDF5_logical_matrix : public HDF5_lin_matrix<int> {
-public:
-    HDF5_logical_matrix(const Rcpp::RObject&);
-    ~HDF5_logical_matrix();
-    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t); // see LIN_matrix.h for why we use IntegerVector.
-    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    std::unique_ptr<logical_matrix> clone() const;
-};
+typedef HDF5_lin_matrix<int, LGLSXP> HDF5_logical_matrix;
 
 /* Dispatcher */
 

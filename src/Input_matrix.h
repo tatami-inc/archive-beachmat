@@ -50,7 +50,7 @@ protected:
 template<typename T, class V>
 class Csparse_matrix : public any_matrix {
 public:    
-    Csparse_matrix(const Rcpp::RObject&, T);
+    Csparse_matrix(const Rcpp::RObject&);
     ~Csparse_matrix();
 
     T get(size_t, size_t);
@@ -63,11 +63,12 @@ public:
 protected:
     Rcpp::IntegerVector i, p;
     V x;
-    const T fill;
 
     size_t currow, curstart, curend;
     std::vector<int> indices; // Left as 'int' to simplify comparisons with 'i' and 'p'.
     void update_indices(size_t, size_t, size_t);
+
+    T get_empty() const; // Specialized function for each realization (easy to extend for non-int/double).
 };
 
 /* symmetric packed Matrix */
@@ -97,17 +98,17 @@ protected:
 
 /* HDF5Matrix */
 
-template<typename T>
+template<typename T, int RTYPE>
 class HDF5_matrix : public any_matrix {
 public:
-    HDF5_matrix(const Rcpp::RObject&, int, const H5T_class_t&);
+    HDF5_matrix(const Rcpp::RObject&);
     ~HDF5_matrix();
 
-    void extract_row(size_t, T*, const H5::DataType&, size_t, size_t);
-    void extract_col(size_t, T*, const H5::DataType&, size_t, size_t);
-    void extract_one(size_t, size_t, T*, const H5::DataType&);  
+    void extract_row(size_t, T*, size_t, size_t);
+    void extract_col(size_t, T*, size_t, size_t);
+    void extract_one(size_t, size_t, T*);  
 
-    const H5::DataSet& get_dataset() const;
+    const H5::DataType& get_datatype() const;
 protected:
     Rcpp::RObject realized;
 
@@ -115,6 +116,9 @@ protected:
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
+
+    H5::DataType HDT;
+    H5T_class_t set_types ();
 };
 
 #include "Input_methods.h"

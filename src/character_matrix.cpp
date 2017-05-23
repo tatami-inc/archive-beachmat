@@ -48,9 +48,10 @@ std::unique_ptr<character_matrix> simple_character_matrix::clone() const {
 
 /* Methods for the HDF5 character matrix. */
 
-HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : mat(incoming, STRSXP, H5T_STRING), str_type(mat.get_dataset()) {
+HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : mat(incoming) {
+    const H5::DataType& str_type=mat.get_datatype();
     if (!str_type.isVariableStr()) { 
-        auto bufsize=str_type.getSize(); 
+        bufsize=str_type.getSize(); 
         row_buf.resize(bufsize*(mat.get_ncol()));
         col_buf.resize(bufsize*(mat.get_nrow()));
         one_buf.resize(bufsize);
@@ -71,8 +72,7 @@ size_t HDF5_character_matrix::get_ncol() const {
 
 void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
     char* ref=row_buf.data();
-    mat.extract_row(r, ref, str_type, start, end);
-    auto bufsize=str_type.getSize(); 
+    mat.extract_row(r, ref, start, end);
     for (size_t c=start; c<end; ++c, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
@@ -81,8 +81,7 @@ void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, 
 
 void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
     char* ref=col_buf.data();
-    mat.extract_col(c, ref, str_type, start, end);
-    auto bufsize=str_type.getSize(); 
+    mat.extract_col(c, ref, start, end);
     for (size_t r=start; r<end; ++r, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
@@ -91,7 +90,7 @@ void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, 
  
 Rcpp::String HDF5_character_matrix::get(size_t r, size_t c) { 
     char* ref=one_buf.data();
-    mat.extract_one(r, c, ref, str_type);
+    mat.extract_one(r, c, ref);
     return ref;
 }
 

@@ -68,7 +68,7 @@ Rcpp::RObject simple_output<T, V>::yield() {
 /* Methods for HDF5 output matrix. */
 
 template<typename T, class V>
-HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, const H5::DataType& HPT, T f) : any_matrix(nr, nc), FILL(f) {
+HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, const H5::DataType& hdt, T f) : any_matrix(nr, nc), HDT(hdt), FILL(f) {
     // File opening.
     Rcpp::Environment hdf5env("package:HDF5Array");
     Rcpp::Function filenamefun=hdf5env["getHDF5DumpFile"];
@@ -76,7 +76,7 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, const H5::DataType& HPT, T
     hfile.openFile(fname, H5F_ACC_RDWR);
 
     H5::DSetCreatPropList plist;
-    plist.setFillValue(HPT, &FILL);
+    plist.setFillValue(HDT, &FILL);
     hsize_t dims[2];
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
     dims[1]=this->nrow; 
@@ -85,7 +85,7 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, const H5::DataType& HPT, T
     // Creating the data set.
     Rcpp::Function datanamefun=hdf5env["getHDF5DumpName"];
     dname=make_to_string(datanamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
-    hdata=hfile.createDataSet(dname, HPT, hspace, plist); 
+    hdata=hfile.createDataSet(dname, HDT, hspace, plist); 
 
     Rcpp::Function appendfun=hdf5env["appendDatasetCreationToHDF5DumpLog"];
     appendfun(Rcpp::StringVector(fname), 
@@ -106,20 +106,19 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, const H5::DataType& HPT, T
     onespace=H5::DataSpace(1, one_count);
     onespace.selectAll();
 
+    // Setting logical attributes.
+    if (V().sexp_type()==LGLSXP) {
+        H5::StrType str_type(0, H5T_VARIABLE);
+        H5::DataSpace att_space(1, one_count);
+        H5::Attribute att = hdata.createAttribute("storage.mode", str_type, att_space);
+        att.write(str_type, std::string("logical"));
+    }
+
     return;
 }
 
 template<typename T, class V>
 HDF5_output<T, V>::~HDF5_output() {}
-
-template<typename T, class V>
-void HDF5_output<T, V>::set_logical() {
-    H5::StrType str_type(0, H5T_VARIABLE);
-    H5::DataSpace att_space(1, one_count);
-    H5::Attribute att = hdata.createAttribute("storage.mode", str_type, att_space);
-    att.write(str_type, std::string("logical"));
-    return;
-}
 
 template<typename T, class V>
 void HDF5_output<T, V>::select_col(size_t c, size_t start, size_t end) {
@@ -133,9 +132,9 @@ void HDF5_output<T, V>::select_col(size_t c, size_t start, size_t end) {
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::fill_col(size_t c, T* in, const H5::DataType& HPT, size_t start, size_t end) {
+void HDF5_output<T, V>::fill_col(size_t c, T* in, size_t start, size_t end) {
     select_col(c, start, end);
-    hdata.write(in, HPT, colspace, hspace);
+    hdata.write(in, HDT, colspace, hspace);
     return;
 }
 
@@ -151,9 +150,9 @@ void HDF5_output<T, V>::select_row(size_t r, size_t start, size_t end) {
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::fill_row(size_t c, T* in, const H5::DataType& HPT, size_t start, size_t end) {
+void HDF5_output<T, V>::fill_row(size_t c, T* in, size_t start, size_t end) {
     select_row(c, start, end);
-    hdata.write(in, HPT, rowspace, hspace);
+    hdata.write(in, HDT, rowspace, hspace);
     return;
 }
 
@@ -166,36 +165,36 @@ void HDF5_output<T, V>::select_one(size_t r, size_t c) {
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::fill(size_t r, size_t c, T in, const H5::DataType& HPT) {
+void HDF5_output<T, V>::fill(size_t r, size_t c, T in) {
     select_one(r, c);
-    hdata.write(&in, HPT, onespace, hspace);
+    hdata.write(&in, HDT, onespace, hspace);
     return;
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::get_row(size_t r, T* out, const H5::DataType& HPT, size_t start, size_t end) { 
+void HDF5_output<T, V>::get_row(size_t r, T* out, size_t start, size_t end) { 
     select_row(r, start, end);
-    hdata.read(out, HPT, rowspace, hspace);
+    hdata.read(out, HDT, rowspace, hspace);
     return;
 } 
 
 template<typename T, class V>
-void HDF5_output<T, V>::get_col(size_t c, T* out, const H5::DataType& HPT, size_t start, size_t end) { 
+void HDF5_output<T, V>::get_col(size_t c, T* out, size_t start, size_t end) { 
     select_col(c, start, end);
-    hdata.read(out, HPT, colspace, hspace);
+    hdata.read(out, HDT, colspace, hspace);
     return;
 }
 
 template<typename T, class V>
-T HDF5_output<T, V>::get(size_t r, size_t c, const H5::DataType& HPT) { 
+T HDF5_output<T, V>::get(size_t r, size_t c) { 
     select_one(r, c);
     T out;
-    hdata.read(&out, HPT, onespace, hspace);
+    hdata.read(&out, HDT, onespace, hspace);
     return out;
 }
 
 template<typename T, class V>
-Rcpp::RObject HDF5_output<T, V>::yield(const H5::DataType& HPT) {
+Rcpp::RObject HDF5_output<T, V>::yield() {
     std::string seedclass="HDF5ArraySeed";
     Rcpp::S4 h5seed(seedclass);
 
@@ -216,7 +215,7 @@ Rcpp::RObject HDF5_output<T, V>::yield(const H5::DataType& HPT) {
         throw_custom_error("missing 'first_val' slot in ", seedclass, " object");
     }
     if (this->nrow && this->ncol) { 
-        h5seed.slot("first_val") = get(0, 0, HPT);
+        h5seed.slot("first_val") = get(0, 0);
     } else {
         h5seed.slot("first_val") = V(0); // empty vector.
     }

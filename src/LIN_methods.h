@@ -142,7 +142,7 @@ std::unique_ptr<lin_matrix<T> > dense_lin_matrix<T, V>::clone() const {
 /* Defining the column-sparse interface. */
 
 template<typename T, class V>
-Csparse_lin_matrix<T, V>::Csparse_lin_matrix(const Rcpp::RObject& incoming, T fill) : mat(incoming, fill) {}
+Csparse_lin_matrix<T, V>::Csparse_lin_matrix(const Rcpp::RObject& incoming) : mat(incoming) {}
 
 template<typename T, class V>
 Csparse_lin_matrix<T, V>::~Csparse_lin_matrix() {}
@@ -184,6 +184,11 @@ void Csparse_lin_matrix<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator o
 template<typename T, class V>
 T Csparse_lin_matrix<T, V>::get(size_t r, size_t c) {
     return mat.get(r, c);
+}
+
+template<typename T, class V>
+std::unique_ptr<lin_matrix<T> > Csparse_lin_matrix<T, V>::clone() const {
+    return std::unique_ptr<lin_matrix<T> >(new Csparse_lin_matrix<T, V>(*this));
 }
 
 /* Defining the packed symmetric interface. */
@@ -240,56 +245,34 @@ std::unique_ptr<lin_matrix<T> > Psymm_lin_matrix<T, V>::clone() const {
 
 /* Defining the HDF5 interface. */
 
-template<typename T>
-HDF5_lin_matrix<T>::HDF5_lin_matrix(const Rcpp::RObject& incoming, int expected, const H5T_class_t& hct, const H5::PredType& hpt) : 
-    mat(incoming, expected, hct), HPT(hpt), rowtmp(mat.get_ncol()), coltmp(mat.get_nrow()) {}
+template<typename T, int RTYPE>
+HDF5_lin_matrix<T, RTYPE>::HDF5_lin_matrix(const Rcpp::RObject& incoming) : mat(incoming), rowtmp(mat.get_ncol()), coltmp(mat.get_nrow()) {}
 
-template<typename T>
-HDF5_lin_matrix<T>::~HDF5_lin_matrix() {}
+template<typename T, int RTYPE>
+HDF5_lin_matrix<T, RTYPE>::~HDF5_lin_matrix() {}
 
-template<typename T>
-size_t HDF5_lin_matrix<T>::get_nrow() const {
+template<typename T, int RTYPE>
+size_t HDF5_lin_matrix<T, RTYPE>::get_nrow() const {
     return mat.get_nrow();
 }
 
-template<typename T>
-size_t HDF5_lin_matrix<T>::get_ncol() const {
+template<typename T, int RTYPE>
+size_t HDF5_lin_matrix<T, RTYPE>::get_ncol() const {
     return mat.get_ncol();
 }
 
-template<typename T>
-void HDF5_lin_matrix<T>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, coltmp.data(), HPT, start, end);
-    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
-    return;
-}
+// get_col/row defined for each realized class separately.
 
-template<typename T>
-void HDF5_lin_matrix<T>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, coltmp.data(), HPT, start, end);
-    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
-    return;
-}
-
-template<typename T>
-void HDF5_lin_matrix<T>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, rowtmp.data(), HPT, start, end);
-    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
-    return;
-}
-
-template<typename T>
-void HDF5_lin_matrix<T>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, rowtmp.data(), HPT, start, end);
-    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
-    return;
-}
-
-template<typename T>
-T HDF5_lin_matrix<T>::get(size_t r, size_t c) {
+template<typename T, int RTYPE>
+T HDF5_lin_matrix<T, RTYPE>::get(size_t r, size_t c) {
     T out;
-    mat.extract_one(r, c, &out, HPT);
+    mat.extract_one(r, c, &out);
     return out;
+}
+
+template<typename T, int RTYPE>
+std::unique_ptr<lin_matrix<T> > HDF5_lin_matrix<T, RTYPE>::clone() const {
+    return std::unique_ptr<lin_matrix<T> >(new HDF5_lin_matrix<T, RTYPE>(*this));
 }
 
 /****************************************
@@ -441,7 +424,7 @@ std::unique_ptr<lin_output<T> > simple_lin_output<T, V>::clone() const {
 
 template<typename T, class V>
 HDF5_lin_output<T, V>::HDF5_lin_output(size_t nr, size_t nc, const H5::DataType& hpt, T fill) : mat(nr, nc, hpt, fill), 
-    HPT(hpt), rowtmp(mat.get_ncol()), coltmp(mat.get_nrow()) {}
+    rowtmp(mat.get_ncol()), coltmp(mat.get_nrow()) {}
 
 template<typename T, class V>
 HDF5_lin_output<T, V>::~HDF5_lin_output() {}
@@ -458,74 +441,74 @@ size_t HDF5_lin_output<T, V>::get_ncol() const {
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, coltmp.data(), HPT, start, end);
+    mat.get_col(c, coltmp.data(), start, end);
     std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, coltmp.data(), HPT, start, end);
+    mat.get_col(c, coltmp.data(), start, end);
     std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, rowtmp.data(), HPT, start, end);
+    mat.get_row(r, rowtmp.data(), start, end);
     std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, rowtmp.data(), HPT, start, end);
+    mat.get_row(r, rowtmp.data(), start, end);
     std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 T HDF5_lin_output<T, V>::get(size_t r, size_t c) {
-    return mat.get(r, c, HPT);
+    return mat.get(r, c);
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, coltmp.data(), HPT, start, end);
+    mat.fill_col(c, coltmp.data(), start, end);
     std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, coltmp.data(), HPT, start, end);
+    mat.fill_col(c, coltmp.data(), start, end);
     std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, rowtmp.data(), HPT, start, end);
+    mat.fill_row(r, rowtmp.data(), start, end);
     std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, rowtmp.data(), HPT, start, end);
+    mat.fill_row(r, rowtmp.data(), start, end);
     std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 
 template<typename T, class V>
 void HDF5_lin_output<T, V>::fill(size_t r, size_t c, T in) {
-    mat.fill(r, c, in, HPT);
+    mat.fill(r, c, in);
     return;
 }
 
 template<typename T, class V>
 Rcpp::RObject HDF5_lin_output<T, V>::yield() {
-    return mat.yield(HPT);
+    return mat.yield();
 }
 
 #endif

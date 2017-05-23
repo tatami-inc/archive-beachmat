@@ -94,7 +94,7 @@ private:
 template<typename T, class V>
 class Csparse_lin_matrix : public lin_matrix<T> {
 public:    
-    Csparse_lin_matrix(const Rcpp::RObject&, T);
+    Csparse_lin_matrix(const Rcpp::RObject&);
     ~Csparse_lin_matrix();
 
     size_t get_nrow() const;
@@ -107,6 +107,8 @@ public:
     void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
     T get(size_t, size_t);
+
+    std::unique_ptr<lin_matrix<T> > clone() const;
 private:
     Csparse_matrix<T, V> mat;
 };
@@ -137,10 +139,10 @@ private:
 
 /* HDF5Matrix of LINs */
 
-template<typename T>
+template<typename T, int RTYPE>
 class HDF5_lin_matrix : public lin_matrix<T> {
 public:
-    HDF5_lin_matrix(const Rcpp::RObject&, int, const H5T_class_t&, const H5::PredType&);
+    HDF5_lin_matrix(const Rcpp::RObject&);
     ~HDF5_lin_matrix();
 
     size_t get_nrow() const;
@@ -153,9 +155,10 @@ public:
     void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
     T get(size_t, size_t);
+
+    std::unique_ptr<lin_matrix<T> > clone() const;
 protected:
-    HDF5_matrix<T> mat;
-    const H5::PredType& HPT;
+    HDF5_matrix<T, RTYPE> mat;
     std::vector<T> rowtmp, coltmp;
 };
 

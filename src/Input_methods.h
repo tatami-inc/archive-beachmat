@@ -101,7 +101,7 @@ void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
 /* Methods for a Csparse matrix. */
 
 template <typename T, class V>
-Csparse_matrix<T, V>::Csparse_matrix(const Rcpp::RObject& incoming, T f) : fill(f), currow(0), curstart(0), curend(this->ncol) {
+Csparse_matrix<T, V>::Csparse_matrix(const Rcpp::RObject& incoming) : currow(0), curstart(0), curend(this->ncol) {
     std::string ctype=check_Matrix_class(incoming, "gCMatrix");  
     this->fill_dims(get_safe_slot(incoming, "Dim"));
     const size_t& NC=this->ncol;
@@ -172,7 +172,7 @@ T Csparse_matrix<T, V>::get(size_t r, size_t c) {
     if (loc!=iend && *loc==r) { 
         return x[loc - i.begin()];
     } else {
-        return fill;
+        return get_empty();
     }
 }
 
@@ -244,7 +244,7 @@ template <class Iter>
 void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
     check_rowargs(r, start, end);
     update_indices(r, start, end);
-    std::fill(out, out+end-start, fill);
+    std::fill(out, out+end-start, get_empty());
 
     auto pIt=p.begin()+start+1; // Points to first-past-the-end for each 'c'.
     for (size_t c=start; c<end; ++c, ++pIt, ++out) { 
@@ -272,7 +272,7 @@ void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end)
         eIt=std::lower_bound(iIt, eIt, end);
     }
 
-    std::fill(out, out+end-start, fill);
+    std::fill(out, out+end-start, get_empty());
     for (; iIt!=eIt; ++iIt, ++xIt) {
         *(out + (*iIt - int(start)))=*xIt;
     }
@@ -413,8 +413,8 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
 
 /* Methods for a HDF5 matrix. */
 
-template<typename T>
-HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H5T_class_t& htc) : realized(R_NilValue) { 
+template<typename T, int RTYPE>
+HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_NilValue) { 
     std::string ctype=get_class(incoming);
     if (incoming.isS4()) {
         if (ctype=="DelayedMatrix") { 
@@ -437,9 +437,9 @@ HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H
 
     // Checking first value.
     const Rcpp::RObject& firstval=get_safe_slot(h5_seed, "first_val");
-    if (firstval.sexp_type()!=expected) { 
+    if (firstval.sexp_type()!=RTYPE) { 
         std::stringstream err;
-        err << "'first_val' slot in a " << get_class(h5_seed) << " object should be " << translate_type(expected);
+        err << "'first_val' slot in a " << get_class(h5_seed) << " object should be " << translate_type(RTYPE);
         throw std::runtime_error(err.str().c_str());
     }
 
@@ -468,12 +468,13 @@ HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H
     // Setting up the HDF5 accessors.
     hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);
     hdata = hfile.openDataSet(H5std_string(dataset));
-    if (hdata.getTypeClass()!=htc) {
+    auto expected=set_types();
+    if (hdata.getTypeClass()!=expected) {
         std::stringstream err;
         err << "data type in HDF5 file is not ";
-        if (htc==H5T_FLOAT) { err << "floating-point"; }
-        else if (htc==H5T_INTEGER) { err << "integer"; }
-        else if (htc==H5T_STRING) { err << "character"; }
+        if (expected==H5T_FLOAT) { err << "floating-point"; }
+        else if (expected==H5T_INTEGER) { err << "integer"; }
+        else if (expected==H5T_STRING) { err << "character"; }
         else { err << "the specified type"; }
         throw std::runtime_error(err.str().c_str());
     }
@@ -504,11 +505,29 @@ HDF5_matrix<T>::HDF5_matrix(const Rcpp::RObject& incoming, int expected, const H
     return;
 }
 
-template<typename T>
-HDF5_matrix<T>::~HDF5_matrix() {}
+template<typename T, int RTYPE>
+H5T_class_t HDF5_matrix<T, RTYPE>::set_types () {
+    switch (RTYPE) {
+        case REALSXP:
+            HDT=H5::DataType(H5::PredType::NATIVE_DOUBLE);
+            return H5T_FLOAT;
+        case INTSXP: case LGLSXP:
+            HDT=H5::DataType(H5::PredType::NATIVE_INT32);
+            return H5T_INTEGER;
+        case STRSXP:
+            HDT=H5::DataType(H5::StrType(hdata));
+            return H5T_STRING;
+    }
+    std::stringstream err;
+    err << "unsupported sexptype '" << RTYPE << "'";
+    throw std::runtime_error(err.str().c_str());
+}
 
-template<typename T>
-void HDF5_matrix<T>::extract_row(size_t r, T* out, const H5::DataType& dt, size_t start, size_t end) { 
+template<typename T, int RTYPE>
+HDF5_matrix<T, RTYPE>::~HDF5_matrix() {}
+
+template<typename T, int RTYPE>
+void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t end) { 
     check_rowargs(r, start, end);
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
@@ -516,12 +535,12 @@ void HDF5_matrix<T>::extract_row(size_t r, T* out, const H5::DataType& dt, size_
     h5_start[0] = start;
     h5_start[1] = r;
     hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
-    hdata.read(out, dt, rowspace, hspace);
+    hdata.read(out, HDT, rowspace, hspace);
     return;
 } 
 
-template<typename T>
-void HDF5_matrix<T>::extract_col(size_t c, T* out, const H5::DataType& dt, size_t start, size_t end) { 
+template<typename T, int RTYPE>
+void HDF5_matrix<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t end) { 
     check_colargs(c, start, end);
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
@@ -529,23 +548,23 @@ void HDF5_matrix<T>::extract_col(size_t c, T* out, const H5::DataType& dt, size_
     h5_start[0] = c;
     h5_start[1] = start;
     hspace.selectHyperslab(H5S_SELECT_SET, col_count, h5_start);
-    hdata.read(out, dt, colspace, hspace);
+    hdata.read(out, HDT, colspace, hspace);
     return;
 }
 
-template<typename T>
-void HDF5_matrix<T>::extract_one(size_t r, size_t c, T* out, const H5::DataType& dt) { 
+template<typename T, int RTYPE>
+void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
     check_oneargs(r, c);
     h5_start[0]=c;
     h5_start[1]=r;  
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
-    hdata.read(out, dt, onespace, hspace);
+    hdata.read(out, HDT, onespace, hspace);
     return;
 }
 
-template<typename T>
-const H5::DataSet& HDF5_matrix<T>::get_dataset() const {
-    return hdata;
+template<typename T, int RTYPE>
+const H5::DataType& HDF5_matrix<T, RTYPE>::get_datatype() const { 
+    return HDT;
 }
 
 #endif

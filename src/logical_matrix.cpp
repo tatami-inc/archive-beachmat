@@ -2,58 +2,59 @@
 
 namespace beachmat {
 
-/* Column-sparse logical methods. */
+/* Csparse logical input methods. */
 
-Csparse_logical_matrix::Csparse_logical_matrix(const Rcpp::RObject& incoming) : Csparse_lin_matrix<int, Rcpp::LogicalVector>(incoming, 0) {}
-
-Csparse_logical_matrix::~Csparse_logical_matrix() {}
-
-std::unique_ptr<logical_matrix> Csparse_logical_matrix::clone() const {
-    return std::unique_ptr<logical_matrix>(new Csparse_logical_matrix(*this));
-}
+template<>
+int Csparse_matrix<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
 
 /* HDF5 logical input methods. */
 
-HDF5_logical_matrix::HDF5_logical_matrix(const Rcpp::RObject& incoming) : 
-    HDF5_lin_matrix<int>(incoming, LGLSXP, H5T_INTEGER, H5::PredType::NATIVE_INT32) {}
-
-HDF5_logical_matrix::~HDF5_logical_matrix() {}
-
-void HDF5_logical_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), HPT, start, end);
-}
-
+template<>
 void HDF5_logical_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), HPT, start, end);
+    mat.extract_col(c, &(*out), start, end);
+    return;
 }
 
-std::unique_ptr<logical_matrix> HDF5_logical_matrix::clone() const {
-    return std::unique_ptr<logical_matrix>(new HDF5_logical_matrix(*this));
+template<>
+void HDF5_logical_matrix::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.extract_col(c, coltmp.data(), start, end);
+    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
+    return;
+}
+
+template<>
+void HDF5_logical_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.extract_row(r, &(*out), start, end);
+    return;
+}
+
+template<>
+void HDF5_logical_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.extract_row(r, rowtmp.data(), start, end);
+    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
+    return;
 }
 
 /* HDF5 logical output methods. */
 
-HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_lin_output(nr, nc, H5::PredType::NATIVE_INT32, 0) {
-    mat.set_logical();
-    return;
-}
+HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_lin_output(nr, nc, H5::PredType::NATIVE_INT32, 0) {}
 
 HDF5_logical_output::~HDF5_logical_output() {}
 
 void HDF5_logical_output::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, &(*out), HPT, start, end);
+    mat.get_row(r, &(*out), start, end);
 }
 
 void HDF5_logical_output::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, &(*out), HPT, start, end);
+    mat.get_col(c, &(*out), start, end);
 }
 
 void HDF5_logical_output::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, &(*out), HPT, start, end);
+    mat.fill_row(r, &(*out), start, end);
 }
 
 void HDF5_logical_output::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, &(*out), HPT, start, end);
+    mat.fill_col(c, &(*out), start, end);
 }
 
 std::unique_ptr<logical_output> HDF5_logical_output::clone() const {

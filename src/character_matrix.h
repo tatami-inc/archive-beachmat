@@ -63,8 +63,8 @@ public:
 
     std::unique_ptr<character_matrix> clone() const;
 protected:
-    HDF5_matrix<char> mat; 
-    H5::StrType str_type;
+    HDF5_matrix<char, STRSXP> mat; 
+    size_t bufsize;
     std::vector<char> row_buf, col_buf, one_buf;
 };
 
