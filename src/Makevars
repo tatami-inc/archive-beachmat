@@ -1,4 +1,6 @@
-PKG_LIBS=${R_HOME}/library/Rhdf5lib/lib/libhdf5_cpp.a ${R_HOME}/library/Rhdf5lib/lib/libhdf5.a -ldl -lz
+RHDF5LIB_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave`
+PKG_LIBS=$(RHDF5LIB_LIBS)
 
 .PHONY: all libbeachmat
 
