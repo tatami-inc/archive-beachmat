@@ -1,22 +1,22 @@
-RHDF5LIB_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
-	"${R_HOME}/bin/R" --vanilla --slave`
+RHDF5LIB_LIBS=$(shell echo 'Rhdf5lib::pkgconfig("PKG_LIBS")'|\
+	"${R_HOME}/bin/R" --vanilla --slave)
 PKG_LIBS=$(RHDF5LIB_LIBS)
 
 .PHONY: all libbeachmat
 
 all: libbeachmat $(SHLIB)
 
-BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
+BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib${R_ARCH}"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
 libbeachmat: $(SHLIB)
 	mkdir -p $(BEACHMAT_LIBDIR) $(BEACHMAT_INCLUDEDIR)
 	cp *.h $(BEACHMAT_INCLUDEDIR)
-	ar rc libbeachmat.a *.o
-	mv $< libbeachmat.so
+	mv $< libbeachmat.dll
 	mv libbeachmat.* $(BEACHMAT_LIBDIR)
 
 shlib-clean: clean
 
-clean: 
+clean:
 	rm -f libbeachmat.*
+
