@@ -37,28 +37,59 @@ void HDF5_logical_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, s
 
 /* HDF5 logical output methods. */
 
-HDF5_logical_output::HDF5_logical_output(int nr, int nc) : HDF5_lin_output(nr, nc, H5::PredType::NATIVE_INT32, 0) {}
+template<>
+int HDF5_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
 
-HDF5_logical_output::~HDF5_logical_output() {}
-
+template<> 
 void HDF5_logical_output::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     mat.get_row(r, &(*out), start, end);
+    return;
 }
 
+template<>
+void HDF5_logical_output::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, rowtmp.data(), start, end);
+    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
+    return;
+}
+
+template<> 
 void HDF5_logical_output::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     mat.get_col(c, &(*out), start, end);
+    return;
 }
 
+template<>
+void HDF5_logical_output::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, coltmp.data(), start, end);
+    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
+    return;
+}
+
+template<> 
 void HDF5_logical_output::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     mat.fill_row(r, &(*out), start, end);
+    return;
 }
 
+template<>
+void HDF5_logical_output::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.fill_row(r, rowtmp.data(), start, end);
+    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
+    return;
+}
+
+template<> 
 void HDF5_logical_output::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     mat.fill_col(c, &(*out), start, end);
+    return;
 }
 
-std::unique_ptr<logical_output> HDF5_logical_output::clone() const {
-    return std::unique_ptr<logical_output>(new HDF5_logical_output(*this));
+template<>
+void HDF5_logical_output::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.fill_col(c, coltmp.data(), start, end);
+    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
+    return;
 }
 
 /* Dispatch definition */

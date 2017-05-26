@@ -32,7 +32,7 @@ private:
 template<typename T, class V>
 class HDF5_output : public any_matrix {
 public:
-    HDF5_output(size_t, size_t, const H5::DataType&, T);
+    HDF5_output(size_t, size_t);
     ~HDF5_output();
     
     void fill_row(size_t, T*, size_t, size_t);
@@ -44,6 +44,7 @@ public:
     T get(size_t, size_t);
 
     Rcpp::RObject yield();
+
 protected:
     std::string fname, dname;
 
@@ -53,10 +54,11 @@ protected:
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
 
     H5::DataType HDT;
-    const T FILL;
     void select_row(size_t, size_t, size_t);
     void select_col(size_t, size_t, size_t);
     void select_one(size_t, size_t);
+
+    T get_empty() const;
 };
 
 #include "Output_methods.h"

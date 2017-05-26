@@ -247,7 +247,7 @@ private:
 template<typename T, class V>
 class HDF5_lin_output : public lin_output<T> {
 public:
-    HDF5_lin_output(size_t, size_t, const H5::DataType&, T);
+    HDF5_lin_output(size_t, size_t);
     ~HDF5_lin_output();
 
     size_t get_nrow() const;
@@ -270,9 +270,10 @@ public:
     void fill(size_t, size_t, T);
 
     Rcpp::RObject yield();
+
+    std::unique_ptr<lin_output<T> > clone() const;
 protected:
     HDF5_output<T, V> mat;
-    const H5::DataType HPT;
     std::vector<T> rowtmp, coltmp;
 };
 

@@ -36,16 +36,7 @@ typedef simple_lin_output<int, Rcpp::IntegerVector> simple_integer_output;
 
 /* HDF5 output integer matrix */
 
-class HDF5_integer_output : public HDF5_lin_output<int, Rcpp::IntegerVector> {
-public:    
-    HDF5_integer_output(int, int);
-    ~HDF5_integer_output();
-    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    std::unique_ptr<integer_output> clone() const;
-};
+typedef HDF5_lin_output<int, Rcpp::IntegerVector> HDF5_integer_output;
 
 /* Output dispatchers */
 

@@ -48,16 +48,7 @@ typedef simple_lin_output<int, Rcpp::LogicalVector> simple_logical_output;
 
 /* HDF5 output logical matrix */
 
-class HDF5_logical_output : public HDF5_lin_output<int, Rcpp::LogicalVector> {
-public:
-    HDF5_logical_output(int, int);
-    ~HDF5_logical_output();
-    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    std::unique_ptr<logical_output> clone() const;
-};
+typedef HDF5_lin_output<int, Rcpp::LogicalVector> HDF5_logical_output;
 
 /* Output dispatchers */
 

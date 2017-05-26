@@ -68,30 +68,47 @@ Rcpp::RObject simple_output<T, V>::yield() {
 /* Methods for HDF5 output matrix. */
 
 template<typename T, class V>
-HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, const H5::DataType& hdt, T f) : any_matrix(nr, nc), HDT(hdt), FILL(f) {
+HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
     // File opening.
     Rcpp::Environment hdf5env("package:HDF5Array");
     Rcpp::Function filenamefun=hdf5env["getHDF5DumpFile"];
     fname=make_to_string(filenamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
     hfile.openFile(fname, H5F_ACC_RDWR);
 
+    // Type setting.
+    const int RTYPE=V().sexp_type();
+    switch (RTYPE) {
+        case REALSXP:
+            HDT=H5::DataType(H5::PredType::NATIVE_DOUBLE);
+            break;
+        case INTSXP: case LGLSXP:
+            HDT=H5::DataType(H5::PredType::NATIVE_INT32);
+            break;
+        default:
+            std::stringstream err;
+            err << "unsupported sexptype '" << RTYPE << "'";
+            throw std::runtime_error(err.str().c_str());
+    }
+
+    // Creating the data set.
     H5::DSetCreatPropList plist;
-    plist.setFillValue(HDT, &FILL);
+    const T empty=get_empty();
+    plist.setFillValue(HDT, &empty);
     hsize_t dims[2];
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
     dims[1]=this->nrow; 
     hspace.setExtentSimple(2, dims);
 
-    // Creating the data set.
     Rcpp::Function datanamefun=hdf5env["getHDF5DumpName"];
     dname=make_to_string(datanamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
     hdata=hfile.createDataSet(dname, HDT, hspace, plist); 
 
+    // Adding to the log file.
     Rcpp::Function appendfun=hdf5env["appendDatasetCreationToHDF5DumpLog"];
     appendfun(Rcpp::StringVector(fname), 
             Rcpp::StringVector(dname), 
             Rcpp::IntegerVector::create(this->nrow, this->ncol),
-            Rcpp::StringVector(translate_type(V().sexp_type())));
+            Rcpp::StringVector(translate_type(RTYPE)));
 
     h5_start[0]=0;
     h5_start[1]=0;
@@ -192,6 +209,8 @@ T HDF5_output<T, V>::get(size_t r, size_t c) {
     hdata.read(&out, HDT, onespace, hspace);
     return out;
 }
+
+// get_empty() defined for each realized class separately.
 
 template<typename T, class V>
 Rcpp::RObject HDF5_output<T, V>::yield() {
