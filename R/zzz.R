@@ -14,7 +14,7 @@ pkgconfig <- function(opt = c("PKG_LIBS", "PKG_CPPFLAGS"))
         switch(Sys.info()['sysname'], Linux={
             sprintf('-L%s -Wl,-rpath,%s -lbeachmat -pthread', patharch, patharch)
         }, Darwin={
-            sprintf('%s/libbeachmat.a %s -pthread', patharch, Rhdf5::pkgconfig("PKG_CXX_FLAGS"))
+            sprintf('%s/libbeachmat.a %s -pthread', patharch, capture.output(Rhdf5lib::pkgconfig("PKG_CXX_LIBS")))
         }, Windows={
             sprintf('-L"%s" -lbeachmat -pthread -lws2_32', patharch)
         }
