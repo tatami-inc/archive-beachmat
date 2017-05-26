@@ -40,6 +40,17 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_logical_edge, 2),
     REGISTER(test_character_edge, 2),
 
+    REGISTER(test_numeric_to_logical_output, 3), 
+    REGISTER(test_numeric_to_integer_output, 3),
+    REGISTER(test_integer_to_logical_output, 3),
+    REGISTER(test_integer_to_numeric_output, 3),
+    REGISTER(test_logical_to_integer_output, 3),
+    REGISTER(test_logical_to_numeric_output, 3),
+
+    REGISTER(test_integer_edge_output, 2),
+    REGISTER(test_numeric_edge_output, 2),
+    REGISTER(test_logical_edge_output, 2),
+
     {NULL, NULL, 0}
 };
 

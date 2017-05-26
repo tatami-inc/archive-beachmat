@@ -1,5 +1,7 @@
 # Creating functions to check each set of matrix inputs.
 
+###############################
+
 .check_output_mat <- function(FUN, ..., hdf5.out, cxxfun) { 
     for (flip in c(TRUE, FALSE)) { 
         # When flip=TRUE, we fill the output matrix based on the input matrix,
@@ -31,6 +33,20 @@
     return(invisible(NULL))
 }
    
+check_integer_output_mat <- function(FUN, ..., hdf5.out) {
+    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_integer_output)
+} 
+
+check_numeric_output_mat <- function(FUN, ..., hdf5.out) {
+    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_numeric_output)
+} 
+
+check_logical_output_mat <- function(FUN, ..., hdf5.out) {
+    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_logical_output)
+} 
+
+###############################
+
 .check_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out, cxxfun, fill) { 
     rx <- range(by.row)
     ry <- range(by.col)
@@ -66,17 +82,10 @@
     return(invisible(NULL))
 }
 
-check_integer_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_integer_output)
-} 
 
 check_integer_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
     .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, hdf5.out=hdf5.out, 
                         cxxfun=cxx_test_integer_output_slice, fill=0L)
-} 
-
-check_numeric_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_numeric_output)
 } 
 
 check_numeric_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
@@ -84,14 +93,12 @@ check_numeric_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
                         cxxfun=cxx_test_numeric_output_slice, fill=0)
 } 
 
-check_logical_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_logical_output)
-} 
-
 check_logical_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
     .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, hdf5.out=hdf5.out, 
                         cxxfun=cxx_test_logical_output_slice, fill=FALSE)
 } 
+
+###############################
 
 .check_execution_order <- function(FUN, cxxfun, type) {
     # Checking that the output function in '.Call' does not overwrite the 
@@ -139,5 +146,97 @@ check_numeric_order <- function(FUN, cxxfun) {
 
 check_logical_order <- function(FUN, cxxfun) {
     .check_execution_order(FUN, cxxfun=cxx_test_logical_output, type="logical")
+}
+
+###############################
+
+.check_converted_output <- function(FUN, ..., hdf5.out, cxxfun, rfun) { 
+    for (flip in c(TRUE, FALSE)) { # Again, checking flippedness.
+        for (i in 1:3) { 
+            test.mat <- FUN(...)
+            
+            out <- .Call(cxxfun, test.mat, i, flip)
+            if (hdf5.out) { 
+                testthat::expect_s4_class(out, "HDF5Matrix")
+                out <- as.matrix(out)
+            }
+            
+            ref <- as.matrix(test.mat)
+            if (flip) {
+                if (i==1L) {
+                    ref <- ref[nrow(ref):1,,drop=FALSE]
+                } else if (i==2L) {
+                    ref <- ref[,ncol(ref):1,drop=FALSE]
+                }
+            }
+            
+            testthat::expect_identical(rfun(ref), out)
+        }
+    }
+    return(invisible(NULL))
+}
+
+check_numeric_converted_output  <- function(FUN, ..., hdf5.out) {
+    .check_converted_output(FUN=FUN, ..., cxxfun=cxx_test_numeric_to_integer_output, hdf5.out=hdf5.out, 
+                            rfun=function(x) {
+                                storage.mode(x) <- "integer" 
+                                return(x)
+                            })
+}
+
+check_integer_converted_output <- function(FUN, ..., hdf5.out) {
+    .check_converted_output(FUN=FUN, ..., cxxfun=cxx_test_integer_to_numeric_output, hdf5.out=hdf5.out, 
+                            rfun=function(x) { 
+                                storage.mode(x) <- "double"
+                                return(x)
+                            })
+}
+
+check_logical_converted_output <- function(FUN, ..., hdf5.out) {
+    .check_converted_output(FUN=FUN, ..., cxxfun=cxx_test_logical_to_numeric_output, hdf5.out=hdf5.out, 
+                            rfun=function(x) { 
+                                storage.mode(x) <- "double"
+                                return(x)
+                            })
+    .check_converted_output(FUN=FUN, ..., cxxfun=cxx_test_logical_to_integer_output, hdf5.out=hdf5.out, 
+                            rfun=function(x) { 
+                                storage.mode(x) <- "integer"
+                                return(x)
+                            })
+}
+
+
+###############################
+
+.check_edge_output_errors <- function(x, cxxfun) {
+    testthat::expect_true(.Call(cxxfun, x, 0L))
+
+    testthat::expect_error(.Call(cxxfun, x, 1L), "row index out of range")
+    testthat::expect_error(.Call(cxxfun, x, -1L), "column index out of range")        
+    testthat::expect_error(.Call(cxxfun, x, 2L), "column start index is greater than column end index")
+    testthat::expect_error(.Call(cxxfun, x, -2L), "row start index is greater than row end index")
+    testthat::expect_error(.Call(cxxfun, x, 3L), "column end index out of range")
+    testthat::expect_error(.Call(cxxfun, x, -3L), "row end index out of range")
+    
+    testthat::expect_error(.Call(cxxfun, x, 4L), "row index out of range")
+    testthat::expect_error(.Call(cxxfun, x, -4L), "column index out of range")        
+    testthat::expect_error(.Call(cxxfun, x, 5L), "column start index is greater than column end index")
+    testthat::expect_error(.Call(cxxfun, x, -5L), "row start index is greater than row end index")
+    testthat::expect_error(.Call(cxxfun, x, 6L), "column end index out of range")
+    testthat::expect_error(.Call(cxxfun, x, -6L), "row end index out of range")
+
+    return(invisible(NULL))
+}
+
+check_integer_edge_output_errors <- function(FUN, ...) {
+    .check_edge_output_errors(FUN(...), cxxfun=cxx_test_integer_edge_output)
+}
+
+check_logical_edge_output_errors <- function(FUN, ...) {
+    .check_edge_output_errors(FUN(...), cxxfun=cxx_test_logical_edge_output)
+}
+
+check_numeric_edge_output_errors <- function(FUN, ...) {
+    .check_edge_output_errors(FUN(...), cxxfun=cxx_test_numeric_edge_output)
 }
 

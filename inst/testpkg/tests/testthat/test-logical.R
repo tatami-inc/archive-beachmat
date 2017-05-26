@@ -137,9 +137,13 @@ test_that("Delayed logical matrix input is okay", {
 
 test_that("Logical matrix input conversions are okay", {
     beachtest:::check_logical_conversion(sFUN)
+
     beachtest:::check_logical_conversion(dFUN)
+
     beachtest:::check_logical_conversion(csFUN)
+
     beachtest:::check_logical_conversion(spFUN)
+
     beachtest:::check_logical_conversion(hFUN)
 })
 
@@ -147,9 +151,13 @@ test_that("Logical matrix input conversions are okay", {
 
 test_that("Logical matrix input error generation is okay", {
     beachtest:::check_logical_edge_errors(sFUN)
+
     beachtest:::check_logical_edge_errors(dFUN)
+
     beachtest:::check_logical_edge_errors(csFUN)
+
     beachtest:::check_logical_edge_errors(spFUN)
+
     beachtest:::check_logical_edge_errors(hFUN)
 })
 
@@ -173,6 +181,22 @@ test_that("HDF5 logical matrix output is okay", {
     beachtest:::check_logical_output_slice(hFUN, by.row=12:15, by.col=1:5, hdf5.out=TRUE)
 
     beachtest:::check_logical_order(hFUN)
+})
+
+# Testing conversions:
+
+test_that("Logical matrix output conversions are okay", {
+    beachtest:::check_logical_converted_output(sFUN, hdf5.out=FALSE)
+
+    beachtest:::check_logical_converted_output(hFUN, hdf5.out=TRUE)
+})
+
+# Testing for errors:
+
+test_that("Logical matrix output error generation is okay", {
+    beachtest:::check_logical_edge_output_errors(sFUN)
+
+    beachtest:::check_logical_edge_output_errors(hFUN)
 })
 
 #######################################################

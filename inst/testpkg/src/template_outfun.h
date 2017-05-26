@@ -127,4 +127,49 @@ Rcpp::RObject pump_out_slice (M ptr, O optr, const Rcpp::IntegerVector& mode,
     return optr->yield();
 }
 
+/* This function tests the edge cases and error triggers. */
+
+template <class T, class M>  
+void output_edge (M ptr, const Rcpp::IntegerVector& mode) {
+    if (mode.size()!=1) { 
+        throw std::runtime_error("'mode' should be an integer scalar"); 
+    }
+    const int Mode=mode[0];
+
+    T stuff;
+    if (Mode==0) {
+        ptr->get_row(0, stuff.begin(), 0, 0); // Should not break.
+        ptr->get_col(0, stuff.begin(), 0, 0); 
+        ptr->fill_row(0, stuff.begin(), 0, 0); 
+        ptr->fill_col(0, stuff.begin(), 0, 0); 
+    } else if (Mode==1) {
+        ptr->get_row(-1, stuff.begin()); // break!
+    } else if (Mode==-1) {
+        ptr->get_col(-1, stuff.begin()); // break!
+    } else if (Mode==2) {
+        ptr->get_row(0, stuff.begin(), 1, 0); // break!
+    } else if (Mode==-2) {
+        ptr->get_col(0, stuff.begin(), 1, 0); // break!
+    } else if (Mode==3) {
+        ptr->get_row(0, stuff.begin(), 0, -1); // break!
+    } else if (Mode==-3) {
+        ptr->get_col(0, stuff.begin(), 0, -1); // break!
+    } else if (Mode==4) {
+        ptr->fill_row(-1, stuff.begin()); // break!
+    } else if (Mode==-4) {
+        ptr->fill_col(-1, stuff.begin()); // break!
+    } else if (Mode==5) {
+        ptr->fill_row(0, stuff.begin(), 1, 0); // break!
+    } else if (Mode==-5) {
+        ptr->fill_col(0, stuff.begin(), 1, 0); // break!
+    } else if (Mode==6) {
+        ptr->fill_row(0, stuff.begin(), 0, -1); // break!
+    } else if (Mode==-6) {
+        ptr->fill_col(0, stuff.begin(), 0, -1); // break!
+    }
+   
+    return;
+}
+
+
 #endif

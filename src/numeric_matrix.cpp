@@ -68,8 +68,8 @@ void HDF5_numeric_output::get_col(size_t c, Rcpp::NumericVector::iterator out, s
 
 template<> 
 void HDF5_numeric_output::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    std::copy(out, out + end - start, rowtmp.begin());
     mat.fill_row(r, rowtmp.data(), start, end);
-    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
     return;
 }
 
@@ -81,8 +81,8 @@ void HDF5_numeric_output::fill_row(size_t r, Rcpp::NumericVector::iterator out, 
 
 template<> 
 void HDF5_numeric_output::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    std::copy(out, out + end - start, coltmp.begin());
     mat.fill_col(c, coltmp.data(), start, end);
-    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
     return;
 }
 

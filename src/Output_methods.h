@@ -15,6 +15,7 @@ simple_output<T, V>::~simple_output() {}
 template<typename T, class V>
 template<class Iter>
 void simple_output<T, V>::fill_col(size_t c, Iter in, size_t start, size_t end) {
+    check_colargs(c, start, end);
     std::copy(in, in + end - start, data.begin()+c*(this->nrow)+start); 
     return;
 }
@@ -22,6 +23,7 @@ void simple_output<T, V>::fill_col(size_t c, Iter in, size_t start, size_t end) 
 template<typename T, class V>
 template<class Iter>
 void simple_output<T, V>::fill_row(size_t r, Iter in, size_t start, size_t end) {
+    check_rowargs(r, start, end);
     const size_t& NR=this->nrow;
     auto mIt=data.begin() + r + start * NR;
     for (size_t c=start; c<end; ++c, mIt+=NR, ++in) {
@@ -32,6 +34,7 @@ void simple_output<T, V>::fill_row(size_t r, Iter in, size_t start, size_t end) 
 
 template<typename T, class V>
 void simple_output<T, V>::fill(size_t r, size_t c, T in) {
+    check_oneargs(r, c);
     data[r + (this->nrow)*c]=in;
     return;
 }
@@ -39,6 +42,7 @@ void simple_output<T, V>::fill(size_t r, size_t c, T in) {
 template<typename T, class V>
 template<class Iter>
 void simple_output<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
+    check_rowargs(r, start, end);
     const size_t& NR=this->nrow;
     auto src=data.begin()+start*NR+r;
     for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
@@ -48,6 +52,7 @@ void simple_output<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) 
 template<typename T, class V>
 template<class Iter>
 void simple_output<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end);
     auto src=data.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
@@ -55,6 +60,7 @@ void simple_output<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) 
 
 template<typename T, class V>
 T simple_output<T, V>::get(size_t r, size_t c) {
+    check_oneargs(r, c);
     return data[c*(this->nrow)+r];
 }
 
@@ -139,6 +145,7 @@ HDF5_output<T, V>::~HDF5_output() {}
 
 template<typename T, class V>
 void HDF5_output<T, V>::select_col(size_t c, size_t start, size_t end) {
+    check_colargs(c, start, end);
     col_count[1]=end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -157,6 +164,7 @@ void HDF5_output<T, V>::fill_col(size_t c, T* in, size_t start, size_t end) {
 
 template<typename T, class V>
 void HDF5_output<T, V>::select_row(size_t r, size_t start, size_t end) {
+    check_rowargs(r, start, end);
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -175,6 +183,7 @@ void HDF5_output<T, V>::fill_row(size_t c, T* in, size_t start, size_t end) {
 
 template<typename T, class V>
 void HDF5_output<T, V>::select_one(size_t r, size_t c) {
+    check_oneargs(r, c);
     h5_start[0]=c;
     h5_start[1]=r;
     hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);

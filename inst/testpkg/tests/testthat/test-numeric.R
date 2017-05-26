@@ -137,9 +137,13 @@ test_that("Delayed numeric matrix input is okay", {
 
 test_that("Numeric matrix input conversions are okay", {
     beachtest:::check_numeric_conversion(sFUN)
+
     beachtest:::check_numeric_conversion(dFUN)
+
     beachtest:::check_numeric_conversion(csFUN)
+
     beachtest:::check_numeric_conversion(spFUN)
+
     beachtest:::check_numeric_conversion(hFUN)
 })
 
@@ -147,9 +151,13 @@ test_that("Numeric matrix input conversions are okay", {
 
 test_that("Numeric matrix input error generation is okay", {
     beachtest:::check_numeric_edge_errors(sFUN)
+
     beachtest:::check_numeric_edge_errors(dFUN)
+
     beachtest:::check_numeric_edge_errors(csFUN)
+
     beachtest:::check_numeric_edge_errors(spFUN)
+
     beachtest:::check_numeric_edge_errors(hFUN)
 })
 
@@ -162,7 +170,7 @@ set.seed(12345)
 test_that("Simple numeric matrix output is okay", {
     beachtest:::check_numeric_output_mat(sFUN, hdf5.out=FALSE)
     
-    beachtest:::check_numeric_output_slice(sFUN, by.row=1:12, by.col=3:7, hdf5.out=FALSE)
+    beachtest:::check_numeric_output_slice(sFUN, by.row=1:12, by.col=3:7, hdf5.out=FALSE)  
 })
 
 # Testing HDF5 numeric output:
@@ -171,8 +179,24 @@ test_that("HDF5 numeric matrix output is okay", {
     beachtest:::check_numeric_output_mat(hFUN, hdf5.out=TRUE)
     
     beachtest:::check_numeric_output_slice(hFUN, by.row=1:2, by.col=2:10, hdf5.out=TRUE)
-    
+
     beachtest:::check_numeric_order(hFUN)
+})
+
+# Testing conversions:
+
+test_that("Numeric matrix output conversions are okay", {
+    beachtest:::check_numeric_converted_output(sFUN, hdf5.out=FALSE)
+    
+    beachtest:::check_numeric_converted_output(hFUN, hdf5.out=TRUE)
+})
+
+# Testing for errors:
+
+test_that("Numeric matrix output error generation is okay", {
+    beachtest:::check_numeric_edge_output_errors(sFUN)
+    
+    beachtest:::check_numeric_edge_output_errors(hFUN)
 })
 
 #######################################################
