@@ -12,10 +12,6 @@
 #include "R.h"
 #include "Rinternals.h"
 
-#define BEACHMAT_USE_HDF5
-
-#ifdef BEACHMAT_USE_HDF5
 #include "c++/H5Cpp.h"
-#endif
 
 #endif

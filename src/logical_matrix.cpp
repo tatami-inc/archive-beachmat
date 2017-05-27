@@ -106,11 +106,7 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
         } else if (ctype=="lspMatrix") {
             return std::unique_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
         } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
-#ifdef BEACHMAT_USE_HDF5            
             return std::unique_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
-#else
-            throw std::runtime_error("'beachmat' not compiled with HDF5 support");
-#endif            
         }
         throw_custom_error("unsupported class '", ctype, "' for logical_matrix");
     } 
@@ -123,11 +119,7 @@ std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, bool b
     if (basic) { 
         return std::unique_ptr<logical_output>(new simple_logical_output(nrow, ncol));
     } 
-#ifdef BEACHMAT_USE_HDF5
     return std::unique_ptr<logical_output>(new HDF5_logical_output(nrow, ncol));
-#else
-    throw std::runtime_error("'beachmat' not compiled with HDF5 support");
-#endif            
 }
 
 std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {

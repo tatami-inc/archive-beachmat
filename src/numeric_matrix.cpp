@@ -106,11 +106,7 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
         } else if (ctype=="dspMatrix") {
             return std::unique_ptr<numeric_matrix>(new Psymm_numeric_matrix(incoming));
         } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
-#ifdef BEACHMAT_USE_HDF5
             return std::unique_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
-#else  
-            throw std::runtime_error("'beachmat' not compiled with HDF5 support");
-#endif            
         }
         throw_custom_error("unsupported class '", ctype, "' for numeric_matrix");
     } 
@@ -123,11 +119,7 @@ std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, bool b
     if (basic) { 
         return std::unique_ptr<numeric_output>(new simple_numeric_output(nrow, ncol));
     } 
-#ifdef BEACHMAT_USE_HDF5
     return std::unique_ptr<numeric_output>(new HDF5_numeric_output(nrow, ncol));
-#else
-    throw std::runtime_error("'beachmat' not compiled with HDF5 support");
-#endif            
 }
 
 std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {

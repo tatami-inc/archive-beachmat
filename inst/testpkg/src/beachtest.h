@@ -1,3 +1,6 @@
+#ifndef BEACHTEST_H
+#define BEACHTEST_H
+
 #include "Rcpp.h"
 #include "beachmat/numeric_matrix.h"
 #include "beachmat/integer_matrix.h"
@@ -84,4 +87,4 @@ SEXP test_numeric_edge_output (SEXP, SEXP);
 
 }
 
-
+#endif
