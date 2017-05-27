@@ -1,2 +1,6 @@
+importFrom("Rhdf5lib", pkgconfig)
+
+importFrom("utils", capture.output)
+
 export(pkgconfig)
 
