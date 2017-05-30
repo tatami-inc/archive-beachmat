@@ -2,5 +2,7 @@ importFrom("Rhdf5lib", pkgconfig)
 
 importFrom("utils", capture.output)
 
+importFrom("HDF5Array", getHDF5DumpFile, getHDF5DumpName, getHDF5DumpChunkDim, appendDatasetCreationToHDF5DumpLog)
+
 export(pkgconfig)
 

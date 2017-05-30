@@ -75,14 +75,25 @@ Rcpp::RObject simple_output<T, V>::yield() {
 
 template<typename T, class V>
 HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
+    const Rcpp::Environment env=Rcpp::Environment::namespace_env("beachmat");
+    Rcpp::Function fun=env["setupHDF5Array"];
+    const int RTYPE=V().sexp_type();
+    Rcpp::List collected=fun(Rcpp::IntegerVector::create(this->nrow, this->ncol), Rcpp::StringVector(translate_type(RTYPE)));
+    
     // File opening.
-    Rcpp::Environment hdf5env("package:HDF5Array");
-    Rcpp::Function filenamefun=hdf5env["getHDF5DumpFile"];
-    fname=make_to_string(filenamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
+    fname=make_to_string(collected[0]);
+    dname=make_to_string(collected[1]);
+    Rcpp::IntegerVector chunks=collected[2];
+    if (chunks.size()!=2) { 
+        throw std::runtime_error("chunk dimensions should be an integer vector of length 2");
+    }
+    Rcpp::IntegerVector compress=collected[3];
+    if (compress.size()!=1) {
+        throw std::runtime_error("compression should be an integer scalar");
+    }
     hfile.openFile(fname, H5F_ACC_RDWR);
 
     // Type setting.
-    const int RTYPE=V().sexp_type();
     switch (RTYPE) {
         case REALSXP:
             HDT=H5::DataType(H5::PredType::NATIVE_DOUBLE);
@@ -101,31 +112,20 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
     const T empty=get_empty();
     plist.setFillValue(HDT, &empty);
 
-    Rcpp::Function chunkfun=hdf5env["getHDF5DumpChunkDim"];
-    Rcpp::IntegerVector current_dims=Rcpp::IntegerVector::create(this->nrow, this->ncol);
-    Rcpp::StringVector current_type(translate_type(RTYPE));
-    Rcpp::IntegerVector current_chunk=chunkfun(current_dims, current_type);
     std::vector<hsize_t> chunk_dims(2);
-    chunk_dims[0]=current_chunk[1]; // Setting the chunk dimensions (flipping them, see below).
-    chunk_dims[1]=current_chunk[0];
+    chunk_dims[0]=chunks[1]; // Setting the chunk dimensions (flipping them, see below).
+    chunk_dims[1]=chunks[0];
     plist.setChunk(2, chunk_dims.data());
-    plist.setDeflate(6);
+    plist.setDeflate(compress[0]);
 
     std::vector<hsize_t> dims(2);
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
     dims[1]=this->nrow; 
-    hspace.setExtentSimple(2, dims.data());
 
-    Rcpp::Function datanamefun=hdf5env["getHDF5DumpName"];
-    dname=make_to_string(datanamefun(Rcpp::Named("for.use", Rcpp::LogicalVector::create(1))));
+    hspace.setExtentSimple(2, dims.data());
     hdata=hfile.createDataSet(dname, HDT, hspace, plist); 
 
-    // Adding to the log file.
-    Rcpp::Function appendfun=hdf5env["appendDatasetCreationToHDF5DumpLog"];
-    appendfun(Rcpp::StringVector(fname), 
-            Rcpp::StringVector(dname), 
-            current_dims, current_type, current_chunk);
-
+    // Setting other values.
     h5_start[0]=0;
     h5_start[1]=0;
     col_count[0]=1;
