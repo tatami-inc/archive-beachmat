@@ -100,6 +100,40 @@ check_logical_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
 
 ###############################
 
+check_sparse_numeric_output <- function(FUN, ...) {
+    for (mode in 1:2) {
+        current <- FUN(...)
+        if (mode==1L) {
+            dim <- ncol(current)
+        } else {
+            dim <- nrow(current)
+        }
+
+        for (type in 1:2) {
+            if (type==1L) {
+                o <- seq_len(dim)
+            } else {
+                o <- sample(dim)
+            }
+
+            out <- .Call(cxx_test_sparse_numeric_output, current, mode, o-1L)
+            ref <- as.matrix(out[[1]])
+            dimnames(ref) <- NULL
+
+            if (mode==1L) { 
+                expect_identical(out[[1]][,o], current)
+                expect_identical(out[[2]][nrow(current):1,], ref)
+            } else {
+                expect_identical(out[[1]][o,], current)
+                expect_identical(out[[2]][,ncol(current):1], ref)
+            }
+        }
+    }
+    return(invisible(NULL))
+}
+
+###############################
+
 .check_execution_order <- function(FUN, cxxfun, type) {
     # Checking that the output function in '.Call' does not overwrite the 
     # underlying HDF5 file and change the values of other HDF5Matrix objects. 

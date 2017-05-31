@@ -132,3 +132,57 @@ SEXP test_numeric_edge_output (SEXP in, SEXP mode) {
     END_RCPP
 }
 
+/* Sparse output. */
+
+SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in); // should be a sparse matrix.
+    auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false, true); // a sparse matrix.
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, true, false); // a basic matrix.
+
+    Rcpp::IntegerVector M(mode);
+    if (M.size()!=1) { 
+        throw std::runtime_error("mode should be an integer scalar");
+    } 
+    Rcpp::IntegerVector order(rorder);
+    if (M[0]==1) {
+        if (order.size()!=ptr->get_ncol()) {
+            throw std::runtime_error("order should be of length equal to the number of columns");
+        }
+        Rcpp::NumericVector target(ptr->get_nrow());
+        auto oIt=order.begin();
+        for (size_t c=0; c<order.size(); ++c, ++oIt) {
+            ptr->get_col(c, target.begin());
+            optr->fill_col(*oIt, target.begin());
+   
+            // Wiping, reversing and refilling. 
+            std::fill(target.begin(), target.end(), 0); 
+            optr->get_col(*oIt, target.begin());
+            std::reverse(target.begin(), target.end()); 
+            optr2->fill_col(*oIt, target.begin());
+        }
+    } else if (M[0]==2) {
+        if (order.size()!=ptr->get_nrow()) {
+            throw std::runtime_error("order should be of length equal to the number of rows");
+        }
+        Rcpp::NumericVector target(ptr->get_ncol());
+        auto oIt=order.begin();
+        for (size_t r=0; r<order.size(); ++r, ++oIt) {
+            ptr->get_row(r, target.begin());
+            optr->fill_row(*oIt, target.begin());
+            
+            // Wiping, reversing and refilling. 
+            std::fill(target.begin(), target.end(), 0); 
+            optr->get_row(*oIt, target.begin());
+            std::reverse(target.begin(), target.end()); 
+            optr2->fill_row(*oIt, target.begin());
+        }
+    }
+
+    Rcpp::List output(2);
+    output[0]=optr->yield();
+    output[1]=optr2->yield();
+    return output;
+    END_RCPP
+}
+

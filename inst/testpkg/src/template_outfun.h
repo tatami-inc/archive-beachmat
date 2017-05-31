@@ -70,7 +70,7 @@ Rcpp::RObject pump_out(M ptr, O optr, const Rcpp::IntegerVector& mode, const Rcp
 
 template <class T, class M, class O>  
 Rcpp::RObject pump_out_slice (M ptr, O optr, const Rcpp::IntegerVector& mode, 
-        const Rcpp::IntegerVector& rows, const Rcpp::IntegerVector& cols,  const Rcpp::LogicalVector& refill) {
+        const Rcpp::IntegerVector& rows, const Rcpp::IntegerVector& cols, const Rcpp::LogicalVector& refill) {
 
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
@@ -170,6 +170,5 @@ void output_edge (M ptr, const Rcpp::IntegerVector& mode) {
    
     return;
 }
-
 
 #endif
