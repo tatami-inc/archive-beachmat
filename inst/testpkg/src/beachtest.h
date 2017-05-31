@@ -55,29 +55,29 @@ SEXP test_character_edge (SEXP, SEXP);
 
 // Output functions.
 
-SEXP test_integer_output(SEXP, SEXP, SEXP);
+SEXP test_integer_output(SEXP, SEXP);
 
-SEXP test_integer_output_slice(SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP test_integer_output_slice(SEXP, SEXP, SEXP, SEXP);
 
-SEXP test_numeric_output(SEXP, SEXP, SEXP);
+SEXP test_numeric_output(SEXP, SEXP);
 
-SEXP test_numeric_output_slice(SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP test_numeric_output_slice(SEXP, SEXP, SEXP, SEXP);
 
-SEXP test_logical_output(SEXP, SEXP, SEXP);
+SEXP test_logical_output(SEXP, SEXP);
 
-SEXP test_logical_output_slice(SEXP, SEXP, SEXP, SEXP, SEXP);
+SEXP test_logical_output_slice(SEXP, SEXP, SEXP, SEXP);
 
-SEXP test_numeric_to_logical_output (SEXP, SEXP, SEXP);
+SEXP test_numeric_to_logical_output (SEXP, SEXP);
 
-SEXP test_numeric_to_integer_output (SEXP, SEXP, SEXP);
+SEXP test_numeric_to_integer_output (SEXP, SEXP);
 
-SEXP test_integer_to_logical_output (SEXP, SEXP, SEXP);
+SEXP test_integer_to_logical_output (SEXP, SEXP);
 
-SEXP test_integer_to_numeric_output (SEXP, SEXP, SEXP);
+SEXP test_integer_to_numeric_output (SEXP, SEXP);
 
-SEXP test_logical_to_integer_output (SEXP, SEXP, SEXP);
+SEXP test_logical_to_integer_output (SEXP, SEXP);
 
-SEXP test_logical_to_numeric_output (SEXP, SEXP, SEXP);
+SEXP test_logical_to_numeric_output (SEXP, SEXP);
 
 SEXP test_integer_edge_output (SEXP, SEXP);
 

@@ -24,6 +24,8 @@ check_character_mat <- function(FUN, ...) {
     .check_mat(FUN=FUN, ..., cxxfun=cxx_test_character_access)
 }
 
+###############################
+
 .check_slices <- function(FUN, ..., by.row, by.col, cxxfun) {
     for (x in by.row) {
         rx <- range(x)
@@ -38,8 +40,6 @@ check_character_mat <- function(FUN, ...) {
     }
     return(invisible(NULL))
 }
-
-###############################
 
 check_character_slice <- function(FUN, ..., by.row, by.col) {
     .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_character_slice)

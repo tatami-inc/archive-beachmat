@@ -3,32 +3,27 @@
 ###############################
 
 .check_output_mat <- function(FUN, ..., hdf5.out, cxxfun) { 
-    for (flip in c(TRUE, FALSE)) { 
-        # When flip=TRUE, we fill the output matrix based on the input matrix,
-        # extract values by row/column from the filled output matrix, flip
-        # the values and refill the output matrix. This checks whether the
-        # getters of the output matrix work as expected.
+    for (i in 1:3) { 
+        test.mat <- FUN(...)
+        
+        out <- .Call(cxxfun, test.mat, i)
+        if (hdf5.out) { 
+            testthat::expect_s4_class(out[[1]], "HDF5Matrix")
+            out[[1]] <- as.matrix(out[[1]])
+        }      
+        ref <- as.matrix(test.mat)
+        testthat::expect_identical(ref, out[[1]])
 
-        for (i in 1:3) { 
-            test.mat <- FUN(...)
-
-            out <- .Call(cxxfun, test.mat, i, flip)
-            if (hdf5.out) { 
-                testthat::expect_s4_class(out, "HDF5Matrix")
-                out <- as.matrix(out)
-            }
-            
-            ref <- as.matrix(test.mat)
-            if (flip) {
-                if (i==1L) {
-                    ref <- ref[nrow(ref):1,,drop=FALSE]
-                } else if (i==2L) {
-                    ref <- ref[,ncol(ref):1,drop=FALSE]
-                }
-            }
-
-            testthat::expect_identical(ref, out)
+        # Checking the flipped matrix. Here, we extract values by row/column from the filled output matrix, flip
+        # the values and refill the output matrix. This checks whether the getters of the output matrix work as expected.
+        if (i==1L) {
+            ref <- ref[nrow(ref):1,,drop=FALSE]
+        } else if (i==2L) {
+            ref <- ref[,ncol(ref):1,drop=FALSE]
+        } else if (i==3L) {
+            ref <- ref[nrow(ref):1,ncol(ref):1,drop=FALSE]
         }
+        testthat::expect_identical(ref, out[[2]])
     }
     return(invisible(NULL))
 }
@@ -51,33 +46,32 @@ check_logical_output_mat <- function(FUN, ..., hdf5.out) {
     rx <- range(by.row)
     ry <- range(by.col)
 
-    for (flip in c(TRUE, FALSE)) { # Again, flipping to check getters in *_output.
-        for (it in 1:2) {
-            test.mat <- FUN(...)
-
-            out <- .Call(cxxfun, test.mat, it, rx, ry, flip)
-            if (hdf5.out) { 
-                testthat::expect_s4_class(out, "HDF5Matrix")
-                out <- as.matrix(out)
-            }
-            
-            ref <- as.matrix(test.mat)
-            if (!flip) { 
-                testthat::expect_identical(ref[by.row, by.col], out[by.row, by.col]) 
-            } else {
-                if (it==1L) {
-                    ref[,-by.col] <- fill
-                    testthat::expect_identical(ref[rev(by.row),], out[by.row,])
-                } else {
-                    ref[-by.row,] <- fill
-                    testthat::expect_identical(ref[,rev(by.col)], out[,by.col])
-                }
-            }
-
-            # Checking that everywhere else is blank. 
-            out[by.row,by.col] <- fill
-            testthat::expect_true(all(out==fill))
+    for (it in 1:2) {
+        test.mat <- FUN(...)      
+        out <- .Call(cxxfun, test.mat, it, rx, ry)
+        if (hdf5.out) { 
+            testthat::expect_s4_class(out[[1]], "HDF5Matrix")
+            out[[1]] <- as.matrix(out[[1]])
         }
+
+        # Checking the standard fill.
+        test <- out[[1]]
+        ref <- as.matrix(test.mat)
+        testthat::expect_identical(ref[by.row, by.col], test[by.row, by.col]) 
+        test[by.row,by.col] <- fill
+        testthat::expect_true(all(test==fill))
+
+        # Checking the flipped fill.
+        flipped <- out[[2]]
+        if (it==1L) {
+            ref[,-by.col] <- fill
+            testthat::expect_identical(ref[rev(by.row),], flipped[by.row,])
+        } else {
+            ref[-by.row,] <- fill
+            testthat::expect_identical(ref[,rev(by.col)], flipped[,by.col])
+        }
+        flipped[by.row,by.col] <- fill
+        testthat::expect_true(all(flipped==fill))
     }
     return(invisible(NULL))
 }
@@ -139,7 +133,7 @@ check_sparse_numeric_output <- function(FUN, ...) {
     # underlying HDF5 file and change the values of other HDF5Matrix objects. 
     mats <- list(FUN(), FUN(), FUN())
     ref.mats <- lapply(mats, as.matrix)
-    new.mats <- lapply(mats, function(x) .Call(cxxfun, x, 1L, FALSE)) 
+    new.mats <- lapply(mats, function(x) .Call(cxxfun, x, 1L)[[1]]) 
 
     for (i in seq_along(mats)) { 
         out <- new.mats[[i]]
@@ -185,27 +179,26 @@ check_logical_order <- function(FUN, cxxfun) {
 ###############################
 
 .check_converted_output <- function(FUN, ..., hdf5.out, cxxfun, rfun) { 
-    for (flip in c(TRUE, FALSE)) { # Again, checking flippedness.
-        for (i in 1:3) { 
-            test.mat <- FUN(...)
-            
-            out <- .Call(cxxfun, test.mat, i, flip)
-            if (hdf5.out) { 
-                testthat::expect_s4_class(out, "HDF5Matrix")
-                out <- as.matrix(out)
-            }
-            
-            ref <- as.matrix(test.mat)
-            if (flip) {
-                if (i==1L) {
-                    ref <- ref[nrow(ref):1,,drop=FALSE]
-                } else if (i==2L) {
-                    ref <- ref[,ncol(ref):1,drop=FALSE]
-                }
-            }
-            
-            testthat::expect_identical(rfun(ref), out)
+    for (i in 1:3) { 
+        test.mat <- FUN(...)
+        
+        out <- .Call(cxxfun, test.mat, i)
+        if (hdf5.out) { 
+            testthat::expect_s4_class(out[[1]], "HDF5Matrix")
+            out[[1]] <- as.matrix(out[[1]])
         }
+        ref <- as.matrix(test.mat)
+        testthat::expect_identical(rfun(ref), out[[1]])
+            
+        # With flipping.
+        if (i==1L) {
+            ref <- ref[nrow(ref):1,,drop=FALSE]
+        } else if (i==2L) {
+            ref <- ref[,ncol(ref):1,drop=FALSE]
+        } else if (i==3L) {
+            ref <- ref[nrow(ref):1,ncol(ref):1,drop=FALSE]
+        }
+        testthat::expect_identical(rfun(ref), out[[2]])
     }
     return(invisible(NULL))
 }
