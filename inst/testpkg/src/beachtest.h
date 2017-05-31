@@ -87,6 +87,8 @@ SEXP test_numeric_edge_output (SEXP, SEXP);
 
 SEXP test_sparse_numeric_output (SEXP, SEXP, SEXP);
 
+SEXP test_sparse_numeric_output_slice (SEXP, SEXP, SEXP, SEXP);
+
 }
 
 #endif

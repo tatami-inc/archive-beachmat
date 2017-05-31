@@ -175,10 +175,14 @@ test_that("Simple numeric matrix output is okay", {
 
 # Testing HDF5 sparse output:
 
-test_that("HDF5 numeric matrix output is okay", {
+test_that("Sparse numeric matrix output is okay", {
     beachtest:::check_sparse_numeric_output(csFUN)
     beachtest:::check_sparse_numeric_output(csFUN, d=0.2)
     beachtest:::check_sparse_numeric_output(csFUN, d=0.5)
+
+    beachtest:::check_sparse_numeric_output_slice(csFUN, by.row=1:5, by.col=7:9)
+    beachtest:::check_sparse_numeric_output_slice(csFUN, by.row=1, by.col=2:8, d=0.2)
+    beachtest:::check_sparse_numeric_output_slice(csFUN, by.row=3:9, by.col=5, d=0.5)
 })
 
 # Testing HDF5 numeric output:

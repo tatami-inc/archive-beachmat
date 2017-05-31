@@ -42,15 +42,15 @@ check_logical_output_mat <- function(FUN, ..., hdf5.out) {
 
 ###############################
 
-.check_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out, cxxfun, fill) { 
+.check_output_slice <- function(FUN, ..., by.row, by.col, class.out, cxxfun, fill) { 
     rx <- range(by.row)
     ry <- range(by.col)
 
     for (it in 1:2) {
         test.mat <- FUN(...)      
         out <- .Call(cxxfun, test.mat, it, rx, ry)
-        if (hdf5.out) { 
-            testthat::expect_s4_class(out[[1]], "HDF5Matrix")
+        if (!is.na(class.out)) {
+            testthat::expect_s4_class(out[[1]], class.out) 
             out[[1]] <- as.matrix(out[[1]])
         }
 
@@ -63,6 +63,7 @@ check_logical_output_mat <- function(FUN, ..., hdf5.out) {
 
         # Checking the flipped fill.
         flipped <- out[[2]]
+        dimnames(ref) <- NULL
         if (it==1L) {
             ref[,-by.col] <- fill
             testthat::expect_identical(ref[rev(by.row),], flipped[by.row,])
@@ -78,24 +79,27 @@ check_logical_output_mat <- function(FUN, ..., hdf5.out) {
 
 
 check_integer_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
-    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, hdf5.out=hdf5.out, 
+    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, 
+                        class.out=ifelse(hdf5.out, "HDF5Matrix", NA_character_),
                         cxxfun=cxx_test_integer_output_slice, fill=0L)
 } 
 
 check_numeric_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
-    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, hdf5.out=hdf5.out, 
+    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, 
+                        class.out=ifelse(hdf5.out, "HDF5Matrix", NA_character_),
                         cxxfun=cxx_test_numeric_output_slice, fill=0)
 } 
 
 check_logical_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
-    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, hdf5.out=hdf5.out, 
+    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, 
+                        class.out=ifelse(hdf5.out, "HDF5Matrix", NA_character_),
                         cxxfun=cxx_test_logical_output_slice, fill=FALSE)
 } 
 
 ###############################
 
 check_sparse_numeric_output <- function(FUN, ...) {
-    for (mode in 1:2) {
+    for (mode in 1:3) {
         current <- FUN(...)
         if (mode==1L) {
             dim <- ncol(current)
@@ -111,20 +115,31 @@ check_sparse_numeric_output <- function(FUN, ...) {
             }
 
             out <- .Call(cxx_test_sparse_numeric_output, current, mode, o-1L)
+            testthat::expect_s4_class(out[[1]], "dgCMatrix")
             ref <- as.matrix(out[[1]])
             dimnames(ref) <- NULL
 
             if (mode==1L) { 
                 expect_identical(out[[1]][,o], current)
-                expect_identical(out[[2]][nrow(current):1,], ref)
-            } else {
+                expect_identical(out[[2]][nrow(current):1,,drop=FALSE], ref)
+            } else if (mode==2L) {
                 expect_identical(out[[1]][o,], current)
-                expect_identical(out[[2]][,ncol(current):1], ref)
+                expect_identical(out[[2]][,ncol(current):1,drop=FALSE], ref)
+            } else {
+                expect_identical(out[[1]], current) # no reordering 
+                expect_identical(out[[2]][nrow(current):1,ncol(current):1,drop=FALSE], ref)
+                break
             }
         }
     }
     return(invisible(NULL))
 }
+
+check_sparse_numeric_output_slice <- function(FUN, ..., by.row, by.col) {
+   .check_output_slice(FUN, ..., by.row=by.row, by.col=by.col, class.out="dgCMatrix",
+                       cxxfun=cxx_test_sparse_numeric_output_slice, fill=0) 
+}
+
 
 ###############################
 

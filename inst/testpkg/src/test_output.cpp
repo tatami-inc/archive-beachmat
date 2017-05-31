@@ -157,13 +157,16 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
         throw std::runtime_error("mode should be an integer scalar");
     } 
     Rcpp::IntegerVector order(rorder);
+    const size_t& nrows=ptr->get_nrow();
+    const size_t& ncols=ptr->get_ncol();
+
     if (M[0]==1) {
-        if (order.size()!=ptr->get_ncol()) {
+        if (order.size()!=ncols) {
             throw std::runtime_error("order should be of length equal to the number of columns");
         }
-        Rcpp::NumericVector target(ptr->get_nrow());
+        Rcpp::NumericVector target(nrows);
         auto oIt=order.begin();
-        for (size_t c=0; c<order.size(); ++c, ++oIt) {
+        for (size_t c=0; c<ncols; ++c, ++oIt) {
             ptr->get_col(c, target.begin());
             optr->fill_col(*oIt, target.begin());
    
@@ -174,12 +177,12 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
             optr2->fill_col(*oIt, target.begin());
         }
     } else if (M[0]==2) {
-        if (order.size()!=ptr->get_nrow()) {
+        if (order.size()!=nrows){ 
             throw std::runtime_error("order should be of length equal to the number of rows");
         }
-        Rcpp::NumericVector target(ptr->get_ncol());
+        Rcpp::NumericVector target(ncols);
         auto oIt=order.begin();
-        for (size_t r=0; r<order.size(); ++r, ++oIt) {
+        for (size_t r=0; r<nrows; ++r, ++oIt) {
             ptr->get_row(r, target.begin());
             optr->fill_row(*oIt, target.begin());
             
@@ -191,12 +194,12 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
         }
     } else {
         // By cell.
-       for (int c=0; c<ptr->get_ncol(); ++c){ 
-           for (int r=0; r<ptr->get_nrow(); ++r) {
-               optr->fill(r, c, ptr->get(r, c));
-               optr2->fill(r, c, optr->get(r, c));
-           }
-       }
+        for (size_t c=0; c<ncols; ++c){ 
+            for (size_t r=0; r<nrows; ++r) {
+                optr->fill(r, c, ptr->get(r, c));
+                optr2->fill(nrows-r-1, ncols-c-1, optr->get(r, c));
+            }
+        }
     }
 
     Rcpp::List output(2);
@@ -206,3 +209,11 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
     END_RCPP
 }
 
+SEXP test_sparse_numeric_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in); // should be a sparse matrix.
+    auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false, true); // a sparse matrix as output.
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    return pump_out_slice<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
+    END_RCPP
+}
