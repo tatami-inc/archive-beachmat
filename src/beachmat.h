@@ -2,6 +2,7 @@
 #define BEACHMAT_H
 
 #include <vector>
+#include <deque>
 #include <algorithm>
 #include <string>
 #include <memory>

@@ -2,12 +2,12 @@
 
 namespace beachmat { 
 
-/* Csparse logical input methods. */
+/* Csparse numeric input methods. */
 
 template<>
 double Csparse_matrix<double, Rcpp::NumericVector>::get_empty() const { return 0; }
 
-/* HDF5 integer input methods. */
+/* HDF5 numeric input methods. */
 
 template<>
 void HDF5_numeric_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
@@ -34,6 +34,11 @@ void HDF5_numeric_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, s
     mat.extract_row(r, &(*out), start, end);
     return;
 }
+
+/* Sparse numeric output methods. */
+
+template<>
+double sparse_output<double, Rcpp::NumericVector>::get_empty() const { return 0; }
 
 /* HDF5 numeric output methods. */
 
@@ -115,15 +120,21 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
 
 /* Output dispatch definition */
 
-std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, bool basic) {
-    if (basic) { 
-        return std::unique_ptr<numeric_output>(new simple_numeric_output(nrow, ncol));
-    } 
-    return std::unique_ptr<numeric_output>(new HDF5_numeric_output(nrow, ncol));
+std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, output_mode mode) {
+    switch (mode) {
+        case BASIC:
+            return std::unique_ptr<numeric_output>(new simple_numeric_output(nrow, ncol));
+        case SPARSE:
+            return std::unique_ptr<numeric_output>(new sparse_numeric_output(nrow, ncol));
+        case HDF5:
+            return std::unique_ptr<numeric_output>(new HDF5_numeric_output(nrow, ncol));
+        default:
+            throw std::runtime_error("unsupported output mode for numeric matrices");
+    }
 }
 
-std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {
-    return create_numeric_output(nrow, ncol, (simplify || !incoming.isS4()));
+std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify, bool preserve_zero) {
+    return create_numeric_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero && get_class(incoming)=="dgCMatrix"));
 }
 
 }

@@ -44,15 +44,19 @@ typedef lin_output<double> numeric_output;
 
 typedef simple_lin_output<double, Rcpp::NumericVector> simple_numeric_output;
 
+/* Sparse output numeric matrix */
+
+typedef sparse_lin_output<double, Rcpp::NumericVector> sparse_numeric_output;
+
 /* HDF5 output numeric matrix */
 
 typedef HDF5_lin_output<double, Rcpp::NumericVector> HDF5_numeric_output;
 
 /* Output dispatchers */
 
-std::unique_ptr<numeric_output> create_numeric_output(int, int, bool=true);
+std::unique_ptr<numeric_output> create_numeric_output(int, int, output_mode=BASIC);
 
-std::unique_ptr<numeric_output> create_numeric_output(int, int, const Rcpp::RObject&, bool);
+std::unique_ptr<numeric_output> create_numeric_output(int, int, const Rcpp::RObject&, bool, bool=false);
 
 }
 

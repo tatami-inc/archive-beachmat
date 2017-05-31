@@ -242,6 +242,40 @@ private:
     simple_output<T, V> mat;
 };
 
+/* Sparse LIN output */
+
+template<typename T, class V>
+class sparse_lin_output : public lin_output<T> {
+public:
+    sparse_lin_output(size_t, size_t);
+    ~sparse_lin_output();
+
+    size_t get_nrow() const;
+    size_t get_ncol() const;
+
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    T get(size_t, size_t);
+
+    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void fill_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void fill_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    void fill(size_t, size_t, T);
+
+    Rcpp::RObject yield();
+
+    std::unique_ptr<lin_output<T> > clone() const;
+private:
+    sparse_output<T, V> mat;
+};
+
 /* HDF5 LIN output */
 
 template<typename T, class V>

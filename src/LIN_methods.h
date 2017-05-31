@@ -420,6 +420,93 @@ std::unique_ptr<lin_output<T> > simple_lin_output<T, V>::clone() const {
     return std::unique_ptr<lin_output<T> >(new simple_lin_output<T, V>(*this));
 }
 
+/* Defining the sparse output interface. */ 
+
+template<typename T, class V>
+sparse_lin_output<T, V>::sparse_lin_output(size_t nr, size_t nc) : mat(nr, nc) {}
+
+template<typename T, class V>
+sparse_lin_output<T, V>::~sparse_lin_output() {}
+
+template<typename T, class V>
+size_t sparse_lin_output<T, V>::get_nrow() const {
+    return mat.get_nrow();
+}
+
+template<typename T, class V>
+size_t sparse_lin_output<T, V>::get_ncol() const {
+    return mat.get_ncol();
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+T sparse_lin_output<T, V>::get(size_t r, size_t c) {
+    return mat.get(r, c);
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.fill_col(c, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.fill_col(c, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.fill_row(r, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.fill_row(r, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void sparse_lin_output<T, V>::fill(size_t r, size_t c, T in) {
+    mat.fill(r, c, in);
+    return;
+}
+
+template<typename T, class V>
+Rcpp::RObject sparse_lin_output<T, V>::yield() {
+    return mat.yield();
+}
+
+template<typename T, class V>
+std::unique_ptr<lin_output<T> > sparse_lin_output<T, V>::clone() const {
+    return std::unique_ptr<lin_output<T> >(new sparse_lin_output<T, V>(*this));
+}
+
 /* Defining the HDF5 output interface. */
 
 template<typename T, class V>

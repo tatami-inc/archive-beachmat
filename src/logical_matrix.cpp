@@ -35,6 +35,11 @@ void HDF5_logical_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, s
     return;
 }
 
+/* Sparse numeric output methods. */
+
+template<>
+int sparse_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
+
 /* HDF5 logical output methods. */
 
 template<>
@@ -115,15 +120,21 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
 
 /* Output dispatch definition */
 
-std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, bool basic) {
-    if (basic) { 
-        return std::unique_ptr<logical_output>(new simple_logical_output(nrow, ncol));
-    } 
-    return std::unique_ptr<logical_output>(new HDF5_logical_output(nrow, ncol));
+std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, output_mode mode) {
+    switch (mode) {
+        case BASIC:
+            return std::unique_ptr<logical_output>(new simple_logical_output(nrow, ncol));
+        case SPARSE:
+            return std::unique_ptr<logical_output>(new sparse_logical_output(nrow, ncol));
+        case HDF5:
+            return std::unique_ptr<logical_output>(new HDF5_logical_output(nrow, ncol));
+        default:
+            throw std::runtime_error("unsupported output mode for logical matrices");
+    }
 }
 
-std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {
-    return create_logical_output(nrow, ncol, (simplify || !incoming.isS4()));
+std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify, bool preserve_zero) {
+    return create_logical_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero && get_class(incoming)=="lgCMatrix"));
 }
 
 }

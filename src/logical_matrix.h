@@ -46,15 +46,19 @@ typedef lin_output<int> logical_output;
 
 typedef simple_lin_output<int, Rcpp::LogicalVector> simple_logical_output;
 
+/* Sparse output logical matrix */
+
+typedef sparse_lin_output<int, Rcpp::LogicalVector> sparse_logical_output;
+
 /* HDF5 output logical matrix */
 
 typedef HDF5_lin_output<int, Rcpp::LogicalVector> HDF5_logical_output;
 
 /* Output dispatchers */
 
-std::unique_ptr<logical_output> create_logical_output(int, int, bool=true);
+std::unique_ptr<logical_output> create_logical_output(int, int, output_mode=BASIC);
 
-std::unique_ptr<logical_output> create_logical_output(int, int, const Rcpp::RObject&, bool);
+std::unique_ptr<logical_output> create_logical_output(int, int, const Rcpp::RObject&, bool, bool=false);
 
 }
 

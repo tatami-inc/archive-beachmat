@@ -97,5 +97,21 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
     return incoming.sexp_type();
 }
 
+output_mode choose_output_mode(const Rcpp::RObject& in, bool simplify, bool preserve_zero) {
+    if (!in.isS4()) {
+        return BASIC;
+    } 
+    auto curclass=get_class(in);
+    if (curclass=="HDF5Array" || curclass=="DelayedArray") { 
+        return HDF5;
+    }           
+    if (simplify) {
+        return BASIC;
+    }
+    if (preserve_zero) {
+        return SPARSE;
+    } 
+    return HDF5;
 }
 
+}

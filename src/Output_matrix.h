@@ -30,6 +30,35 @@ private:
 };
 
 template<typename T, class V>
+class sparse_output : public any_matrix {
+public:
+    sparse_output(size_t, size_t);
+    ~sparse_output();
+
+    template <class Iter>
+    void fill_row(size_t, Iter, size_t, size_t);
+    template <class Iter>
+    void fill_col(size_t, Iter, size_t, size_t);
+    void fill(size_t, size_t, T);
+
+    template <class Iter>
+    void get_col(size_t, Iter, size_t, size_t);
+    template <class Iter>
+    void get_row(size_t, Iter, size_t, size_t);
+    T get(size_t, size_t);
+
+    Rcpp::RObject yield();
+private:
+    typedef std::pair<size_t, T> data_pair;
+    std::vector<std::deque<data_pair> > data;
+
+    T get_empty() const;
+    template <class Iter>
+    Iter find_matching_row(Iter, Iter, const data_pair&);
+};
+
+
+template<typename T, class V>
 class HDF5_output : public any_matrix {
 public:
     HDF5_output(size_t, size_t);
