@@ -2,90 +2,10 @@
 
 namespace beachmat {
 
-/* HDF5 integer input methods. */
-
-template<>
-void HDF5_integer_matrix::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), start, end);
-    return;
-}
-
-template<>
-void HDF5_integer_matrix::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, coltmp.data(), start, end);
-    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
-    return;
-}
-
-template<>
-void HDF5_integer_matrix::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), start, end);
-    return;
-}
-
-template<>
-void HDF5_integer_matrix::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, rowtmp.data(), start, end);
-    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
-    return;
-}
-
 /* HDF5 integer output methods. */
 
 template<>
 int HDF5_output<int, Rcpp::IntegerVector>::get_empty() const { return 0; }
-
-template<> 
-void HDF5_integer_output::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, &(*out), start, end);
-    return;
-}
-
-template<>
-void HDF5_integer_output::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, rowtmp.data(), start, end);
-    std::copy(rowtmp.begin(), rowtmp.begin() + end - start, out);
-    return;
-}
-
-template<> 
-void HDF5_integer_output::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, &(*out), start, end);
-    return;
-}
-
-template<>
-void HDF5_integer_output::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, coltmp.data(), start, end);
-    std::copy(coltmp.begin(), coltmp.begin() + end - start, out);
-    return;
-}
-
-template<> 
-void HDF5_integer_output::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, &(*out), start, end);
-    return;
-}
-
-template<>
-void HDF5_integer_output::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    std::copy(out, out + end - start, rowtmp.begin());
-    mat.fill_row(r, rowtmp.data(), start, end);
-    return;
-}
-
-template<> 
-void HDF5_integer_output::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, &(*out), start, end);
-    return;
-}
-
-template<>
-void HDF5_integer_output::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    std::copy(out, out + end - start, coltmp.begin());
-    mat.fill_col(c, coltmp.data(), start, end);
-    return;
-}
 
 /* Dispatch definition */
 

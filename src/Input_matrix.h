@@ -105,8 +105,16 @@ public:
     ~HDF5_matrix();
 
     void extract_row(size_t, T*, size_t, size_t);
+    template<typename X>
+    void extract_row(size_t, X*, const H5::DataType&, size_t, size_t);
+
     void extract_col(size_t, T*, size_t, size_t);
-    void extract_one(size_t, size_t, T*);  
+    template<typename X>
+    void extract_col(size_t, X*, const H5::DataType&, size_t, size_t);
+    
+    void extract_one(size_t, size_t, T*); // Use of pointer is a bit circuitous, but necessary for character access.
+    template<typename X>
+    void extract_one(size_t, size_t, X*, const H5::DataType&);  
 
     const H5::DataType& get_datatype() const;
 protected:
@@ -117,8 +125,8 @@ protected:
     H5::DataSpace hspace, rowspace, colspace, onespace;
     hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
 
-    H5::DataType HDT;
-    H5T_class_t set_types ();
+    H5::DataType default_type;
+    H5T_class_t set_types();
 };
 
 #include "Input_methods.h"

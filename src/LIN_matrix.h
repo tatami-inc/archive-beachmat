@@ -159,7 +159,6 @@ public:
     std::unique_ptr<lin_matrix<T> > clone() const;
 protected:
     HDF5_matrix<T, RTYPE> mat;
-    std::vector<T> rowtmp, coltmp;
 };
 
 /************************************************************************
@@ -308,7 +307,6 @@ public:
     std::unique_ptr<lin_output<T> > clone() const;
 protected:
     HDF5_output<T, V> mat;
-    std::vector<T> rowtmp, coltmp;
 };
 
 #include "LIN_methods.h"

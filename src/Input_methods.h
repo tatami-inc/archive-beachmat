@@ -509,13 +509,13 @@ template<typename T, int RTYPE>
 H5T_class_t HDF5_matrix<T, RTYPE>::set_types () {
     switch (RTYPE) {
         case REALSXP:
-            HDT=H5::DataType(H5::PredType::NATIVE_DOUBLE);
+            default_type=H5::DataType(H5::PredType::NATIVE_DOUBLE);
             return H5T_FLOAT;
         case INTSXP: case LGLSXP:
-            HDT=H5::DataType(H5::PredType::NATIVE_INT32);
+            default_type=H5::DataType(H5::PredType::NATIVE_INT32);
             return H5T_INTEGER;
         case STRSXP:
-            HDT=H5::DataType(H5::StrType(hdata));
+            default_type=H5::DataType(H5::StrType(hdata));
             return H5T_STRING;
     }
     std::stringstream err;
@@ -527,7 +527,8 @@ template<typename T, int RTYPE>
 HDF5_matrix<T, RTYPE>::~HDF5_matrix() {}
 
 template<typename T, int RTYPE>
-void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t end) { 
+template<typename X>
+void HDF5_matrix<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     check_rowargs(r, start, end);
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
@@ -537,10 +538,17 @@ void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t e
     hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
     hdata.read(out, HDT, rowspace, hspace);
     return;
-} 
+}
 
 template<typename T, int RTYPE>
-void HDF5_matrix<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t end) { 
+void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t end) { 
+    extract_row(r, out, default_type, start, end);
+    return;
+}
+
+template<typename T, int RTYPE>
+template<typename X>
+void HDF5_matrix<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     check_colargs(c, start, end);
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
@@ -551,9 +559,16 @@ void HDF5_matrix<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t e
     hdata.read(out, HDT, colspace, hspace);
     return;
 }
+    
+template<typename T, int RTYPE>
+void HDF5_matrix<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t end) { 
+    extract_col(c, out, default_type, start, end);
+    return;
+}
 
 template<typename T, int RTYPE>
-void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
+template<typename X>
+void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, X* out, const H5::DataType& HDT) { 
     check_oneargs(r, c);
     h5_start[0]=c;
     h5_start[1]=r;  
@@ -563,8 +578,14 @@ void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
 }
 
 template<typename T, int RTYPE>
+void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, T* out) { 
+    extract_one(r, c, out, default_type);
+    return;
+}
+
+template<typename T, int RTYPE>
 const H5::DataType& HDF5_matrix<T, RTYPE>::get_datatype() const { 
-    return HDT;
+    return default_type;
 }
 
 #endif

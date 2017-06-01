@@ -307,10 +307,10 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
     // Type setting.
     switch (RTYPE) {
         case REALSXP:
-            HDT=H5::DataType(H5::PredType::NATIVE_DOUBLE);
+            default_type=H5::DataType(H5::PredType::NATIVE_DOUBLE);
             break;
         case INTSXP: case LGLSXP:
-            HDT=H5::DataType(H5::PredType::NATIVE_INT32);
+            default_type=H5::DataType(H5::PredType::NATIVE_INT32);
             break;
         default:
             std::stringstream err;
@@ -321,7 +321,7 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
     // Creating the data set.
     H5::DSetCreatPropList plist;
     const T empty=get_empty();
-    plist.setFillValue(HDT, &empty);
+    plist.setFillValue(default_type, &empty);
 
     std::vector<hsize_t> chunk_dims(2);
     chunk_dims[0]=chunks[1]; // Setting the chunk dimensions (flipping them, see below).
@@ -334,7 +334,7 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
     dims[1]=this->nrow; 
 
     hspace.setExtentSimple(2, dims.data());
-    hdata=hfile.createDataSet(dname, HDT, hspace, plist); 
+    hdata=hfile.createDataSet(dname, default_type, hspace, plist); 
 
     // Setting other values.
     h5_start[0]=0;
@@ -377,9 +377,16 @@ void HDF5_output<T, V>::select_col(size_t c, size_t start, size_t end) {
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::fill_col(size_t c, T* in, size_t start, size_t end) {
+template<typename X>
+void HDF5_output<T, V>::fill_col(size_t c, const X* in, const H5::DataType& HDT, size_t start, size_t end) {
     select_col(c, start, end);
     hdata.write(in, HDT, colspace, hspace);
+    return;
+}
+
+template<typename T, class V>
+void HDF5_output<T, V>::fill_col(size_t c, const T* in, size_t start, size_t end) {
+    fill_col(c, in, default_type, start, end);
     return;
 }
 
@@ -396,9 +403,16 @@ void HDF5_output<T, V>::select_row(size_t r, size_t start, size_t end) {
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::fill_row(size_t c, T* in, size_t start, size_t end) {
+template<typename X>
+void HDF5_output<T, V>::fill_row(size_t c, const X* in, const H5::DataType& HDT, size_t start, size_t end) {
     select_row(c, start, end);
     hdata.write(in, HDT, rowspace, hspace);
+    return;
+}
+
+template<typename T, class V>
+void HDF5_output<T, V>::fill_row(size_t c, const T* in, size_t start, size_t end) {
+    fill_row(c, in, default_type, start, end);
     return;
 }
 
@@ -414,21 +428,35 @@ void HDF5_output<T, V>::select_one(size_t r, size_t c) {
 template<typename T, class V>
 void HDF5_output<T, V>::fill(size_t r, size_t c, T in) {
     select_one(r, c);
-    hdata.write(&in, HDT, onespace, hspace);
+    hdata.write(&in, default_type, onespace, hspace);
     return;
 }
 
 template<typename T, class V>
-void HDF5_output<T, V>::get_row(size_t r, T* out, size_t start, size_t end) { 
+template<typename X>
+void HDF5_output<T, V>::get_row(size_t r, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     select_row(r, start, end);
     hdata.read(out, HDT, rowspace, hspace);
     return;
 } 
 
 template<typename T, class V>
-void HDF5_output<T, V>::get_col(size_t c, T* out, size_t start, size_t end) { 
+void HDF5_output<T, V>::get_row(size_t r, T* out, size_t start, size_t end) { 
+    get_row(r, out, default_type, start, end);
+    return;
+} 
+
+template<typename T, class V>
+template<typename X>
+void HDF5_output<T, V>::get_col(size_t c, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     select_col(c, start, end);
     hdata.read(out, HDT, colspace, hspace);
+    return;
+}
+
+template<typename T, class V>
+void HDF5_output<T, V>::get_col(size_t c, T* out, size_t start, size_t end) { 
+    get_col(c, out, default_type, start, end);
     return;
 }
 
@@ -436,7 +464,7 @@ template<typename T, class V>
 T HDF5_output<T, V>::get(size_t r, size_t c) { 
     select_one(r, c);
     T out;
-    hdata.read(&out, HDT, onespace, hspace);
+    hdata.read(&out, default_type, onespace, hspace);
     return out;
 }
 
