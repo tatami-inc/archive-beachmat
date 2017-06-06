@@ -54,7 +54,7 @@ std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, output
 }
 
 std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify, bool preserve_zero) {
-    return create_logical_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero && get_class(incoming)=="lgCMatrix"));
+    return create_logical_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero));
 }
 
 }

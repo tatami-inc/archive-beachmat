@@ -210,14 +210,12 @@ void sparse_output<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) 
 template<typename T, class V>
 T sparse_output<T, V>::get(size_t r, size_t c) {
     check_oneargs(r, c);
-    T output, empty=get_empty();
-
     const std::deque<data_pair>& current=data[c];
-    auto cIt=find_matching_row(current.begin(), current.end(), data_pair(r, empty));
+    auto cIt=find_matching_row(current.begin(), current.end(), data_pair(r, get_empty()));
     if (cIt!=current.end() && cIt->first==r) {
         return cIt->second;
     } else {
-        return empty;
+        return get_empty();
     }
 }
 

@@ -108,7 +108,7 @@ output_mode choose_output_mode(const Rcpp::RObject& in, bool simplify, bool pres
     if (simplify) {
         return BASIC;
     }
-    if (preserve_zero) {
+    if (preserve_zero && !curclass.empty() && curclass.substr(1)=="gCMatrix") {
         return SPARSE;
     } 
     return HDF5;

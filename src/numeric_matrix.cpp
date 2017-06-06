@@ -54,7 +54,7 @@ std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, output
 }
 
 std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify, bool preserve_zero) {
-    return create_numeric_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero && get_class(incoming)=="dgCMatrix"));
+    return create_numeric_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero));
 }
 
 }
