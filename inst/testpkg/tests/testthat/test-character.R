@@ -26,6 +26,24 @@ test_that("Simple character matrix input is okay", {
     beachtest:::check_type(sFUN, expected="character")
 })
 
+# Testing RLE matrices:
+
+set.seed(23456)
+library(DelayedArray)
+rFUN <- function(nr=15, nc=10) {
+    as(matrix(sample(LETTERS[1:4], nr*nc, replace=TRUE), nr, nc), "RleArray")
+}
+
+test_that("RLE character matrix input is okay", {
+    beachtest:::check_character_mat(rFUN)
+    beachtest:::check_character_mat(rFUN, nr=5, nc=30)
+    beachtest:::check_character_mat(rFUN, nr=30, nc=5)
+    
+    beachtest:::check_character_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(rFUN, expected="character")
+})
+
 # Testing HDF5 matrices:
 
 set.seed(34567)

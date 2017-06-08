@@ -46,6 +46,26 @@ private:
     simple_matrix<Rcpp::String, Rcpp::StringVector> mat;
 };
 
+/* RLE character matrix */
+
+class Rle_character_matrix : public character_matrix {
+public:
+    Rle_character_matrix(const Rcpp::RObject& incoming);
+    ~Rle_character_matrix();
+  
+    size_t get_nrow() const;
+    size_t get_ncol() const;
+ 
+    void get_row(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+
+    Rcpp::String get(size_t, size_t);
+
+    std::unique_ptr<character_matrix> clone() const;
+private:
+    Rle_matrix<Rcpp::String, Rcpp::StringVector> mat;
+};
+
 /* HDF5Matrix */
 
 class HDF5_character_matrix : public character_matrix {

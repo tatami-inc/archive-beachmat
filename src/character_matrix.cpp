@@ -46,6 +46,36 @@ std::unique_ptr<character_matrix> simple_character_matrix::clone() const {
     return std::unique_ptr<character_matrix>(new simple_character_matrix(*this));
 }
 
+/* Methods for the Rle character matrix. */
+
+Rle_character_matrix::Rle_character_matrix(const Rcpp::RObject& incoming) : mat(incoming) {}
+
+Rle_character_matrix::~Rle_character_matrix() {}
+
+size_t Rle_character_matrix::get_nrow() const {
+    return mat.get_nrow();
+}
+
+size_t Rle_character_matrix::get_ncol() const {
+    return mat.get_ncol();
+}
+
+void Rle_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
+    mat.get_row(r, out, start, end);
+}
+
+void Rle_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
+    mat.get_col(c, out, start, end);
+}
+
+Rcpp::String Rle_character_matrix::get(size_t r, size_t c) {
+    return mat.get(r, c);
+}
+
+std::unique_ptr<character_matrix> Rle_character_matrix::clone() const {
+    return std::unique_ptr<character_matrix>(new Rle_character_matrix(*this));
+}
+
 /* Methods for the HDF5 character matrix. */
 
 HDF5_character_matrix::HDF5_character_matrix(const Rcpp::RObject& incoming) : mat(incoming) {
@@ -105,6 +135,8 @@ std::unique_ptr<character_matrix> create_character_matrix(const Rcpp::RObject& i
         std::string ctype=get_class(incoming);
         if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
             return std::unique_ptr<character_matrix>(new HDF5_character_matrix(incoming));
+        } else if (ctype=="RleMatrix") { 
+            return std::unique_ptr<character_matrix>(new Rle_character_matrix(incoming));
         }
         std::stringstream err;
         err << "unsupported class '" << ctype << "' for character_matrix";
