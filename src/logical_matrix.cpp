@@ -32,6 +32,8 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
             return std::unique_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
         } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
             return std::unique_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
+        } else if (ctype=="RleMatrix") {
+            return std::unique_ptr<logical_matrix>(new Rle_logical_matrix(incoming));
         }
         throw_custom_error("unsupported class '", ctype, "' for logical_matrix");
     } 

@@ -16,6 +16,10 @@ typedef lin_matrix<int> integer_matrix;
 
 typedef simple_lin_matrix<int, Rcpp::IntegerVector> simple_integer_matrix;
 
+/* RleMatrix */
+
+typedef Rle_lin_matrix<int, Rcpp::IntegerVector> Rle_integer_matrix;
+
 /* HDF5Matrix */
 
 typedef HDF5_lin_matrix<int, INTSXP> HDF5_integer_matrix;

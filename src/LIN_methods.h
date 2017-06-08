@@ -243,6 +243,58 @@ std::unique_ptr<lin_matrix<T> > Psymm_lin_matrix<T, V>::clone() const {
     return std::unique_ptr<lin_matrix<T> >(new Psymm_lin_matrix<T, V>(*this));
 }
 
+/* Defining the Rle interface. */
+
+template<typename T, class V>
+Rle_lin_matrix<T, V>::Rle_lin_matrix(const Rcpp::RObject& incoming) : mat(incoming) {}
+
+template<typename T, class V>
+Rle_lin_matrix<T, V>::~Rle_lin_matrix() {}
+
+template<typename T, class V>
+size_t Rle_lin_matrix<T, V>::get_nrow() const {
+    return mat.get_nrow();
+}
+
+template<typename T, class V>
+size_t Rle_lin_matrix<T, V>::get_ncol() const {
+    return mat.get_ncol();
+}
+
+template<typename T, class V>
+void Rle_lin_matrix<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void Rle_lin_matrix<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_col(c, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void Rle_lin_matrix<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+void Rle_lin_matrix<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    mat.get_row(r, out, start, end);
+    return;
+}
+
+template<typename T, class V>
+T Rle_lin_matrix<T, V>::get(size_t r, size_t c) {
+    return mat.get(r, c);
+}
+
+template<typename T, class V>
+std::unique_ptr<lin_matrix<T> > Rle_lin_matrix<T, V>::clone() const {
+    return std::unique_ptr<lin_matrix<T> >(new Rle_lin_matrix<T, V>(*this));
+}
+
 /* Defining the HDF5 interface. */
 
 template<typename T, int RTYPE>

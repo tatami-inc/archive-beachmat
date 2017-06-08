@@ -96,6 +96,31 @@ protected:
     size_t get_index(size_t, size_t) const;
 };
 
+/* Run length encoding-based matrix */
+
+template<typename T, class V>
+class Rle_matrix : public any_matrix {
+public:
+    Rle_matrix(const Rcpp::RObject&);
+    ~Rle_matrix();
+
+    T get(size_t, size_t);
+
+    template<class Iter>
+    void get_row(size_t, Iter, size_t, size_t); 
+
+    template<class Iter>
+    void get_col(size_t, Iter, size_t, size_t); 
+private:
+    V runvalue;
+    std::vector<size_t> coldex;
+    std::vector<std::deque<size_t> > cumrow;
+
+    size_t cache_row, cache_start, cache_end;
+    std::vector<size_t> cache_indices;
+    void update_indices(size_t r, size_t start, size_t end);
+};
+
 /* HDF5Matrix */
 
 template<typename T, int RTYPE>

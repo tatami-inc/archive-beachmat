@@ -28,6 +28,10 @@ typedef Csparse_lin_matrix<int, Rcpp::LogicalVector> Csparse_logical_matrix;
 
 typedef Psymm_lin_matrix<int, Rcpp::LogicalVector> Psymm_logical_matrix;
 
+/* RleMatrix */
+
+typedef Rle_lin_matrix<int, Rcpp::LogicalVector> Rle_logical_matrix;
+
 /* HDF5Matrix */
 
 typedef HDF5_lin_matrix<int, LGLSXP> HDF5_logical_matrix;

@@ -14,6 +14,8 @@ std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incom
         std::string ctype=get_class(incoming);
         if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
             return std::unique_ptr<integer_matrix>(new HDF5_integer_matrix(incoming));
+        } else if (ctype=="RleMatrix") {
+            return std::unique_ptr<integer_matrix>(new Rle_integer_matrix(incoming));
         }
         std::stringstream err;
         err << "unsupported class '" << ctype << "' for integer_matrix";

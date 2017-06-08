@@ -32,6 +32,8 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
             return std::unique_ptr<numeric_matrix>(new Psymm_numeric_matrix(incoming));
         } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
             return std::unique_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
+        } else if (ctype=="RleMatrix") {
+            return std::unique_ptr<numeric_matrix>(new Rle_numeric_matrix(incoming));
         }
         throw_custom_error("unsupported class '", ctype, "' for numeric_matrix");
     } 

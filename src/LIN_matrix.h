@@ -137,6 +137,30 @@ private:
     Psymm_matrix<T, V> mat;
 };
 
+/* Rle-based LIN Matrix */
+
+template<typename T, class V>
+class Rle_lin_matrix : public lin_matrix<T> {
+public:    
+    Rle_lin_matrix(const Rcpp::RObject&);
+    ~Rle_lin_matrix();
+
+    size_t get_nrow() const;
+    size_t get_ncol() const;
+
+    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    T get(size_t, size_t);
+
+    std::unique_ptr<lin_matrix<T> > clone() const;
+private:
+    Rle_matrix<T, V> mat;
+};
+
 /* HDF5Matrix of LINs */
 
 template<typename T, int RTYPE>

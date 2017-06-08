@@ -84,6 +84,11 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
             Rcpp::RObject first_val=get_safe_slot(h5seed, "first_val");
             return first_val.sexp_type();
 
+        } else if (classname=="RleMatrix") {
+            Rcpp::RObject rleseed=get_safe_slot(incoming, "seed");
+            Rcpp::RObject rle=get_safe_slot(rleseed, "rle");
+            return get_safe_slot(rle, "values").sexp_type();
+
         } else if (classname.length()==9 && classname.substr(3)=="Matrix") {
             if (classname[0]=='d') {
                 return REALSXP;

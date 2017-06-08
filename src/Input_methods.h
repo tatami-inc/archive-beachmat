@@ -411,6 +411,197 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
     return;
 }
 
+/* Methods for an Rle-based matrix. */
+
+template<typename T, class V>
+Rle_matrix<T, V>::Rle_matrix(const Rcpp::RObject& incoming) {
+    std::string ctype=get_class(incoming);
+    if (!incoming.isS4() || ctype!="RleMatrix") { 
+        throw std::runtime_error("matrix should be a RleMatrix object");
+    }
+
+    const Rcpp::RObject& rle_seed=get_safe_slot(incoming, "seed");
+    std::string stype=get_class(rle_seed);
+    if (!rle_seed.isS4() || stype!="RleArraySeed") {
+        throw_custom_error("'seed' slot in a ", ctype, " object should be a RleArraySeed object");
+    }
+
+    if (!rle_seed.hasAttribute("dim")) { 
+        throw_custom_error("", stype, " object should have 'dim' attribute"); 
+    }
+    this->fill_dims(rle_seed.attr("dim"));
+    const size_t& NC=this->ncol;
+    const size_t& NR=this->nrow;
+
+    const Rcpp::RObject& rle=get_safe_slot(rle_seed, "rle");
+    std::string rtype=get_class(rle);
+    if (!rle.isS4() || rtype!="Rle") {
+        throw_custom_error("'rle' slot in a ", rtype, " objects should be a Rle object");
+    }
+
+    Rcpp::RObject temp_rv=get_safe_slot(rle, "values");
+    if (temp_rv.sexp_type()!=runvalue.sexp_type()) { 
+        std::stringstream err;
+        err << "'values' slot in a " << get_class(incoming) << " object should be " << translate_type(runvalue.sexp_type());
+        throw std::runtime_error(err.str().c_str());
+    }
+    runvalue=temp_rv;
+
+    const Rcpp::RObject& temp_rl=get_safe_slot(rle, "lengths");
+    if (temp_rl.sexp_type()!=INTSXP) { 
+        throw_custom_error("'lengths' slot in a ", rtype, " object should be integer"); 
+    }
+    Rcpp::IntegerVector runlength(temp_rl);
+    if (runlength.size()!=runvalue.size()) { 
+        throw std::runtime_error("run value and length vectors should be of the same length"); 
+    }
+
+    /* The coldex vector contains the index on "runvalue" where each column starts.
+     * The cumrow vector contains the cumulative row for each column, taken by adding all the RLE lengths within a column.
+     * Each cumulative row corresponds to a value in "runvalue".
+     */
+    coldex.resize(NC + 1);
+    cumrow.resize(NC);
+    std::deque<size_t> tmp_holder;
+
+    size_t col=0, row=0, counter=0;
+    for (auto rlIt=runlength.begin(); rlIt!=runlength.end(); ++rlIt, ++counter) {
+        row+=*rlIt;
+        if (row >= NR) { 
+            // Some work required to account for cases where a single RLE entry runs over into the next column(s).
+            while (row >= NR) {
+                tmp_holder.push_back(NR);
+                row -= NR;
+                if (col==NC) {
+                    throw std::runtime_error("length of RLE is inconsistent with matrix dimensions");
+                }
+                cumrow[col].swap(tmp_holder);
+                ++col;
+                coldex[col]=counter; // Current value is the start of the next column.
+            }
+
+            if (row > 0) { 
+                if (col==NC) {
+                    throw std::runtime_error("length of RLE is inconsistent with matrix dimensions");
+                }
+                tmp_holder.push_back(row);
+            } else {
+                ++(coldex[col]); // Next value is the start of the next column, if the run expires at the end of the last column.
+            }
+        } else {
+            tmp_holder.push_back(row);
+        }
+    }
+    
+    // Setting up the cached indices.
+    cache_row=0;
+    cache_start=0;
+    cache_end=0;
+    cache_indices.resize(NC);
+    return;
+}
+
+template<typename T, class V>
+Rle_matrix<T, V>::~Rle_matrix() {}
+
+template<typename T, class V>
+template<class Iter>
+void Rle_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
+    check_colargs(c, start, end);
+
+    const auto& curcol=cumrow[c];
+    auto rvIt=runvalue.begin() + coldex[c];
+    auto ccIt=curcol.begin();
+    if (start) {
+        auto tmp_ccIt=std::upper_bound(ccIt, curcol.end(), start); // jump to start.
+        rvIt+=tmp_ccIt - ccIt;
+        ccIt=tmp_ccIt;
+    }
+
+    size_t current_row=start;
+    while (current_row < end) {
+        const size_t n_to_add=std::min(end, *ccIt) - current_row;
+        std::fill(out, out+n_to_add, *rvIt);
+        current_row=*ccIt;
+        ++ccIt;
+        ++rvIt;
+        out+=n_to_add;
+    }
+
+    return;
+}
+
+template<typename T, class V>
+void Rle_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
+    if (cache_start!=start || cache_end!=end) {
+        // Regenerate if they don't match; too much effort to keep track of which ones are valid.
+        cache_start=start;
+        cache_end=end;
+        std::fill(cache_indices.begin() + start, cache_indices.begin() + end, 0);
+        cache_row=0;
+    }
+
+    /* Index for column 'c' should hold the point at cumrow[c] that is greater than 'r'.
+     * We use an upper bound because a cumulative row of 1 corresponds to a row index of 0.
+     */
+    if (r==cache_row) {
+        return;
+    }
+    if (r==cache_row+1) {
+        for (size_t c=start; c<end; ++c) {
+            size_t& curIndex=cache_indices[c];
+            if (cumrow[c][curIndex] <= r) {
+                ++curIndex;
+            }            
+        }        
+    } else if (r+1==cache_row) {
+        for (size_t c=start; c<end; ++c) {
+            size_t& curIndex=cache_indices[c];
+            if (curIndex) {
+                if (cumrow[c][curIndex-1] > r) {
+                    --curIndex;
+                }
+            }        
+        }
+    } else if (r > cache_row) {
+        for (size_t c=start; c<end; ++c) {
+            const auto& curcol=cumrow[c];
+            size_t& curIndex=cache_indices[c];
+            auto rdIt=std::upper_bound(curcol.begin() + curIndex, curcol.end(), r);
+            curIndex=rdIt - curcol.begin();            
+        }
+    } else if (r < cache_row) {
+        for (size_t c=start; c<end; ++c) {
+            const auto& curcol=cumrow[c];
+            size_t& curIndex=cache_indices[c];
+            auto rdIt=std::upper_bound(curcol.begin(), curcol.begin() + curIndex, r);
+            curIndex=rdIt - curcol.begin();            
+        }
+    }
+
+    cache_row=r;
+    return;
+}
+
+template<typename T, class V>
+template<class Iter>
+void Rle_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
+    check_rowargs(r, start, end);
+    update_indices(r, start, end);
+    for (size_t c=start; c<end; ++c, ++out) {
+        (*out)=*(runvalue.begin() + cache_indices[c] + coldex[c]);
+    }
+    return;
+}
+
+template<typename T, class V>
+T Rle_matrix<T, V>::get(size_t r, size_t c) {
+    check_oneargs(r, c);
+    const auto& curcol=cumrow[c];
+    size_t extra=std::upper_bound(curcol.begin(), curcol.end(), r) - curcol.begin();
+    return *(runvalue.begin() + coldex[c] + extra);
+}
+
 /* Methods for a HDF5 matrix. */
 
 template<typename T, int RTYPE>
