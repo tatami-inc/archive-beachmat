@@ -6,8 +6,8 @@
 # Testing simple matrices:
 
 set.seed(12345)
-sFUN <- function(nr=15, nc=10) {
-    matrix(rpois(nr*nc, lambda=5), nr, nc)
+sFUN <- function(nr=15, nc=10, lambda=5) {
+    matrix(rpois(nr*nc, lambda=lambda), nr, nc)
 }
 
 test_that("Simple integer matrix input is okay", {
@@ -18,6 +18,29 @@ test_that("Simple integer matrix input is okay", {
     beachtest:::check_integer_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
     
     beachtest:::check_type(sFUN, expected="integer")
+})
+
+# Testing RLE matrices:
+
+set.seed(23456)
+library(DelayedArray)
+rFUN <- function(nr=15, nc=10, lambda=1) {
+    as(sFUN(nr, nc, lambda=lambda), "RleArray")
+}
+
+test_that("RLE integer matrix input is okay", {
+    beachtest:::check_integer_mat(rFUN)
+    beachtest:::check_integer_mat(rFUN, nr=5, nc=30)
+    beachtest:::check_integer_mat(rFUN, nr=30, nc=5)
+
+    beachtest:::check_integer_mat(rFUN, lambda=0.1)
+    beachtest:::check_integer_mat(rFUN, nr=5, nc=30, lambda=0.1)
+    beachtest:::check_integer_mat(rFUN, nr=30, nc=5, lambda=0.1)
+    
+    beachtest:::check_integer_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    beachtest:::check_integer_slice(rFUN, lambda=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(rFUN, expected="integer")
 })
 
 # Testing HDF5 matrices:

@@ -88,6 +88,24 @@ test_that("Symmetric logical matrix input is okay", {
     beachtest:::check_type(spFUN, mode="L", expected="logical")
 })
 
+# Testing RLE matrices:
+
+set.seed(23456)
+library(DelayedArray)
+rFUN <- function(nr=15, nc=10) {
+    as(sFUN(nr, nc), "RleArray")
+}
+
+test_that("RLE logical matrix input is okay", {
+    beachtest:::check_logical_mat(rFUN)
+    beachtest:::check_logical_mat(rFUN, nr=5, nc=30)
+    beachtest:::check_logical_mat(rFUN, nr=30, nc=5)
+    
+    beachtest:::check_logical_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(rFUN, expected="logical")
+})
+
 # Testing HDF5 matrices:
 
 set.seed(34567)

@@ -88,6 +88,29 @@ test_that("Symmetric numeric matrix input is okay", {
     beachtest:::check_type(spFUN, mode="L", expected="double")
 })
 
+# Testing Rle matrices:
+
+set.seed(23456)
+library(DelayedArray)
+rFUN <- function(nr=15, nc=10, density=0.2) {
+    as(as.matrix(csFUN(nr, nc, density)), "RleArray")
+}
+
+test_that("RLE numeric matrix input is okay", {
+    beachtest:::check_numeric_mat(rFUN)
+    beachtest:::check_numeric_mat(rFUN, nr=5, nc=30)
+    beachtest:::check_numeric_mat(rFUN, nr=30, nc=5)
+
+    beachtest:::check_numeric_mat(rFUN, density=0.1)
+    beachtest:::check_numeric_mat(rFUN, nr=5, nc=30, density=0.1)
+    beachtest:::check_numeric_mat(rFUN, nr=30, nc=5, density=0.1)
+    
+    beachtest:::check_numeric_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    beachtest:::check_numeric_slice(rFUN, density=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    
+    beachtest:::check_type(rFUN, expected="double")
+})
+
 # Testing HDF5 matrices:
 
 set.seed(34567)
