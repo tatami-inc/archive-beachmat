@@ -21,7 +21,7 @@ int find_sexp_type (const Rcpp::RObject&);
 
 // Output utilities.
 
-enum output_mode { BASIC, HDF5, SPARSE };
+enum output_mode { SIMPLE, HDF5, SPARSE };
 
 output_mode choose_output_mode(const Rcpp::RObject&, bool, bool);
 

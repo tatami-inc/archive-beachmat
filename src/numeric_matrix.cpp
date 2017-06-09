@@ -44,7 +44,7 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
 
 std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, output_mode mode) {
     switch (mode) {
-        case BASIC:
+        case SIMPLE:
             return std::unique_ptr<numeric_output>(new simple_numeric_output(nrow, ncol));
         case SPARSE:
             return std::unique_ptr<numeric_output>(new sparse_numeric_output(nrow, ncol));

@@ -185,10 +185,10 @@ For character matrices, `X` should be of type `Rcpp::StringVector::iterator`, an
 
 The following matrix classes are supported:
 
-- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dspMatrix`, `HDF5Matrix`, `DelayedMatrix`
-- integer: `matrix`, `HDF5Matrix`, `DelayedMatrix`
-- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lspMatrix`, `HDF5Matrix`, `DelayedMatrix`
-- character: `matrix`, `HDF5Matrix`, `DelayedMatrix`
+- numeric: `matrix`, `dgeMatrix`, `dgCMatrix`, `dspMatrix`, `RleMatrix`, `HDF5Matrix`, `DelayedMatrix`
+- integer: `matrix`, `RleMatrix`, `HDF5Matrix`, `DelayedMatrix`
+- logical: `matrix`, `lgeMatrix`, `lgCMatrix`, `lspMatrix`, `RleMatrix`, `HDF5Matrix`, `DelayedMatrix`
+- character: `matrix`, `RleMatrix`, `HDF5Matrix`, `DelayedMatrix`
 
 Additional classes can be added on a need-to-use basis.
 As a general rule, if a matrix-like object can be stored in a `SummarizedExperiment` class (from the `r Biocpkg("SummarizedExperiment")` package), the API should be able to handle it.
@@ -238,30 +238,38 @@ In particular, the `character_matrix` interface differs from the others, so a si
 
 # Overview of the API (output)
 
-## An example with a numeric matrix
+## Specifying the output type
 
-Two types of output matrices are supported - simple `matrix` and `HDF5Matrix` objects.
-A simple numeric output matrix with `nrow` rows and `ncol` columns is created by:
-
-```
-std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol);
-```
-
-A numeric `HDF5Matrix` output matrix is created by setting the last argument (`basic`) to `false`:
+Three types of output matrices are supported - simple `matrix`, `*gCMatrix` and `HDF5Matrix` objects.
+For example, a simple numeric output matrix with `nrow` rows and `ncol` columns is created by:
 
 ```
-std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, false);
+std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, beachmat::SIMPLE);
 ```
 
-The function is also overloaded so that it can choose the type of output to match an input type.
-For example, if I have a matrix object `dmat`, the output type can be matched to the input type with:
+A sparse matrix is similarly created by setting the last argument to `beachmat::SPARSE`, while a `HDF5Matrix` is constructed by setting `beachmat::HDF5`.
+
+Another option is to allow the function to dynamically choose the output type to match that of an existing matrix.
+This is useful for automatically choosing an output format that reflects the choice of input format.
+For example, if data are supplied to a function in a simple matrix, it would be reasonable to expect that the output is similarly small enough to be stored as a simple matrix.
+On the other hand, if the input is a `HDF5Matrix`, it may make more sense to return a `HDF5Matrix` object.
+
+Dynamic choice of output type is performed by supplying the `Rcpp::Robject` object containing the input matrix.
+If I have a matrix object `dmat`, the output type can be matched to the input type with:
 
 ```
-std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, dmat, false);
+std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, dmat, 
+    /* simplify = */ true, /* preserve_zero = */ false);
 ```
 
-Here, the last argument (`simplify`) indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
+The second-last argument `simplify` indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
 If `false`, a `HDF5Matrix` output object will be returned instead.
+
+The last argument `preserve_zero` indicates whether a `*gCMatrix` input should result in a `dgCMatrix` output.
+Exact zeroes are detected and ignored when filling this matrix.
+Also note that if `preserve_zero` is `true`, the setting of `simplify` is ignored when a sparse input matrix is supplied.
+
+## Methods for output matrices
 
 All of the methods described for `numeric_matrix` objects are also available for a `numeric_output` matrix.
 In addition, several methods are available for storing data:
@@ -302,6 +310,7 @@ Currently, character output matrices are not supported.
 Similarly, the name of the data set is obtained via `getHDF5DumpName()`.
 Both names are recorded in the dump log via `appendDatasetCreationToHDF5DumpLog()`.
 This mimics the behaviour observed when `HDF5Matrix` instances are created at the R level.
+Similarly, the compression level and chunk dimensions will be taken from the appropriate global variables.
 - The API is not thread-safe, due to (i) the use of cached class members and (ii) the potential for race conditions when writing to the same location on disk/memory.
 The first issue can be solved by using `clone` to create `*_output` copies for use in each thread.
 However, each copy will still read from and write to the same disk/memory location.

@@ -44,7 +44,7 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
 
 std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, output_mode mode) {
     switch (mode) {
-        case BASIC:
+        case SIMPLE:
             return std::unique_ptr<logical_output>(new simple_logical_output(nrow, ncol));
         case SPARSE:
             return std::unique_ptr<logical_output>(new sparse_logical_output(nrow, ncol));

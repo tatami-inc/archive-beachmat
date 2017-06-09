@@ -28,7 +28,7 @@ std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incom
 
 std::unique_ptr<integer_output> create_integer_output(int nrow, int ncol, output_mode mode) {
     switch (mode) {
-        case BASIC:
+        case SIMPLE:
             return std::unique_ptr<integer_output>(new simple_integer_output(nrow, ncol));
         case HDF5:
             return std::unique_ptr<integer_output>(new HDF5_integer_output(nrow, ncol));

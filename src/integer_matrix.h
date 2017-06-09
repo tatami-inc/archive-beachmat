@@ -44,7 +44,7 @@ typedef HDF5_lin_output<int, Rcpp::IntegerVector> HDF5_integer_output;
 
 /* Output dispatchers */
 
-std::unique_ptr<integer_output> create_integer_output(int, int, output_mode=BASIC);
+std::unique_ptr<integer_output> create_integer_output(int, int, output_mode=SIMPLE);
 
 std::unique_ptr<integer_output> create_integer_output(int, int, const Rcpp::RObject&, bool);
 

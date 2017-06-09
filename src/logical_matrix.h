@@ -60,7 +60,7 @@ typedef HDF5_lin_output<int, Rcpp::LogicalVector> HDF5_logical_output;
 
 /* Output dispatchers */
 
-std::unique_ptr<logical_output> create_logical_output(int, int, output_mode=BASIC);
+std::unique_ptr<logical_output> create_logical_output(int, int, output_mode=SIMPLE);
 
 std::unique_ptr<logical_output> create_logical_output(int, int, const Rcpp::RObject&, bool, bool=false);
 
