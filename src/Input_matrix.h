@@ -144,6 +144,7 @@ public:
     const H5::DataType& get_datatype() const;
 protected:
     Rcpp::RObject realized;
+    std::string filename, dataname;
 
     H5::H5File hfile;
     H5::DataSet hdata;
@@ -152,6 +153,12 @@ protected:
 
     H5::DataType default_type;
     H5T_class_t set_types();
+
+    void prepare_chunk_cache_settings();
+    static const size_t HARDLIMIT=2000000000;
+    bool onrow, oncol;
+    bool largercol, largerrow, colokay, rowokay;
+    H5::FileAccPropList rowlist, collist;
 };
 
 #include "Input_methods.h"

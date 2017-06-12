@@ -8,6 +8,7 @@
 #include <memory>
 #include <stdexcept>
 #include <sstream>
+#include <cmath>
 
 #include "Rcpp.h"
 #include "R.h"

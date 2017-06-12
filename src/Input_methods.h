@@ -605,7 +605,9 @@ T Rle_matrix<T, V>::get(size_t r, size_t c) {
 /* Methods for a HDF5 matrix. */
 
 template<typename T, int RTYPE>
-HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_NilValue) { 
+HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_NilValue), onrow(false), oncol(false),
+        rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
+
     std::string ctype=get_class(incoming);
     if (incoming.isS4()) {
         if (ctype=="DelayedMatrix") { 
@@ -642,23 +644,21 @@ HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_N
     const size_t& NC=this->ncol;
     const size_t& NR=this->nrow;
 
-    std::string fname;
+    // Checking names.
     try {
-        fname=make_to_string(get_safe_slot(h5_seed, "file"));
+        filename=make_to_string(get_safe_slot(h5_seed, "file"));
     } catch (...) { 
         throw_custom_error("'file' slot in a ", stype, " object should be a string");
     }
-
-    std::string dataset;
     try {
-        dataset=make_to_string(get_safe_slot(h5_seed, "name"));
+        dataname=make_to_string(get_safe_slot(h5_seed, "name"));
     } catch (...) { 
         throw_custom_error("'name' slot in a ", stype, " object should be a string");
     }
     
     // Setting up the HDF5 accessors.
-    hfile.openFile(H5std_string(fname), H5F_ACC_RDONLY);
-    hdata = hfile.openDataSet(H5std_string(dataset));
+    hfile.openFile(filename.c_str(), H5F_ACC_RDONLY);
+    hdata = hfile.openDataSet(dataname.c_str());
     auto expected=set_types();
     if (hdata.getTypeClass()!=expected) {
         std::stringstream err;
@@ -693,6 +693,9 @@ HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_N
     one_count[1]=1;
     onespace.setExtentSimple(1, one_count);
     onespace.selectAll();
+
+    // Setting the chunk cache parameters.
+    prepare_chunk_cache_settings();
     return;
 }
 
@@ -715,12 +718,60 @@ H5T_class_t HDF5_matrix<T, RTYPE>::set_types () {
 }
 
 template<typename T, int RTYPE>
+void HDF5_matrix<T, RTYPE>::prepare_chunk_cache_settings () {
+    /* Setting up the chunk cache specification. */
+    H5::DSetCreatPropList cparms = hdata.getCreatePlist();
+    hsize_t chunk_dims[2];
+    cparms.getChunk(2, chunk_dims);
+    const size_t chunk_nrows=chunk_dims[1];
+    const size_t chunk_ncols=chunk_dims[0];
+    const size_t num_rowchunks=std::ceil(double(this->nrow)/chunk_nrows); // taking the ceiling.
+    const size_t num_colchunks=std::ceil(double(this->ncol)/chunk_ncols); 
+
+    // Everything is transposed, so hash indices are filled column-major.
+    // Computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
+    const size_t nslots = std::ceil(double(num_colchunks)/num_rowchunks) * num_rowchunks + 1; 
+
+    // Computing the size of the cache required to store all chunks in each row or column.
+    // Allowing a maximium size of 2 GB.
+    const size_t eachchunk=default_type.getSize() * chunk_nrows * chunk_ncols;
+    const size_t nchunks_in_cache=HARDLIMIT/eachchunk;
+    colokay=nchunks_in_cache >= num_colchunks; // This way avoids overflow from eachchunk*num_Xchunks.
+    rowokay=nchunks_in_cache >= num_rowchunks;
+
+    const size_t eachrow=eachchunk * num_rowchunks;
+    const size_t eachcol=eachchunk * num_colchunks;
+    largercol=eachcol >= eachrow;
+    largerrow=eachrow >= eachcol;
+
+    // The first argument is ignored, according to https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html.
+    // Setting w0 to 0 to evict the last used chunk; no need to worry about full vs partial reads here.
+    rowlist.setCache(10000, nslots, eachrow, 0);
+    collist.setCache(10000, nslots, eachcol, 0);
+    return;
+}
+
+template<typename T, int RTYPE>
 HDF5_matrix<T, RTYPE>::~HDF5_matrix() {}
 
 template<typename T, int RTYPE>
 template<typename X>
 void HDF5_matrix<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     check_rowargs(r, start, end);
+    if (onrow || (oncol && largercol)) {
+        ; // Don't do anything, it's okay.
+    } else if (!rowokay) {
+        std::stringstream err;
+        err << "cache size limit (" << HARDLIMIT << ") exceeded for row access, repack the file";
+        throw std::runtime_error(err.str().c_str());
+    } else {
+        hfile.close();
+        hdata.close();
+        hfile.openFile(filename.c_str(), H5F_ACC_RDONLY, rowlist);
+        hdata = hfile.openDataSet(dataname.c_str());
+        onrow=true;
+    }
+
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();
@@ -741,6 +792,20 @@ template<typename T, int RTYPE>
 template<typename X>
 void HDF5_matrix<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     check_colargs(c, start, end);
+    if (oncol || (onrow && largerrow)) {
+        ; // Don't do anything, it's okay.
+    } else if (!colokay) {
+        std::stringstream err;
+        err << "cache size limit (" << HARDLIMIT << ") exceeded for column access, repack the file";
+        throw std::runtime_error(err.str().c_str());
+    } else {
+        hfile.close();
+        hdata.close();
+        hfile.openFile(filename.c_str(), H5F_ACC_RDONLY, collist);
+        hdata = hfile.openDataSet(dataname.c_str());
+        oncol=true;
+    }
+
     col_count[1] = end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
