@@ -7,7 +7,7 @@ SEXP test_integer_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
     auto optr=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::IntegerVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -16,7 +16,7 @@ SEXP test_logical_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
     auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -25,7 +25,7 @@ SEXP test_numeric_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -36,7 +36,7 @@ SEXP test_integer_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
     auto optr=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out_slice<Rcpp::IntegerVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }
@@ -45,7 +45,7 @@ SEXP test_logical_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
     auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out_slice<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }
@@ -54,7 +54,7 @@ SEXP test_numeric_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out_slice<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }
@@ -65,7 +65,7 @@ SEXP test_integer_to_logical_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
     auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::IntegerVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -74,7 +74,7 @@ SEXP test_integer_to_numeric_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::IntegerVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -83,7 +83,7 @@ SEXP test_logical_to_integer_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
     auto optr=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -92,7 +92,7 @@ SEXP test_logical_to_numeric_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -101,7 +101,7 @@ SEXP test_numeric_to_logical_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
     auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -110,7 +110,7 @@ SEXP test_numeric_to_integer_output(SEXP in, SEXP mode) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
     auto optr=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), in, false);
-    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode);
     END_RCPP
 }
@@ -150,7 +150,7 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in); // should be a sparse matrix.
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false, true); // a sparse matrix as output.
-    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
 
     Rcpp::IntegerVector M(mode);
     if (M.size()!=1) { 
@@ -213,7 +213,7 @@ SEXP test_sparse_numeric_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in); // should be a sparse matrix.
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), in, false, true); // a sparse matrix as output.
-    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::BASIC);
+    auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE);
     return pump_out_slice<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }

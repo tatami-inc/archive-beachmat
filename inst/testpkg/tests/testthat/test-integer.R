@@ -24,8 +24,15 @@ test_that("Simple integer matrix input is okay", {
 
 set.seed(23456)
 library(DelayedArray)
-rFUN <- function(nr=15, nc=10, lambda=1) {
-    as(sFUN(nr, nc, lambda=lambda), "RleArray")
+rFUN <- function(nr=15, nc=10, lambda=1, chunk.ncols=NULL) {
+    x <- sFUN(nr, nc, lambda=lambda)
+    rle <- Rle(x)
+    if (!is.null(chunk.ncols)) {
+        chunksize <- chunk.ncols*nrow(x)
+    } else {
+        chunksize <- NULL
+    }
+    RleArray(rle, dim(x), chunksize=chunksize)
 }
 
 test_that("RLE integer matrix input is okay", {
@@ -36,11 +43,29 @@ test_that("RLE integer matrix input is okay", {
     beachtest:::check_integer_mat(rFUN, lambda=0.1)
     beachtest:::check_integer_mat(rFUN, nr=5, nc=30, lambda=0.1)
     beachtest:::check_integer_mat(rFUN, nr=30, nc=5, lambda=0.1)
-    
+
     beachtest:::check_integer_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
     beachtest:::check_integer_slice(rFUN, lambda=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+    # Repeating the test with chunks.
+    beachtest:::check_integer_mat(rFUN, chunk.ncols=3)
+    beachtest:::check_integer_mat(rFUN, nr=5, nc=30, chunk.ncols=5)
+    beachtest:::check_integer_mat(rFUN, nr=30, nc=5, chunk.ncols=2)
+
+    beachtest:::check_integer_mat(rFUN, lambda=0.1, chunk.ncols=3)
+    beachtest:::check_integer_mat(rFUN, nr=5, nc=30, lambda=0.1, chunk.ncols=5)
+    beachtest:::check_integer_mat(rFUN, nr=30, nc=5, lambda=0.1, chunk.ncols=2)
+
+    beachtest:::check_integer_mat(rFUN, lambda=1000, chunk.ncols=3) # Breaking out of the RAW type.
+    beachtest:::check_integer_mat(rFUN, nr=5, nc=30, lambda=1000, chunk.ncols=5)
+    beachtest:::check_integer_mat(rFUN, nr=30, nc=5, lambda=1000, chunk.ncols=2)
     
+    beachtest:::check_integer_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncols=2)
+    beachtest:::check_integer_slice(rFUN, lambda=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncols=2)
+  
+    # Checking for type. 
     beachtest:::check_type(rFUN, expected="integer")
+    beachtest:::check_type(rFUN, chunk.ncols=2, expected="integer")
 })
 
 # Testing HDF5 matrices:

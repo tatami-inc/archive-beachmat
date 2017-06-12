@@ -92,8 +92,15 @@ test_that("Symmetric numeric matrix input is okay", {
 
 set.seed(23456)
 library(DelayedArray)
-rFUN <- function(nr=15, nc=10, density=0.2) {
-    as(as.matrix(csFUN(nr, nc, density)), "RleArray")
+rFUN <- function(nr=15, nc=10, density=0.2, chunk.ncols=NULL) {
+    x <- as.matrix(csFUN(nr, nc, density))
+    rle <- Rle(x)
+    if (!is.null(chunk.ncols)) {
+        chunksize <- chunk.ncols*nrow(x)
+    } else {
+        chunksize <- NULL
+    }
+    RleArray(rle, dim(x), chunksize=chunksize)
 }
 
 test_that("RLE numeric matrix input is okay", {
@@ -107,8 +114,22 @@ test_that("RLE numeric matrix input is okay", {
     
     beachtest:::check_numeric_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
     beachtest:::check_numeric_slice(rFUN, density=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+    # Testing chunk settings.
+    beachtest:::check_numeric_mat(rFUN, chunk.ncols=3)
+    beachtest:::check_numeric_mat(rFUN, nr=5, nc=30, chunk.ncols=5)
+    beachtest:::check_numeric_mat(rFUN, nr=30, nc=5, chunk.ncols=2)
+
+    beachtest:::check_numeric_mat(rFUN, density=0.1, chunk.ncols=3)
+    beachtest:::check_numeric_mat(rFUN, nr=5, nc=30, density=0.1, chunk.ncols=5)
+    beachtest:::check_numeric_mat(rFUN, nr=30, nc=5, density=0.1, chunk.ncols=2)
     
+    beachtest:::check_numeric_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncols=2)
+    beachtest:::check_numeric_slice(rFUN, density=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncols=2)
+   
+    # Checking type.
     beachtest:::check_type(rFUN, expected="double")
+    beachtest:::check_type(rFUN, chunk.ncols=2, expected="double")
 })
 
 # Testing HDF5 matrices:

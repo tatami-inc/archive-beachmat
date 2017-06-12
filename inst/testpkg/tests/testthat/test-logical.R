@@ -92,8 +92,15 @@ test_that("Symmetric logical matrix input is okay", {
 
 set.seed(23456)
 library(DelayedArray)
-rFUN <- function(nr=15, nc=10) {
-    as(sFUN(nr, nc), "RleArray")
+rFUN <- function(nr=15, nc=10, chunk.ncols=NULL) {
+    x <- sFUN(nr, nc)
+    rle <- Rle(x)
+    if (!is.null(chunk.ncols)) {
+        chunksize <- chunk.ncols*nrow(x)
+    } else {
+        chunksize <- NULL
+    }
+    RleArray(rle, dim(x), chunksize=chunksize)
 }
 
 test_that("RLE logical matrix input is okay", {
@@ -102,8 +109,17 @@ test_that("RLE logical matrix input is okay", {
     beachtest:::check_logical_mat(rFUN, nr=30, nc=5)
     
     beachtest:::check_logical_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+    # Testing chunks.
+    beachtest:::check_logical_mat(rFUN, chunk.ncol=3)
+    beachtest:::check_logical_mat(rFUN, nr=5, nc=30, chunk.ncol=5)
+    beachtest:::check_logical_mat(rFUN, nr=30, nc=5, chunk.ncol=2)
     
+    beachtest:::check_logical_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncol=2)
+    
+    # Checking type.
     beachtest:::check_type(rFUN, expected="logical")
+    beachtest:::check_type(rFUN, chunk.ncol=2, expected="logical")
 })
 
 # Testing HDF5 matrices:
