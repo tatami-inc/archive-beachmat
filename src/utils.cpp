@@ -62,6 +62,21 @@ std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& exp
     return mattype;
 }
 
+int reverse_translate_type (const std::string& curtype) {
+    if (curtype=="logical") {
+        return LGLSXP;
+    } else if (curtype=="character") {
+        return STRSXP;
+    } else if (curtype=="integer") {
+        return INTSXP;
+    } else if (curtype=="double") {
+        return REALSXP;
+    }
+    std::stringstream err;
+    err << "unsupported type'" << curtype << "'";
+    throw std::runtime_error(err.str().c_str());
+}
+
 int find_sexp_type (const Rcpp::RObject& incoming) {
     if (incoming.isObject()) {
         const std::string classname=get_class(incoming);
@@ -69,15 +84,7 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
             Rcpp::Environment delayenv("package:DelayedArray");
             Rcpp::Function typefun=delayenv["type"];
             std::string curtype=Rcpp::as<std::string>(typefun(incoming));
-            if (curtype=="logical") {
-                return LGLSXP;
-            } else if (curtype=="character") {
-                return STRSXP;
-            } else if (curtype=="integer") {
-                return INTSXP;
-            } else if (curtype=="double") {
-                return REALSXP;
-            }
+            return reverse_translate_type(curtype);
             
         } else if (classname=="HDF5Matrix") {
             Rcpp::RObject h5seed=get_safe_slot(incoming, "seed");
@@ -86,8 +93,14 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
 
         } else if (classname=="RleMatrix") {
             Rcpp::RObject rleseed=get_safe_slot(incoming, "seed");
-            Rcpp::RObject rle=get_safe_slot(rleseed, "rle");
-            return get_safe_slot(rle, "values").sexp_type();
+            std::string rclass=get_class(rleseed);
+            if (rclass=="SolidRleArraySeed") {
+                Rcpp::RObject rle=get_safe_slot(rleseed, "rle");
+                return get_safe_slot(rle, "values").sexp_type();
+            } else if (rclass=="ChunkedRleArraySeed") {
+                std::string curtype=Rcpp::as<std::string>(get_safe_slot(rleseed, "type"));
+                return reverse_translate_type(curtype);               
+            }
 
         } else if (classname.length()==9 && classname.substr(3)=="Matrix") {
             if (classname[0]=='d') {
