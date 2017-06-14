@@ -552,8 +552,8 @@ void HDF5_matrix<T, RTYPE>::prepare_chunk_cache_settings () {
     colokay=nchunks_in_cache >= num_colchunks; // This way avoids overflow from eachchunk*num_Xchunks.
     rowokay=nchunks_in_cache >= num_rowchunks;
 
-    const size_t eachrow=eachchunk * num_rowchunks;
-    const size_t eachcol=eachchunk * num_colchunks;
+    const size_t eachrow=eachchunk * num_colchunks; // Need number of chunks in each column, when accessing each row!
+    const size_t eachcol=eachchunk * num_rowchunks;
     largercol=eachcol >= eachrow;
     largerrow=eachrow >= eachcol;
 
