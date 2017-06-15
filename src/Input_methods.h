@@ -534,6 +534,12 @@ template<typename T, int RTYPE>
 void HDF5_matrix<T, RTYPE>::prepare_chunk_cache_settings () {
     /* Setting up the chunk cache specification. */
     H5::DSetCreatPropList cparms = hdata.getCreatePlist();
+    if (cparms.getLayout()!=H5D_CHUNKED) {
+        onrow=true; // Avoid reopening file, if it's contiguous.
+        oncol=true;
+        return;
+    }
+
     hsize_t chunk_dims[2];
     cparms.getChunk(2, chunk_dims);
     const size_t chunk_nrows=chunk_dims[1];
