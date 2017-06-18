@@ -122,7 +122,6 @@ public:
 
     const H5::DataType& get_datatype() const;
 protected:
-    Rcpp::RObject realized;
     std::string filename, dataname;
 
     H5::H5File hfile;

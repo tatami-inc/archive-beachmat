@@ -30,10 +30,16 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
             throw std::runtime_error("dgTMatrix not supported, convert to dgCMatrix");
         } else if (ctype=="dspMatrix") {
             return std::unique_ptr<numeric_matrix>(new Psymm_numeric_matrix(incoming));
-        } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
+        } else if (ctype=="HDF5Matrix") {
             return std::unique_ptr<numeric_matrix>(new HDF5_numeric_matrix(incoming));
         } else if (ctype=="RleMatrix") {
             return std::unique_ptr<numeric_matrix>(new Rle_numeric_matrix(incoming));
+        } else if (ctype=="DelayedMatrix") { 
+            if (is_pristine_delayed_array(incoming)) { 
+                return create_numeric_matrix(get_safe_slot(incoming, "seed"));
+            } else {
+                return create_numeric_matrix(realize_delayed_array(incoming));
+            }
         }
         throw_custom_error("unsupported class '", ctype, "' for numeric_matrix");
     } 

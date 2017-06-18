@@ -133,10 +133,16 @@ std::unique_ptr<character_matrix> HDF5_character_matrix::clone() const {
 std::unique_ptr<character_matrix> create_character_matrix(const Rcpp::RObject& incoming) { 
     if (incoming.isS4()) { 
         std::string ctype=get_class(incoming);
-        if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
+        if (ctype=="HDF5Matrix") {
             return std::unique_ptr<character_matrix>(new HDF5_character_matrix(incoming));
         } else if (ctype=="RleMatrix") { 
             return std::unique_ptr<character_matrix>(new Rle_character_matrix(incoming));
+        } else if (ctype=="DelayedMatrix") { 
+            if (is_pristine_delayed_array(incoming)) { 
+                return create_character_matrix(get_safe_slot(incoming, "seed"));
+            } else {
+                return create_character_matrix(realize_delayed_array(incoming));
+            }
         }
         std::stringstream err;
         err << "unsupported class '" << ctype << "' for character_matrix";

@@ -30,10 +30,16 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
             throw std::runtime_error("lgTMatrix not supported, convert to lgCMatrix");
         } else if (ctype=="lspMatrix") {
             return std::unique_ptr<logical_matrix>(new Psymm_logical_matrix(incoming));
-        } else if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
+        } else if (ctype=="HDF5Matrix") {
             return std::unique_ptr<logical_matrix>(new HDF5_logical_matrix(incoming));
         } else if (ctype=="RleMatrix") {
             return std::unique_ptr<logical_matrix>(new Rle_logical_matrix(incoming));
+        } else if (ctype=="DelayedMatrix") { 
+            if (is_pristine_delayed_array(incoming)) { 
+                return create_logical_matrix(get_safe_slot(incoming, "seed"));
+            } else {
+                return create_logical_matrix(realize_delayed_array(incoming));
+            }
         }
         throw_custom_error("unsupported class '", ctype, "' for logical_matrix");
     } 

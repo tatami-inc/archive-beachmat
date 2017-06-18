@@ -9,6 +9,14 @@ std::string make_to_string(const Rcpp::RObject& str) {
     return Rcpp::as<std::vector<std::string> >(str).front();
 }
 
+void throw_custom_error(const std::string& left, const std::string& classname, const std::string& right) {
+    std::stringstream err;
+    err << left << classname << right;
+    throw std::runtime_error(err.str().c_str());
+}
+
+/* Class checks. */
+
 std::string get_class(const Rcpp::RObject& incoming) {
     if (!incoming.isObject()) {
         throw std::runtime_error("object has no class attribute");
@@ -25,11 +33,16 @@ Rcpp::RObject get_safe_slot(const Rcpp::RObject& incoming, const std::string& sl
     return incoming.slot(slotname);
 }
 
-void throw_custom_error(const std::string& left, const std::string& classname, const std::string& right) {
-    std::stringstream err;
-    err << left << classname << right;
-    throw std::runtime_error(err.str().c_str());
+std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& expected) {
+    std::string mattype=get_class(mat);
+    if (!mat.isS4() || mattype.empty() || mattype.substr(1)!=expected) {
+        throw_custom_error("matrix should be a *", expected, " object");
+    }
+    return mattype;
 }
+
+
+/* Type checks */
 
 std::string translate_type(int sexp_type) {
     std::string should_be;
@@ -52,14 +65,6 @@ std::string translate_type(int sexp_type) {
             throw std::runtime_error(err.str().c_str());
     }
     return should_be;
-}
-
-std::string check_Matrix_class (const Rcpp::RObject& mat, const std::string& expected) {
-    std::string mattype=get_class(mat);
-    if (!mat.isS4() || mattype.empty() || mattype.substr(1)!=expected) {
-        throw_custom_error("matrix should be a *", expected, " object");
-    }
-    return mattype;
 }
 
 int reverse_translate_type (const std::string& curtype) {
@@ -114,6 +119,26 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
     }
     return incoming.sexp_type();
 }
+
+/* DelayedArray utilities. */
+
+bool is_pristine_delayed_array(const Rcpp::RObject& in) {
+    const Rcpp::Environment env=Rcpp::Environment::namespace_env("DelayedArray");
+    Rcpp::Function fun=env["is_pristine"];
+    Rcpp::LogicalVector out=fun(in);
+    if (out.size()!=1) {
+        throw std::runtime_error("pristine check should return a logical scalar");
+    }
+    return out[0];
+}
+
+Rcpp::RObject realize_delayed_array(const Rcpp::RObject& in) {
+    Rcpp::Environment delayenv("package:DelayedArray");
+    Rcpp::Function realfun=delayenv["realize"];
+    return realfun(in);
+}
+
+/* Output functions. */
 
 output_mode choose_output_mode(const Rcpp::RObject& in, bool simplify, bool preserve_zero) {
     if (!in.isS4()) {

@@ -12,10 +12,16 @@ int HDF5_output<int, Rcpp::IntegerVector>::get_empty() const { return 0; }
 std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incoming) { 
     if (incoming.isS4()) { 
         std::string ctype=get_class(incoming);
-        if (ctype=="HDF5Matrix" || ctype=="DelayedMatrix") { 
+        if (ctype=="HDF5Matrix") { 
             return std::unique_ptr<integer_matrix>(new HDF5_integer_matrix(incoming));
         } else if (ctype=="RleMatrix") {
             return std::unique_ptr<integer_matrix>(new Rle_integer_matrix(incoming));
+        } else if (ctype=="DelayedMatrix") { 
+            if (is_pristine_delayed_array(incoming)) { 
+                return create_integer_matrix(get_safe_slot(incoming, "seed"));
+            } else {
+                return create_integer_matrix(realize_delayed_array(incoming));
+            }
         }
         std::stringstream err;
         err << "unsupported class '" << ctype << "' for integer_matrix";

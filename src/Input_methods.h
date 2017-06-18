@@ -418,24 +418,15 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
 /* Methods for a HDF5 matrix. */
 
 template<typename T, int RTYPE>
-HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : realized(R_NilValue), onrow(false), oncol(false),
+HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : onrow(false), oncol(false),
         rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
 
     std::string ctype=get_class(incoming);
-    if (incoming.isS4()) {
-        if (ctype=="DelayedMatrix") { 
-            Rcpp::Environment delayenv("package:DelayedArray");
-            Rcpp::Function realfun=delayenv["realize"];
-            realized=realfun(incoming, "HDF5Array");
-        } else if (ctype=="HDF5Matrix") {
-            realized=incoming;
-        }
-    }
-    if (realized==R_NilValue) {
+    if (!incoming.isS4() || ctype!="HDF5Matrix") {
         throw std::runtime_error("matrix should be a HDF5Matrix or DelayedMatrix object");
     }
 
-    const Rcpp::RObject& h5_seed=get_safe_slot(realized, "seed");
+    const Rcpp::RObject& h5_seed=get_safe_slot(incoming, "seed");
     std::string stype=get_class(h5_seed);
     if (!h5_seed.isS4() || stype!="HDF5ArraySeed") {
         throw_custom_error("'seed' slot in a ", ctype, " object should be a HDF5ArraySeed object");
