@@ -120,14 +120,14 @@ check_sparse_numeric_output <- function(FUN, ...) {
             dimnames(ref) <- NULL
 
             if (mode==1L) { 
-                expect_identical(out[[1]][,o], current)
-                expect_identical(out[[2]][nrow(current):1,,drop=FALSE], ref)
+                testthat::expect_identical(out[[1]][,o], current)
+                testthat::expect_identical(out[[2]][nrow(current):1,,drop=FALSE], ref)
             } else if (mode==2L) {
-                expect_identical(out[[1]][o,], current)
-                expect_identical(out[[2]][,ncol(current):1,drop=FALSE], ref)
+                testthat::expect_identical(out[[1]][o,], current)
+                testthat::expect_identical(out[[2]][,ncol(current):1,drop=FALSE], ref)
             } else {
-                expect_identical(out[[1]], current) # no reordering 
-                expect_identical(out[[2]][nrow(current):1,ncol(current):1,drop=FALSE], ref)
+                testthat::expect_identical(out[[1]], current) # no reordering 
+                testthat::expect_identical(out[[2]][nrow(current):1,ncol(current):1,drop=FALSE], ref)
                 break
             }
         }

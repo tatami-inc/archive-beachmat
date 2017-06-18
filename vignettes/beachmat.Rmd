@@ -196,14 +196,9 @@ Please contact the maintainers if you have a class that you would like to see su
 
 ## Important developer information 
 
-- In theory, greater efficiency could be obtained when calling `get_col` on column-major base matrices.
-Specifically, a pointer to the column could be directly returned rather than copying the data to a new `Vector` object. 
-However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
-This would be dangerous as the values in the internal storage will change upon repeated calls to `get_col`.
-Filling a user-supplied array is more intuitive as it is obvious that the array will change when `get_col` is called again.
 - For non-`logical` matrices, using a `Rcpp::LogicalVector::iterator` in the `get_*` methods is not recommended.
 For `numeric_matrix` instances, double-to-integer conversion is performed such that values in `(-1, 1)` are converted to integer `0`.
-This would be interpreted as a logical `FALSE`, which is not correct for all non-zero double-precision values.
+This would be interpreted as a logical `FALSE`, which is incorrect for non-zero double-precision values.
 For `integer_matrix` instances, integer values are not coerced to `{0, 1}` when they are assigned into the `Rcpp::LogicalVector`.
 Thus, even though the interpretation is correct, the vector produced will not be equivalent to the result of an `as.logical` call.
 - The API is not thread-safe for simultaneous calls to the `get` methods from different threads.
@@ -211,10 +206,12 @@ Some methods use cached class members for greater efficiency, and simultaneous c
 It is the responsibility of the calling function to lock (and unlock) access to a single `*_matrix` object across threads.
 Alternatively, the `clone` method can be called to generate a unique pointer to a _new_ `*_matrix` instance, which can be used concurrently in another thread.
 This is fairly cheap as the underlying matrix data are not copied.
-- When accessing `character_matrix` data, the `Rcpp::String` class is used as it provides a convenient wrapper around the underlying `CHARSXP`. 
+- When accessing `character_matrix` data, we do not return raw `const char*` pointers to the C-style string. 
+Rather, the `Rcpp::String` class is used as it provides a convenient wrapper around the underlying `CHARSXP`. 
 This ensures that the string is stored in R's global cache and is suitably protected against garbage collection. 
-- `DelayedMatrix` objects are automatically realized to `HDF5Matrix` objects via the `realize` method in the `r Biocpkg("DelayedArray")` package.
-If the realized matrix is to be reused, it may be more efficient to perform the realization in R and pass the `HDF5Matrix` to `.Call`.
+- `DelayedMatrix` objects are automatically realized via the `realize` method in the `r Biocpkg("DelayedArray")` package.
+This uses the same realization backend that was specified in R -- call `getRealizationBackend()` to determine the current backend. 
+If the realized matrix is to be reused, it may be more efficient to perform the realization in R and pass the result to `.Call`.
 - The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
 See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
@@ -222,12 +219,17 @@ See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with the
 <!--
 Advanced comments:
 
+- In theory, greater efficiency could be obtained when calling `get_col` on column-major base matrices.
+Specifically, a pointer to the column could be directly returned rather than copying the data to a new `Vector` object. 
+However, other matrix classes do not store data in the same manner; if a pointer is to be returned, it would have to be to some internal storage.
+This would be dangerous as the values in the internal storage will change upon repeated calls to `get_col`.
+Filling a user-supplied array is more intuitive as it is obvious that the array will change when `get_col` is called again.
 - If any class has pointers to `SEXP` data, the data that each pointer points to should be contained within a `RObject` that is also a member of the class. 
 This ensures that the data is `PROTECT`ed for the lifetime of the class instance. 
 Otherwise, one could imagine a situation where the class is instantiated from a `RObject`; the `RObject` is destroyed; and garbage collection occurs.
 This would invalidate the pointers in the class instance.
 - The two major templated values are `T` and `V`; `T` for the return type of `get`, `V` for the Rcpp::Vector class used for internal storage and iterators.
-Any combination of template arguments is permitted where an indexed of `V` can be successfully converted to type `T`.
+Any combination of template arguments is permitted where an element of `V` can be successfully converted to type `T`.
 - It would be nice to allow the get_* methods to take any random access iterator; however, virtual methods cannot be templated.
 We could add a template argument to the entire class, but this would only allow it to take either a random access iterator or a pointer (not both).
 - We have used inheritance to define the `_matrix` interface, so that run-time polymorphism is possible for different matrix classes.
@@ -313,7 +315,7 @@ This mimics the behaviour observed when `HDF5Matrix` instances are created at th
 Similarly, the compression level and chunk dimensions will be taken from the appropriate global variables.
 - The API is not thread-safe, due to (i) the use of cached class members and (ii) the potential for race conditions when writing to the same location on disk/memory.
 The first issue can be solved by using `clone` to create `*_output` copies for use in each thread.
-However, each copy will still read from and write to the same disk/memory location.
+However, each copy may still read from and write to the same disk/memory location.
 It is the responsibility of the calling function to ensure that access is locked and unlocked appropriately across multiple threads.
 (This may not be necessary if access does not overlap, e.g., writing to different rows.)
 
