@@ -23,6 +23,14 @@ std::string translate_type(int);
 
 int find_sexp_type (const Rcpp::RObject&);
 
+// HDF5 utilities
+
+size_t get_cache_size_hard_limit();
+
+void calc_HDF5_chunk_cache_settings (const size_t, const size_t, const H5::DSetCreatPropList&, const H5::DataType&,
+        bool&, bool&, bool&, bool&, bool&, bool&,
+        H5::FileAccPropList&, H5::FileAccPropList&);
+
 // Delayed Array conversion utilities.
 
 bool is_pristine_delayed_array(const Rcpp::RObject&);

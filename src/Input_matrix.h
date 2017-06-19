@@ -132,10 +132,8 @@ protected:
     H5::DataType default_type;
     H5T_class_t set_types();
 
-    void prepare_chunk_cache_settings();
-    static const size_t HARDLIMIT=2000000000;
     bool onrow, oncol;
-    bool largercol, largerrow, colokay, rowokay;
+    bool largerrow, largercol, rowokay, colokay;
     H5::FileAccPropList rowlist, collist;
 };
 

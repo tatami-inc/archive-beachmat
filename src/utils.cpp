@@ -120,6 +120,55 @@ int find_sexp_type (const Rcpp::RObject& incoming) {
     return incoming.sexp_type();
 }
 
+/* HDF5 utilities. */
+
+size_t get_cache_size_hard_limit () {
+    return 2000000000;
+}
+
+void calc_HDF5_chunk_cache_settings (const size_t total_nrows, const size_t total_ncols, 
+        const H5::DSetCreatPropList& cparms, const H5::DataType& default_type,
+        bool& onrow, bool& oncol, bool& rowokay, bool& colokay, bool& largerrow, bool& largercol,
+        H5::FileAccPropList& rowlist, H5::FileAccPropList& collist) {
+
+    /* Setting up the chunk cache specification. */
+    if (cparms.getLayout()!=H5D_CHUNKED) {
+        return;
+    }
+
+    hsize_t chunk_dims[2];
+    cparms.getChunk(2, chunk_dims);
+    const size_t chunk_nrows=chunk_dims[1];
+    const size_t chunk_ncols=chunk_dims[0];
+    const size_t num_rowchunks=std::ceil(double(total_nrows)/chunk_nrows); // taking the ceiling.
+    const size_t num_colchunks=std::ceil(double(total_ncols)/chunk_ncols); 
+
+    // Everything is transposed, so hash indices are filled column-major.
+    // Computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
+    const size_t nslots = std::ceil(double(num_colchunks)/num_rowchunks) * num_rowchunks + 1; 
+
+    // Computing the size of the cache required to store all chunks in each row or column.
+    const size_t eachchunk=default_type.getSize() * chunk_nrows * chunk_ncols;
+    const size_t nchunks_in_cache=get_cache_size_hard_limit()/eachchunk;
+    colokay=nchunks_in_cache >= num_colchunks; // This way avoids overflow from eachchunk*num_Xchunks.
+    rowokay=nchunks_in_cache >= num_rowchunks;
+
+    const size_t eachrow=eachchunk * num_colchunks; // Need number of chunks in each column, when accessing each row!
+    const size_t eachcol=eachchunk * num_rowchunks;
+    largercol=eachcol >= eachrow;
+    largerrow=eachrow >= eachcol;
+
+    // The first argument is ignored, according to https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html.
+    // Setting w0 to 0 to evict the last used chunk; no need to worry about full vs partial reads here.
+    rowlist.setCache(10000, nslots, eachrow, 0);
+    collist.setCache(10000, nslots, eachcol, 0);
+
+    // File is not opened on either row or column yet.
+    onrow=false; 
+    oncol=false;
+    return;
+}
+
 /* DelayedArray utilities. */
 
 bool is_pristine_delayed_array(const Rcpp::RObject& in) {

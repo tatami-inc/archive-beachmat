@@ -283,7 +283,10 @@ Rcpp::RObject sparse_output<T, V>::yield() {
 /* Methods for HDF5 output matrix. */
 
 template<typename T, class V>
-HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
+HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc), 
+        onrow(true), oncol(true), rowokay(false), colokay(false), largerrow(false), largercol(false), // assuming contiguous.
+        rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
+
     const Rcpp::Environment env=Rcpp::Environment::namespace_env("beachmat");
     Rcpp::Function fun=env["setupHDF5Array"];
     const int RTYPE=V().sexp_type();
@@ -356,6 +359,9 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc) {
         att.write(str_type, std::string("logical"));
     }
 
+    // Setting the chunk cache parameters.
+    calc_HDF5_chunk_cache_settings(this->nrow, this->ncol, hdata.getCreatePlist(), default_type, 
+            onrow, oncol, rowokay, colokay, largerrow, largercol, rowlist, collist);
     return;
 }
 
@@ -365,6 +371,20 @@ HDF5_output<T, V>::~HDF5_output() {}
 template<typename T, class V>
 void HDF5_output<T, V>::select_col(size_t c, size_t start, size_t end) {
     check_colargs(c, start, end);
+    if (oncol || (onrow && largerrow)) {
+        ; // Don't do anything, it's okay.
+    } else if (!colokay) {
+        std::stringstream err;
+        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for column access, repack the file";
+        throw std::runtime_error(err.str().c_str());
+    } else {
+        hdata.close();
+        hfile.close();
+        hfile.openFile(fname.c_str(), H5F_ACC_RDWR, collist);
+        hdata = hfile.openDataSet(dname.c_str());
+        oncol=true;
+    }
+
     col_count[1]=end-start;
     colspace.setExtentSimple(1, col_count+1);
     colspace.selectAll();
@@ -391,6 +411,20 @@ void HDF5_output<T, V>::fill_col(size_t c, const T* in, size_t start, size_t end
 template<typename T, class V>
 void HDF5_output<T, V>::select_row(size_t r, size_t start, size_t end) {
     check_rowargs(r, start, end);
+    if (onrow || (oncol && largercol)) {
+        ; // Don't do anything, it's okay.
+    } else if (!rowokay) {
+        std::stringstream err;
+        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for row access, repack the file";
+        throw std::runtime_error(err.str().c_str());
+    } else {
+        hdata.close();
+        hfile.close();
+        hfile.openFile(fname.c_str(), H5F_ACC_RDWR, rowlist);
+        hdata = hfile.openDataSet(dname.c_str());
+        onrow=true;
+    }
+
     row_count[0] = end-start;
     rowspace.setExtentSimple(1, row_count);
     rowspace.selectAll();

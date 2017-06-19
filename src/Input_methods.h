@@ -418,7 +418,8 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
 /* Methods for a HDF5 matrix. */
 
 template<typename T, int RTYPE>
-HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : onrow(false), oncol(false),
+HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : 
+        onrow(true), oncol(true), rowokay(false), colokay(false), largerrow(false), largercol(false), // assuming contiguous.
         rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
 
     std::string ctype=get_class(incoming);
@@ -499,7 +500,8 @@ HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : onrow(false)
     onespace.selectAll();
 
     // Setting the chunk cache parameters.
-    prepare_chunk_cache_settings();
+    calc_HDF5_chunk_cache_settings(this->nrow, this->ncol, hdata.getCreatePlist(), default_type, 
+            onrow, oncol, rowokay, colokay, largerrow, largercol, rowlist, collist);
     return;
 }
 
@@ -522,46 +524,6 @@ H5T_class_t HDF5_matrix<T, RTYPE>::set_types () {
 }
 
 template<typename T, int RTYPE>
-void HDF5_matrix<T, RTYPE>::prepare_chunk_cache_settings () {
-    /* Setting up the chunk cache specification. */
-    H5::DSetCreatPropList cparms = hdata.getCreatePlist();
-    if (cparms.getLayout()!=H5D_CHUNKED) {
-        onrow=true; // Avoid reopening file, if it's contiguous.
-        oncol=true;
-        return;
-    }
-
-    hsize_t chunk_dims[2];
-    cparms.getChunk(2, chunk_dims);
-    const size_t chunk_nrows=chunk_dims[1];
-    const size_t chunk_ncols=chunk_dims[0];
-    const size_t num_rowchunks=std::ceil(double(this->nrow)/chunk_nrows); // taking the ceiling.
-    const size_t num_colchunks=std::ceil(double(this->ncol)/chunk_ncols); 
-
-    // Everything is transposed, so hash indices are filled column-major.
-    // Computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
-    const size_t nslots = std::ceil(double(num_colchunks)/num_rowchunks) * num_rowchunks + 1; 
-
-    // Computing the size of the cache required to store all chunks in each row or column.
-    // Allowing a maximium size of 2 GB.
-    const size_t eachchunk=default_type.getSize() * chunk_nrows * chunk_ncols;
-    const size_t nchunks_in_cache=HARDLIMIT/eachchunk;
-    colokay=nchunks_in_cache >= num_colchunks; // This way avoids overflow from eachchunk*num_Xchunks.
-    rowokay=nchunks_in_cache >= num_rowchunks;
-
-    const size_t eachrow=eachchunk * num_colchunks; // Need number of chunks in each column, when accessing each row!
-    const size_t eachcol=eachchunk * num_rowchunks;
-    largercol=eachcol >= eachrow;
-    largerrow=eachrow >= eachcol;
-
-    // The first argument is ignored, according to https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html.
-    // Setting w0 to 0 to evict the last used chunk; no need to worry about full vs partial reads here.
-    rowlist.setCache(10000, nslots, eachrow, 0);
-    collist.setCache(10000, nslots, eachcol, 0);
-    return;
-}
-
-template<typename T, int RTYPE>
 HDF5_matrix<T, RTYPE>::~HDF5_matrix() {}
 
 template<typename T, int RTYPE>
@@ -572,11 +534,11 @@ void HDF5_matrix<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HD
         ; // Don't do anything, it's okay.
     } else if (!rowokay) {
         std::stringstream err;
-        err << "cache size limit (" << HARDLIMIT << ") exceeded for row access, repack the file";
+        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for row access, repack the file";
         throw std::runtime_error(err.str().c_str());
     } else {
-        hfile.close();
         hdata.close();
+        hfile.close();
         hfile.openFile(filename.c_str(), H5F_ACC_RDONLY, rowlist);
         hdata = hfile.openDataSet(dataname.c_str());
         onrow=true;
@@ -606,11 +568,11 @@ void HDF5_matrix<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HD
         ; // Don't do anything, it's okay.
     } else if (!colokay) {
         std::stringstream err;
-        err << "cache size limit (" << HARDLIMIT << ") exceeded for column access, repack the file";
+        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for column access, repack the file";
         throw std::runtime_error(err.str().c_str());
     } else {
-        hfile.close();
         hdata.close();
+        hfile.close();
         hfile.openFile(filename.c_str(), H5F_ACC_RDONLY, collist);
         hdata = hfile.openDataSet(dataname.c_str());
         oncol=true;

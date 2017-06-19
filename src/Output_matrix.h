@@ -99,6 +99,10 @@ protected:
     void select_one(size_t, size_t);
 
     T get_empty() const;
+
+    bool onrow, oncol;
+    bool largerrow, largercol, rowokay, colokay;
+    H5::FileAccPropList rowlist, collist;
 };
 
 #include "Output_methods.h"
