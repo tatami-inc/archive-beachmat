@@ -283,7 +283,7 @@ Rcpp::RObject sparse_output<T, V>::yield() {
 /* Methods for HDF5 output matrix. */
 
 template<typename T, class V>
-HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc), 
+HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_t chunk_nc, int compress) : any_matrix(nr, nc), 
         onrow(true), oncol(true), rowokay(false), colokay(false), largerrow(false), largercol(false), // assuming contiguous.
         rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
 
@@ -292,17 +292,25 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc),
     const int RTYPE=V().sexp_type();
     Rcpp::List collected=fun(Rcpp::IntegerVector::create(this->nrow, this->ncol), Rcpp::StringVector(translate_type(RTYPE)));
     
-    // File opening.
+    // Pulling out settings.
     fname=make_to_string(collected[0]);
     dname=make_to_string(collected[1]);
-    Rcpp::IntegerVector chunks=collected[2];
-    if (chunks.size()!=2) { 
-        throw std::runtime_error("chunk dimensions should be an integer vector of length 2");
+    if (chunk_nr==0 || chunk_nc==0) { 
+        Rcpp::IntegerVector chunks=collected[2];
+        if (chunks.size()!=2) { 
+            throw std::runtime_error("chunk dimensions should be an integer vector of length 2");
+        }
+        chunk_nr=chunks[0];
+        chunk_nc=chunks[1];
     }
-    Rcpp::IntegerVector compress=collected[3];
-    if (compress.size()!=1) {
-        throw std::runtime_error("compression should be an integer scalar");
+    if (compress<0) { 
+        Rcpp::IntegerVector rcompress=collected[3];
+        if (rcompress.size()!=1) {
+            throw std::runtime_error("compression should be an integer scalar");
+        }
+        compress=rcompress[0];
     }
+
     hfile.openFile(fname, H5F_ACC_RDWR);
 
     // Type setting.
@@ -325,10 +333,10 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc) : any_matrix(nr, nc),
     plist.setFillValue(default_type, &empty);
 
     std::vector<hsize_t> chunk_dims(2);
-    chunk_dims[0]=chunks[1]; // Setting the chunk dimensions (flipping them, see below).
-    chunk_dims[1]=chunks[0];
+    chunk_dims[0]=chunk_nc; // Setting the chunk dimensions (flipping them, see below).
+    chunk_dims[1]=chunk_nr;
     plist.setChunk(2, chunk_dims.data());
-    plist.setDeflate(compress[0]);
+    plist.setDeflate(compress);
 
     std::vector<hsize_t> dims(2);
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).

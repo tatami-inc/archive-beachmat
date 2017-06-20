@@ -189,21 +189,63 @@ Rcpp::RObject realize_delayed_array(const Rcpp::RObject& in) {
 
 /* Output functions. */
 
-output_mode choose_output_mode(const Rcpp::RObject& in, bool simplify, bool preserve_zero) {
+output_param::output_param (output_mode m) : mode(m), chunk_nr(0), chunk_nc(0), compress(-1) {}
+
+output_param::output_param (const Rcpp::RObject& in, bool simplify, bool preserve_zero) : mode(SIMPLE),
+        chunk_nr(0), chunk_nc(0), compress(-1) {
+
     if (!in.isS4()) {
-        return SIMPLE;
+        return;
     } 
+
     auto curclass=get_class(in);
     if (curclass=="HDF5Array" || curclass=="DelayedArray") { 
-        return HDF5;
-    }           
-    if (simplify) {
-        return SIMPLE;
+        mode=HDF5;
+        return;
     }
+
+    if (simplify) {
+        return;
+    }
+
     if (preserve_zero && !curclass.empty() && curclass.substr(1)=="gCMatrix") {
-        return SPARSE;
+        mode=SPARSE;
+        return;
     } 
-    return HDF5;
+
+    mode=HDF5;
+    return;
 }
+
+output_mode output_param::get_mode() const {
+    return mode;
+}
+
+void output_param::set_chunk_dim(size_t cnr, size_t cnc) {
+    chunk_nr=cnr;
+    chunk_nc=cnc;
+    return;
+}
+
+size_t output_param::get_chunk_nrow() const {
+    return chunk_nr;
+}
+        
+size_t output_param::get_chunk_ncol() const {
+    return chunk_nc;
+}
+
+int output_param::get_compression() const {
+    return compress;
+}
+
+void output_param::set_compression(int c) {
+    compress=c;
+    return;
+}
+
+const output_param SIMPLE_PARAM(SIMPLE);
+const output_param SPARSE_PARAM(SPARSE);
+const output_param HDF5_PARAM(HDF5);
 
 }

@@ -58,9 +58,7 @@ typedef HDF5_lin_output<double, Rcpp::NumericVector> HDF5_numeric_output;
 
 /* Output dispatchers */
 
-std::unique_ptr<numeric_output> create_numeric_output(int, int, output_mode=SIMPLE);
-
-std::unique_ptr<numeric_output> create_numeric_output(int, int, const Rcpp::RObject&, bool, bool=false);
+std::unique_ptr<numeric_output> create_numeric_output(int, int, const output_param&);
 
 }
 

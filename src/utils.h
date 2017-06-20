@@ -41,9 +41,29 @@ Rcpp::RObject realize_delayed_array(const Rcpp::RObject&);
 
 enum output_mode { SIMPLE, HDF5, SPARSE };
 
-output_mode choose_output_mode(const Rcpp::RObject&, bool, bool);
+class output_param {
+public:
+    output_param(output_mode);
+    output_param(const Rcpp::RObject&, bool=false, bool=false);
+    
+    output_mode get_mode() const;
+
+    void set_chunk_dim(size_t, size_t);
+    size_t get_chunk_nrow() const;
+    size_t get_chunk_ncol() const;
+
+    int get_compression () const;
+    void set_compression (int);
+private:
+    output_mode mode;
+    size_t chunk_nr, chunk_nc;
+    int compress;
+};
+
+extern const output_param SIMPLE_PARAM;
+extern const output_param HDF5_PARAM;
+extern const output_param SPARSE_PARAM;
 
 }
-
 
 #endif

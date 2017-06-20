@@ -48,21 +48,18 @@ std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incom
 
 /* Output dispatch definition */
 
-std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, output_mode mode) {
-    switch (mode) {
+std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, const output_param& param) {
+    switch (param.get_mode()) {
         case SIMPLE:
             return std::unique_ptr<logical_output>(new simple_logical_output(nrow, ncol));
         case SPARSE:
             return std::unique_ptr<logical_output>(new sparse_logical_output(nrow, ncol));
         case HDF5:
-            return std::unique_ptr<logical_output>(new HDF5_logical_output(nrow, ncol));
+            return std::unique_ptr<logical_output>(new HDF5_logical_output(nrow, ncol,
+                        param.get_chunk_nrow(), param.get_chunk_ncol(), param.get_compression()));
         default:
             throw std::runtime_error("unsupported output mode for logical matrices");
     }
-}
-
-std::unique_ptr<logical_output> create_logical_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify, bool preserve_zero) {
-    return create_logical_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero));
 }
 
 }

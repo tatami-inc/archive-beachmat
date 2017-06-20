@@ -48,21 +48,18 @@ std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incom
 
 /* Output dispatch definition */
 
-std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, output_mode mode) {
-    switch (mode) {
+std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const output_param& param) {
+    switch (param.get_mode()) {
         case SIMPLE:
             return std::unique_ptr<numeric_output>(new simple_numeric_output(nrow, ncol));
         case SPARSE:
             return std::unique_ptr<numeric_output>(new sparse_numeric_output(nrow, ncol));
         case HDF5:
-            return std::unique_ptr<numeric_output>(new HDF5_numeric_output(nrow, ncol));
+            return std::unique_ptr<numeric_output>(new HDF5_numeric_output(nrow, ncol, 
+                        param.get_chunk_nrow(), param.get_chunk_ncol(), param.get_compression()));
         default:
             throw std::runtime_error("unsupported output mode for numeric matrices");
     }
-}
-
-std::unique_ptr<numeric_output> create_numeric_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify, bool preserve_zero) {
-    return create_numeric_output(nrow, ncol, choose_output_mode(incoming, simplify, preserve_zero));
 }
 
 }

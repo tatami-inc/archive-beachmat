@@ -587,6 +587,10 @@ template<typename T, class V>
 HDF5_lin_output<T, V>::HDF5_lin_output(size_t nr, size_t nc) : mat(nr, nc) {}
 
 template<typename T, class V>
+HDF5_lin_output<T, V>::HDF5_lin_output(size_t nr, size_t nc, size_t chunk_nr, size_t chunk_nc, int compress) : 
+    mat(nr, nc, chunk_nr, chunk_nc, compress) {}
+
+template<typename T, class V>
 HDF5_lin_output<T, V>::~HDF5_lin_output() {}
 
 template<typename T, class V>

@@ -61,7 +61,7 @@ private:
 template<typename T, class V>
 class HDF5_output : public any_matrix {
 public:
-    HDF5_output(size_t, size_t);
+    HDF5_output(size_t, size_t, size_t=0, size_t=0, int=-1);
     ~HDF5_output();
     
     void fill_row(size_t, const T*, size_t, size_t);

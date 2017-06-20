@@ -305,6 +305,7 @@ template<typename T, class V>
 class HDF5_lin_output : public lin_output<T> {
 public:
     HDF5_lin_output(size_t, size_t);
+    HDF5_lin_output(size_t, size_t, size_t, size_t, int);
     ~HDF5_lin_output();
 
     size_t get_nrow() const;

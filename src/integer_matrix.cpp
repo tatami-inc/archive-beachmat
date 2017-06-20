@@ -32,19 +32,16 @@ std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incom
 
 /* Output dispatch definition */
 
-std::unique_ptr<integer_output> create_integer_output(int nrow, int ncol, output_mode mode) {
-    switch (mode) {
+std::unique_ptr<integer_output> create_integer_output(int nrow, int ncol, const output_param& param) {
+    switch (param.get_mode()) {
         case SIMPLE:
             return std::unique_ptr<integer_output>(new simple_integer_output(nrow, ncol));
         case HDF5:
-            return std::unique_ptr<integer_output>(new HDF5_integer_output(nrow, ncol));
+            return std::unique_ptr<integer_output>(new HDF5_integer_output(nrow, ncol,
+                        param.get_chunk_nrow(), param.get_chunk_ncol(), param.get_compression()));
         default:
             throw std::runtime_error("unsupported output mode for integer matrices");
     }
-}
-
-std::unique_ptr<integer_output> create_integer_output(int nrow, int ncol, const Rcpp::RObject& incoming, bool simplify) {
-    return create_integer_output(nrow, ncol, choose_output_mode(incoming, simplify, false));
 }
 
 }
