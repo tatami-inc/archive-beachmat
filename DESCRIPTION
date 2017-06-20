@@ -1,6 +1,6 @@
 Package: beachmat
-Version: 0.98.7
-Date: 2017-06-01
+Version: 0.98.8
+Date: 2017-06-20
 Title: Compiling Bioconductor to Handle Each Matrix Type
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
