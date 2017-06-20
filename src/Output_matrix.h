@@ -101,7 +101,8 @@ protected:
     T get_empty() const;
 
     bool onrow, oncol;
-    bool largerrow, largercol, rowokay, colokay;
+    bool rowokay, colokay;
+    bool largerrow, largercol;
     H5::FileAccPropList rowlist, collist;
 };
 
