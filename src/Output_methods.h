@@ -287,30 +287,31 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_t ch
         onrow(true), oncol(true), rowokay(false), colokay(false), largerrow(false), largercol(false), // assuming contiguous.
         rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
 
+    // Pulling out settings.
     const Rcpp::Environment env=Rcpp::Environment::namespace_env("beachmat");
     Rcpp::Function fun=env["setupHDF5Array"];
     const int RTYPE=V().sexp_type();
-    Rcpp::List collected=fun(Rcpp::IntegerVector::create(this->nrow, this->ncol), Rcpp::StringVector(translate_type(RTYPE)));
-    
-    // Pulling out settings.
+    Rcpp::List collected=fun(Rcpp::IntegerVector::create(this->nrow, this->ncol), Rcpp::StringVector(translate_type(RTYPE)),
+                             Rcpp::IntegerVector::create(chunk_nr, chunk_nc), compress);
+
+    if (collected.size()!=4) { 
+        throw std::runtime_error("output of setupHDF5Array should be a list of four elements");
+    }
     fname=make_to_string(collected[0]);
     dname=make_to_string(collected[1]);
-    if (chunk_nr==0 || chunk_nc==0) { 
-        Rcpp::IntegerVector chunks=collected[2];
-        if (chunks.size()!=2) { 
-            throw std::runtime_error("chunk dimensions should be an integer vector of length 2");
-        }
-        chunk_nr=chunks[0];
-        chunk_nc=chunks[1];
+    Rcpp::IntegerVector r_chunks=collected[2];
+    if (r_chunks.size()!=2) { 
+        throw std::runtime_error("chunk dimensions should be an integer vector of length 2");
     }
-    if (compress<0) { 
-        Rcpp::IntegerVector rcompress=collected[3];
-        if (rcompress.size()!=1) {
-            throw std::runtime_error("compression should be an integer scalar");
-        }
-        compress=rcompress[0];
+    chunk_nr=r_chunks[0];
+    chunk_nc=r_chunks[1];
+    Rcpp::IntegerVector r_compress=collected[3];
+    if (r_compress.size()!=1) {
+        throw std::runtime_error("compression should be an integer scalar");
     }
+    compress=r_compress[0];
 
+    // Opening the file.
     hfile.openFile(fname, H5F_ACC_RDWR);
 
     // Type setting.
@@ -331,12 +332,15 @@ HDF5_output<T, V>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_t ch
     H5::DSetCreatPropList plist;
     const T empty=get_empty();
     plist.setFillValue(default_type, &empty);
-
-    std::vector<hsize_t> chunk_dims(2);
-    chunk_dims[0]=chunk_nc; // Setting the chunk dimensions (flipping them, see below).
-    chunk_dims[1]=chunk_nr;
-    plist.setChunk(2, chunk_dims.data());
-    plist.setDeflate(compress);
+        
+    // Setting the chunk dimensions if not contiguous.
+    if (compress>0) {
+        std::vector<hsize_t> chunk_dims(2);
+        chunk_dims[0]=chunk_nc; // flipping them, as rhdf5 internally transposes it.
+        chunk_dims[1]=chunk_nr;
+        plist.setChunk(2, chunk_dims.data());
+        plist.setDeflate(compress);
+    }
 
     std::vector<hsize_t> dims(2);
     dims[0]=this->ncol; // Setting the dimensions (0 is column, 1 is row; internally transposed).
