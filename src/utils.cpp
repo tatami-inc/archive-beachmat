@@ -140,21 +140,22 @@ void calc_HDF5_chunk_cache_settings (const size_t total_nrows, const size_t tota
     cparms.getChunk(2, chunk_dims);
     const size_t chunk_nrows=chunk_dims[1];
     const size_t chunk_ncols=chunk_dims[0];
-    const size_t num_rowchunks=std::ceil(double(total_nrows)/chunk_nrows); // taking the ceiling.
-    const size_t num_colchunks=std::ceil(double(total_ncols)/chunk_ncols); 
+    const size_t num_chunks_per_row=std::ceil(double(total_ncols)/chunk_ncols); // per row needs to divide by column dimensions.
+    const size_t num_chunks_per_col=std::ceil(double(total_nrows)/chunk_nrows); 
 
     // Everything is transposed, so hash indices are filled column-major.
     // Computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
-    const size_t nslots = std::ceil(double(num_colchunks)/num_rowchunks) * num_rowchunks + 1; 
+    const size_t nslots = std::ceil(double(num_chunks_per_row)/num_chunks_per_col) * num_chunks_per_col + 1; 
 
     // Computing the size of the cache required to store all chunks in each row or column.
+    // The approach used below avoids overflow from eachchunk*num_Xchunks.
     const size_t eachchunk=default_type.getSize() * chunk_nrows * chunk_ncols;
     const size_t nchunks_in_cache=get_cache_size_hard_limit()/eachchunk;
-    colokay=nchunks_in_cache >= num_colchunks; // This way avoids overflow from eachchunk*num_Xchunks.
-    rowokay=nchunks_in_cache >= num_rowchunks;
+    rowokay=nchunks_in_cache >= num_chunks_per_row; 
+    colokay=nchunks_in_cache >= num_chunks_per_col; 
 
-    const size_t eachrow=eachchunk * num_colchunks; // Need number of chunks in each column, when accessing each row!
-    const size_t eachcol=eachchunk * num_rowchunks;
+    const size_t eachrow=eachchunk * num_chunks_per_row; 
+    const size_t eachcol=eachchunk * num_chunks_per_col;
     largercol=eachcol >= eachrow;
     largerrow=eachrow >= eachcol;
 
