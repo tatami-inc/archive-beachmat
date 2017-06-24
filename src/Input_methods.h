@@ -420,7 +420,7 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
 template<typename T, int RTYPE>
 HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : 
         onrow(true), oncol(true), rowokay(false), colokay(false), largerrow(false), largercol(false), // assuming contiguous.
-        rowlist(H5::FileAccPropList::DEFAULT), collist(H5::FileAccPropList::DEFAULT) {
+        rowlist(H5::FileAccPropList::DEFAULT.getId()), collist(H5::FileAccPropList::DEFAULT.getId()) {
 
     std::string ctype=get_class(incoming);
     if (!incoming.isS4() || ctype!="HDF5Matrix") {
