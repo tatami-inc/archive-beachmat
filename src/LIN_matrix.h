@@ -39,7 +39,19 @@ public:
     virtual T get(size_t, size_t)=0;
 
     typename V::const_iterator get_const_col(size_t, typename V::iterator);
-    virtual typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t)=0;
+    virtual typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+
+    size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator);
+    size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator);
+
+    virtual size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
+    virtual size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator);
+    size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator);
+
+    virtual size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
+    virtual size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
 
     virtual std::unique_ptr<lin_matrix<T, V> > clone() const=0;
 };
@@ -55,31 +67,59 @@ public:
     size_t get_nrow() const;
     size_t get_ncol() const;
 
-    void get_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void get_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void get_col(size_t,  Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_col(size_t,  Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void get_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void get_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void get_row(size_t,  Rcpp::IntegerVector::iterator, size_t, size_t);
+    void get_row(size_t,  Rcpp::NumericVector::iterator, size_t, size_t);
 
     T get(size_t, size_t);
 
-    typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+    typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t); 
 
     std::unique_ptr<lin_matrix<T, V> > clone() const;
-private:
+protected:
     M mat;
 };
 
 // Good to use for any inner matrix class that depends on T and V and supports get_row/col.
 
 template <typename T, class V>
-using simple_lin_matrix=advanced_lin_matrix<T, V, simple_matrix<T, V> >;
+class simple_lin_matrix : public advanced_lin_matrix<T, V, simple_matrix<T, V> > {
+public:
+    simple_lin_matrix(const Rcpp::RObject&);
+    ~simple_lin_matrix();
+    
+    typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+
+    std::unique_ptr<lin_matrix<T, V> > clone() const;
+};
 
 template <typename T, class V>
-using dense_lin_matrix=advanced_lin_matrix<T, V, dense_matrix<T, V> >;
+class dense_lin_matrix : public advanced_lin_matrix<T, V, dense_matrix<T, V> > {
+public:
+    dense_lin_matrix(const Rcpp::RObject&);
+    ~dense_lin_matrix();
+    
+    typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+
+    std::unique_ptr<lin_matrix<T, V> > clone() const;
+};
 
 template <typename T, class V>
-using Csparse_lin_matrix=advanced_lin_matrix<T, V, Csparse_matrix<T, V> >;
+class Csparse_lin_matrix : public advanced_lin_matrix<T, V, Csparse_matrix<T, V> > {
+public:
+    Csparse_lin_matrix(const Rcpp::RObject&);
+    ~Csparse_lin_matrix();
+
+    virtual size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
+    virtual size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    virtual size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
+    virtual size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    std::unique_ptr<lin_matrix<T, V> > clone() const;
+};
 
 template <typename T, class V>
 using Psymm_lin_matrix=advanced_lin_matrix<T, V, Psymm_matrix<T, V> >;
@@ -107,6 +147,12 @@ public:
     T get(size_t, size_t);
 
     typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+
+    size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
+    size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
+
+    size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
+    size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
 
     std::unique_ptr<lin_matrix<T, V> > clone() const;
 protected:

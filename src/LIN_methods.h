@@ -40,7 +40,73 @@ typename V::const_iterator lin_matrix<T, V>::get_const_col(size_t c, typename V:
     return get_const_col(c, work, 0, get_nrow());
 }
 
-/* Defining the simple interface. */
+template<typename T, class V>
+typename V::const_iterator lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    get_col(c, work, start, end);
+    return work;
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out) {
+    return get_nonzero_col(c, dex, out, 0, get_nrow());
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out) {
+    return get_nonzero_col(c, dex, out, 0, get_nrow());
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out) {
+    return get_nonzero_row(r, dex, out, 0, get_ncol());
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out) {
+    return get_nonzero_row(r, dex, out, 0, get_ncol());
+}
+
+template<class T, class Iter>
+size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end, T zero) {
+    size_t nzero=0;
+    Iter src=val;
+    for (size_t x=start; x<end; ++x, ++val) {
+        if (*val!=zero) {
+            ++nzero;
+            (*index)=x;
+            (*src)=(*val);
+            ++src;
+            ++index;
+        }   
+    }   
+    return nzero;
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t start, size_t end) {
+    get_row(r, val, start, end);
+    return zero_hunter(index, val, start, end, 0);
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t start, size_t end) {
+    get_row(r, val, start, end);
+    return zero_hunter(index, val, start, end, 0.0);
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t start, size_t end) {
+    get_col(c, val, start, end);
+    return zero_hunter(index, val, start, end, 0);
+}
+
+template<typename T, class V>
+size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t start, size_t end) {
+    get_col(c, val, start, end);
+    return zero_hunter(index, val, start, end, 0.0);
+}
+
+/* Defining the advanced interface. */
 
 template<typename T, class V, class M>
 advanced_lin_matrix<T, V, M>::advanced_lin_matrix(const Rcpp::RObject& incoming) : mat(incoming) {}
@@ -88,13 +154,75 @@ T advanced_lin_matrix<T, V, M>::get(size_t r, size_t c) {
 }
 
 template<typename T, class V, class M>
-typename V::const_iterator advanced_lin_matrix<T, V, M>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    return mat.get_const_col(c, work, start, end);
-}
-
-template<typename T, class V, class M>
 std::unique_ptr<lin_matrix<T, V> > advanced_lin_matrix<T, V, M>::clone() const {
     return std::unique_ptr<lin_matrix<T, V> >(new advanced_lin_matrix<T, V, M>(*this));
+}
+
+/* Defining specific interface for simple/dense matrices. */
+
+template <typename T, class V>
+simple_lin_matrix<T, V>::simple_lin_matrix(const Rcpp::RObject& in) : advanced_lin_matrix<T, V, simple_matrix<T, V> >(in) {}
+
+template <typename T, class V>
+simple_lin_matrix<T, V>::~simple_lin_matrix() {} 
+
+template <typename T, class V>
+typename V::const_iterator simple_lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    return this->mat.get_const_col(c, work, start, end);
+}
+
+template <typename T, class V>
+std::unique_ptr<lin_matrix<T, V> > simple_lin_matrix<T, V>::clone() const {
+    return std::unique_ptr<lin_matrix<T, V> >(new simple_lin_matrix<T, V>(*this));
+}
+
+template <typename T, class V>
+dense_lin_matrix<T, V>::dense_lin_matrix(const Rcpp::RObject& in) : advanced_lin_matrix<T, V, dense_matrix<T, V> >(in) {}
+
+template <typename T, class V>
+dense_lin_matrix<T, V>::~dense_lin_matrix() {} 
+
+template <typename T, class V>
+typename V::const_iterator dense_lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    return this->mat.get_const_col(c, work, start, end);
+}
+
+template <typename T, class V>
+std::unique_ptr<lin_matrix<T, V> > dense_lin_matrix<T, V>::clone() const {
+    return std::unique_ptr<lin_matrix<T, V> >(new dense_lin_matrix<T, V>(*this));
+}
+
+/* Defining specific interface for sparse matrices. */
+
+template <typename T, class V>
+Csparse_lin_matrix<T, V>::Csparse_lin_matrix(const Rcpp::RObject& in) : advanced_lin_matrix<T, V, Csparse_matrix<T, V> >(in) {}
+
+template <typename T, class V>
+Csparse_lin_matrix<T, V>::~Csparse_lin_matrix() {} 
+
+template <typename T, class V>
+size_t Csparse_lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    return this->mat.get_nonzero_col(c, dex, out, start, end);
+}
+
+template <typename T, class V>
+size_t Csparse_lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    return this->mat.get_nonzero_col(c, dex, out, start, end);
+}
+
+template <typename T, class V>
+size_t Csparse_lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    return this->mat.get_nonzero_row(r, dex, out, start, end);
+}
+
+template <typename T, class V>
+size_t Csparse_lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    return this->mat.get_nonzero_row(r, dex, out, start, end);
+}
+
+template <typename T, class V>
+std::unique_ptr<lin_matrix<T, V> > Csparse_lin_matrix<T, V>::clone() const {
+    return std::unique_ptr<lin_matrix<T, V> >(new Csparse_lin_matrix<T, V>(*this));
 }
 
 /* Defining the HDF5 interface. */
@@ -150,6 +278,30 @@ template<typename T, class V, int RTYPE>
 typename V::const_iterator HDF5_lin_matrix<T, V, RTYPE>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
     get_col(c, work, start, end);
     return work;
+}
+
+template<typename T, class V, int RTYPE>
+size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    get_col(c, out, start, end);
+    return zero_hunter(dex, out, start, end, 0);
+}
+
+template<typename T, class V, int RTYPE>
+size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    get_col(c, out, start, end);
+    return zero_hunter(dex, out, start, end, 0.0);
+}
+
+template<typename T, class V, int RTYPE>
+size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
+    get_row(r, out, start, end);
+    return zero_hunter(dex, out, start, end, 0);
+}
+
+template<typename T, class V, int RTYPE>
+size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
+    get_row(r, out, start, end);
+    return zero_hunter(dex, out, start, end, 0.0);
 }
 
 template<typename T, class V, int RTYPE>

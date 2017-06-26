@@ -289,10 +289,50 @@ void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end)
     return;
 }
 
-template <typename T, class V>
-typename V::iterator Csparse_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    get_col(c, work, start, end);
-    return work;
+template<typename T, class V>
+template<class Iter>
+size_t Csparse_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end) {
+    check_rowargs(r, start, end);
+    update_indices(r, start, end);
+
+    auto pIt=p.begin()+start+1; // Points to first-past-the-end for each 'c'.
+    size_t nzero=0;
+    for (size_t c=start; c<end; ++c, ++pIt) { 
+        const int& idex=indices[c];
+        if (idex!=*pIt && i[idex]==r) { 
+            ++nzero;
+            (*index)=c;
+            (*val)=x[idex];
+            ++index;
+            ++val;
+        }
+    } 
+
+    return nzero;
+}
+
+template<typename T, class V>
+template<class Iter>
+size_t Csparse_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end) {
+    check_colargs(c, start, end);
+    const int& pstart=p[c]; 
+    auto iIt=i.begin()+pstart, 
+         eIt=i.begin()+p[c+1]; 
+    auto xIt=x.begin()+pstart;
+
+    if (start) { // Jumping ahead if non-zero.
+        auto new_iIt=std::lower_bound(iIt, eIt, start);
+        xIt+=(new_iIt-iIt);
+        iIt=new_iIt;
+    } 
+    if (end!=(this->nrow)) { // Jumping to last element.
+        eIt=std::lower_bound(iIt, eIt, end);
+    }
+
+    size_t nzero=eIt-iIt;
+    std::copy(xIt, xIt+nzero, index);
+    std::copy(iIt, eIt, val);
+    return nzero;
 }
 
 /* Methods for a Psymm matrix. */
@@ -425,12 +465,6 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
     check_rowargs(r, start, end);
     get_rowcol(r, out, start, end);
     return;
-}
-
-template <typename T, class V>
-typename V::iterator Psymm_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    get_rowcol(c, work, start, end);
-    return work;
 }
 
 /* Methods for an Rle-based matrix. */

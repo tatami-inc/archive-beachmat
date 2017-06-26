@@ -24,7 +24,7 @@ public:
     virtual Rcpp::String get(size_t, size_t)=0;
 
     Rcpp::StringVector::iterator get_const_col(size_t, Rcpp::StringVector::iterator);
-    virtual Rcpp::StringVector::iterator get_const_col(size_t, Rcpp::StringVector::iterator, size_t, size_t)=0;
+    virtual Rcpp::StringVector::iterator get_const_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
 
     virtual std::unique_ptr<character_matrix> clone() const=0;
 };

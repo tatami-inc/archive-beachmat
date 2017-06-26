@@ -20,6 +20,11 @@ Rcpp::StringVector::iterator character_matrix::get_const_col(size_t c, Rcpp::Str
     return get_const_col(c, work, 0, get_nrow());
 }
 
+Rcpp::StringVector::iterator character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t start, size_t end) {
+    get_col(c, work, start, end);
+    return work;
+}
+
 /* Methods for the simple character matrix. */
 
 simple_character_matrix::simple_character_matrix(const Rcpp::RObject& incoming) : mat(incoming) {}
@@ -80,10 +85,6 @@ Rcpp::String Rle_character_matrix::get(size_t r, size_t c) {
     return mat.get(r, c);
 }
 
-Rcpp::StringVector::iterator Rle_character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t start, size_t end) {
-    return mat.get_const_col(c, work, start, end);
-}
-
 std::unique_ptr<character_matrix> Rle_character_matrix::clone() const {
     return std::unique_ptr<character_matrix>(new Rle_character_matrix(*this));
 }
@@ -134,11 +135,6 @@ Rcpp::String HDF5_character_matrix::get(size_t r, size_t c) {
     char* ref=one_buf.data();
     mat.extract_one(r, c, ref);
     return ref;
-}
-
-Rcpp::StringVector::iterator HDF5_character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t start, size_t end) {
-    get_col(c, work, start, end);
-    return work;
 }
 
 std::unique_ptr<character_matrix> HDF5_character_matrix::clone() const {
