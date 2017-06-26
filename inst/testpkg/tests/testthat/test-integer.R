@@ -16,7 +16,14 @@ test_that("Simple integer matrix input is okay", {
     beachtest:::check_integer_mat(sFUN, nr=30, nc=5)
     
     beachtest:::check_integer_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
-    
+
+    # Testing const and non-zero options.
+    beachtest:::check_integer_const_mat(sFUN)
+    beachtest:::check_integer_const_slice(sFUN, by.row=list(1:5, 6:8))
+
+    beachtest:::check_integer_nonzero_mat(sFUN)
+    beachtest:::check_integer_nonzero_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     beachtest:::check_type(sFUN, expected="integer")
 })
 
@@ -46,6 +53,12 @@ test_that("RLE integer matrix input is okay", {
 
     beachtest:::check_integer_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
     beachtest:::check_integer_slice(rFUN, lambda=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+ 
+    beachtest:::check_integer_const_mat(rFUN)
+    beachtest:::check_integer_const_slice(rFUN, by.row=list(1:5, 6:8))
+
+    beachtest:::check_integer_nonzero_mat(rFUN)
+    beachtest:::check_integer_nonzero_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
 
     # Repeating the test with chunks.
     beachtest:::check_integer_mat(rFUN, chunk.ncols=3)
@@ -62,7 +75,13 @@ test_that("RLE integer matrix input is okay", {
     
     beachtest:::check_integer_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncols=2)
     beachtest:::check_integer_slice(rFUN, lambda=0.1, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncols=2)
-  
+ 
+    beachtest:::check_integer_const_mat(rFUN, chunk.ncols=2)
+    beachtest:::check_integer_const_slice(rFUN, chunk.ncols=2, by.row=list(1:5, 6:8))
+
+    beachtest:::check_integer_nonzero_mat(rFUN, chunk.ncols=2)
+    beachtest:::check_integer_nonzero_slice(rFUN, chunk.ncols=2, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+ 
     # Checking for type. 
     beachtest:::check_type(rFUN, expected="integer")
     beachtest:::check_type(rFUN, chunk.ncols=2, expected="integer")
@@ -84,7 +103,14 @@ test_that("HDF5 integer matrix input is okay", {
     beachtest:::check_integer_mat(hFUN, nr=30, nc=5)
     
     beachtest:::check_integer_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
-    
+
+    # Checking const and non-zero options.
+    beachtest:::check_integer_const_mat(hFUN)
+    beachtest:::check_integer_const_slice(hFUN, by.row=list(1:5, 6:8))
+
+    beachtest:::check_integer_nonzero_mat(hFUN)
+    beachtest:::check_integer_nonzero_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     beachtest:::check_type(hFUN, expected="integer")
 })
 

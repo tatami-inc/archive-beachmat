@@ -2,72 +2,145 @@
 
 ###############################
 
-.check_mat <- function(FUN, ..., cxxfun, constfun) {
-    for (it in 1:3) {
+.check_mat <- function(FUN, ..., cxxfun, nmodes=3) {
+    for (it in seq_len(nmodes)) {
         test.mat <- FUN(...)
         ref <- as.matrix(test.mat)
         dimnames(ref) <- NULL
         testthat::expect_identical(ref, .Call(cxxfun, test.mat, it))
     }
-
-    test.mat <- FUN(...)
-    testthat::expect_identical(as.matrix(test.mat), .Call(constfun, test.mat))
     return(invisible(NULL))
 }
 
 check_integer_mat <- function(FUN, ...) {
-    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_integer_access, constfun=cxx_test_integer_const_access)
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_integer_access)
 }
 
 check_character_mat <- function(FUN, ...) {
-    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_character_access, constfun=cxx_test_character_const_access)
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_character_access)
 }
 
 check_numeric_mat <- function(FUN, ...) {
-    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_numeric_access, constfun=cxx_test_numeric_const_access)
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_numeric_access)
 }
 
 check_logical_mat <- function(FUN, ...) {
-    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_logical_access, constfun=cxx_text_logical_const_access)
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_logical_access)
 }
 
 ###############################
 
-.check_slices <- function(FUN, ..., by.row, by.col, cxxfun, constfun) {
+.check_slices <- function(FUN, ..., by.row, by.col, cxxfun) {
     for (x in by.row) {
         rx <- range(x)
+
         for (y in by.col) {
             ry <- range(y)
             test.mat <- FUN(...) 
             ref <- as.matrix(test.mat[x, y, drop=FALSE])
             dimnames(ref) <- NULL
-            testthat::expect_identical(ref, .Call(cxxfun, test.mat, 1L, rx, ry))
-            testthat::expect_identical(ref, .Call(cxxfun, test.mat, 2L, rx, ry))
-        }
-    }
 
-    for (x in by.row) { 
-        rx <- range(x)
-        test.mat <- FUN(...)
-        testthat::expect_identical(as.matrix(test.mat)[x,,drop=FALSE], .Call(constfun, test.mat, rx))
+            for (i in 1:2) {
+                testthat::expect_identical(ref, .Call(cxxfun, test.mat, i, rx, ry))
+            }
+        }
     }
     return(invisible(NULL))
 }
 
 check_integer_slice <- function(FUN, ..., by.row, by.col) {
-    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_integer_slice, constfun=cxx_test_integer_const_slice)
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_integer_slice)
 }
 
 check_character_slice <- function(FUN, ..., by.row, by.col) {
-    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_character_slice, constfun=cxx_test_character_const_slice)
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_character_slice)
 }
 
 check_numeric_slice <- function(FUN, ..., by.row, by.col) {
-    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_numeric_slice, constfun=cxx_test_numeric_const_slice)
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_numeric_slice)
 }
 
 check_logical_slice <- function(FUN, ..., by.row, by.col) {
-    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_logical_slice, constfun=cxx_test_logical_const_slice)
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_logical_slice)
+}
+
+###############################
+
+.check_const_mat <- function(FUN, ..., cxxfun) {
+    test.mat <- FUN(...)
+    ref <- as.matrix(test.mat)
+    dimnames(ref) <- NULL
+    testthat::expect_identical(ref, .Call(cxxfun, test.mat))
+    return(invisible(NULL))
+}
+
+check_integer_const_mat <- function(FUN, ...) {
+    .check_const_mat(FUN=FUN, ..., cxxfun=cxx_test_integer_const_access)
+}
+
+check_character_const_mat <- function(FUN, ...) {
+    .check_const_mat(FUN=FUN, ..., cxxfun=cxx_test_character_const_access)
+}
+
+check_numeric_const_mat <- function(FUN, ...) {
+    .check_const_mat(FUN=FUN, ..., cxxfun=cxx_test_numeric_const_access)
+}
+
+check_logical_const_mat <- function(FUN, ...) {
+    .check_const_mat(FUN=FUN, ..., cxxfun=cxx_test_logical_const_access)
+}
+
+.check_const_slices <- function(FUN, ..., by.row, cxxfun) {
+    for (x in by.row) {
+        rx <- range(x)
+        test.mat <- FUN(...)
+        ref <- as.matrix(test.mat)
+        dimnames(ref) <- NULL
+        testthat::expect_identical(ref[x,,drop=FALSE], .Call(cxxfun, test.mat, rx))
+    }
+    return(invisible(NULL))
+}
+
+check_integer_const_slice <- function(FUN, ..., by.row) {
+    .check_const_slices(FUN=FUN, ..., by.row=by.row, cxxfun=cxx_test_integer_const_slice)
+}
+
+check_character_const_slice <- function(FUN, ..., by.row) {
+    .check_const_slices(FUN=FUN, ..., by.row=by.row, cxxfun=cxx_test_character_const_slice)
+}
+
+check_numeric_const_slice <- function(FUN, ..., by.row) {
+    .check_const_slices(FUN=FUN, ..., by.row=by.row, cxxfun=cxx_test_numeric_const_slice)
+}
+
+check_logical_const_slice <- function(FUN, ..., by.row) {
+    .check_const_slices(FUN=FUN, ..., by.row=by.row, cxxfun=cxx_test_logical_const_slice)
+}
+
+###############################
+
+check_integer_nonzero_mat <- function(FUN, ...) {
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_integer_nonzero_access, nmodes=2)
+}
+
+check_numeric_nonzero_mat <- function(FUN, ...) {
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_numeric_nonzero_access, nmodes=2)
+}
+
+check_logical_nonzero_mat <- function(FUN, ...) {
+    .check_mat(FUN=FUN, ..., cxxfun=cxx_test_logical_nonzero_access, nmodes=2)
+}
+
+check_integer_nonzero_slice <- function(FUN, ..., by.row, by.col) {
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_integer_nonzero_slice)
+}
+
+check_numeric_nonzero_slice <- function(FUN, ..., by.row, by.col) {
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_numeric_nonzero_slice)
+}
+
+check_logical_nonzero_slice <- function(FUN, ..., by.row, by.col) {
+    .check_slices(FUN=FUN, ..., by.row=by.row, by.col=by.col, cxxfun=cxx_test_logical_nonzero_slice)
 }
 
 ###############################

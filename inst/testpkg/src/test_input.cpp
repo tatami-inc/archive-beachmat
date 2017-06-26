@@ -31,36 +31,6 @@ SEXP test_character_access (SEXP in, SEXP mode) {
     END_RCPP
 }
 
-/* Realized const column access functions. */
-
-SEXP test_numeric_const_access (SEXP in) {
-    BEGIN_RCPP
-    auto ptr=beachmat::create_numeric_matrix(in);
-    return fill_up_const<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get());
-    END_RCPP
-}
-
-SEXP test_integer_const_access (SEXP in) {
-    BEGIN_RCPP
-    auto ptr=beachmat::create_integer_matrix(in);
-    return fill_up_const<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get());
-    END_RCPP
-}
-
-SEXP test_logical_const_access (SEXP in) {
-    BEGIN_RCPP
-    auto ptr=beachmat::create_logical_matrix(in);
-    return fill_up_const<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get());
-    END_RCPP
-}
-
-SEXP test_character_const_access (SEXP in) {
-    BEGIN_RCPP
-    auto ptr=beachmat::create_character_matrix(in);
-    return fill_up_const<Rcpp::CharacterVector, Rcpp::CharacterMatrix>(ptr.get());
-    END_RCPP
-}
-
 /* Realized slice-access functions. */
 
 SEXP test_numeric_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
@@ -91,7 +61,37 @@ SEXP test_character_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     END_RCPP
 }
 
-/* Const column slice access */
+/* Const access functions. */
+
+SEXP test_numeric_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up_const<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get());
+    END_RCPP
+}
+
+SEXP test_integer_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up_const<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get());
+    END_RCPP
+}
+
+SEXP test_logical_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up_const<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get());
+    END_RCPP
+}
+
+SEXP test_character_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    return fill_up_const<Rcpp::StringVector, Rcpp::StringMatrix>(ptr.get());
+    END_RCPP
+}
+
+/* Realized const slice-access functions. */
 
 SEXP test_numeric_const_slice (SEXP in, SEXP rx) {
     BEGIN_RCPP
@@ -117,7 +117,53 @@ SEXP test_logical_const_slice (SEXP in, SEXP rx) {
 SEXP test_character_const_slice (SEXP in, SEXP rx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_character_matrix(in);
-    return fill_up_const_slice<Rcpp::CharacterVector, Rcpp::CharacterMatrix>(ptr.get(), rx);
+    return fill_up_const_slice<Rcpp::StringVector, Rcpp::StringMatrix>(ptr.get(), rx);
+    END_RCPP
+}
+
+/* Realized non-zero access functions. */
+
+SEXP test_numeric_nonzero_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up_nonzero<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_integer_nonzero_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up_nonzero<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+SEXP test_logical_nonzero_access (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up_nonzero<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), mode);
+    END_RCPP
+}
+
+/* Realized non-zero slice functions. */
+
+SEXP test_numeric_nonzero_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up_nonzero_slice<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), mode, rx, cx);
+    END_RCPP
+}
+
+SEXP test_integer_nonzero_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up_nonzero_slice<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), mode, rx, cx);
+    END_RCPP
+}
+
+SEXP test_logical_nonzero_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up_nonzero_slice<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), mode, rx, cx);
     END_RCPP
 }
 

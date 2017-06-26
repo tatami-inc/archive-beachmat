@@ -16,7 +16,14 @@ test_that("Simple logical matrix input is okay", {
     beachtest:::check_logical_mat(sFUN, nr=30, nc=5)
     
     beachtest:::check_logical_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+    # Testing const and non-zero options.   
+    beachtest:::check_logical_const_mat(sFUN)
+    beachtest:::check_logical_const_slice(sFUN, by.row=list(1:5, 6:8))
     
+    beachtest:::check_logical_nonzero_mat(sFUN)
+    beachtest:::check_logical_nonzero_slice(sFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     beachtest:::check_type(sFUN, expected="logical")
 })
 
@@ -36,7 +43,14 @@ test_that("Dense logical matrix input is okay", {
     beachtest:::check_logical_mat(dFUN, nr=30, nc=5)
     
     beachtest:::check_logical_slice(dFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+      
+    # Testing const and non-zero options.   
+    beachtest:::check_logical_const_mat(dFUN)
+    beachtest:::check_logical_const_slice(dFUN, by.row=list(1:5, 6:8))
     
+    beachtest:::check_logical_nonzero_mat(dFUN)
+    beachtest:::check_logical_nonzero_slice(dFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8)) 
+
     beachtest:::check_type(dFUN, expected="logical")
 })
 
@@ -59,6 +73,13 @@ test_that("Sparse logical matrix input is okay", {
     beachtest:::check_logical_mat(csFUN, nr=30, nc=5, d=0.2)
     
     beachtest:::check_logical_slice(csFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+    # Testing const and non-zero options.   
+    beachtest:::check_logical_const_mat(csFUN)
+    beachtest:::check_logical_const_slice(csFUN, by.row=list(1:5, 6:8))
+    
+    beachtest:::check_logical_nonzero_mat(csFUN)
+    beachtest:::check_logical_nonzero_slice(csFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
 
     beachtest:::check_type(csFUN, expected="logical")
 })
@@ -83,7 +104,18 @@ test_that("Symmetric logical matrix input is okay", {
     
     beachtest:::check_logical_slice(spFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
     beachtest:::check_logical_slice(spFUN, mode="L", by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+    # Testing const and non-zero options.   
+    beachtest:::check_logical_const_mat(spFUN)
+    beachtest:::check_logical_const_mat(spFUN, mode="L")
+    beachtest:::check_logical_const_slice(spFUN, by.row=list(1:5, 6:8))
+    beachtest:::check_logical_const_slice(spFUN, mode="L", by.row=list(1:5, 6:8))
     
+    beachtest:::check_logical_nonzero_mat(spFUN)
+    beachtest:::check_logical_nonzero_mat(spFUN, mode="L")
+    beachtest:::check_logical_nonzero_slice(spFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+    beachtest:::check_logical_nonzero_slice(spFUN, mode="L", by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     beachtest:::check_type(spFUN, expected="logical")
     beachtest:::check_type(spFUN, mode="L", expected="logical")
 })
@@ -110,13 +142,25 @@ test_that("RLE logical matrix input is okay", {
     
     beachtest:::check_logical_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
 
+    beachtest:::check_logical_const_mat(rFUN)
+    beachtest:::check_logical_const_slice(rFUN, by.row=list(1:5, 6:8))
+    
+    beachtest:::check_logical_nonzero_mat(rFUN)
+    beachtest:::check_logical_nonzero_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     # Testing chunks.
     beachtest:::check_logical_mat(rFUN, chunk.ncol=3)
     beachtest:::check_logical_mat(rFUN, nr=5, nc=30, chunk.ncol=5)
     beachtest:::check_logical_mat(rFUN, nr=30, nc=5, chunk.ncol=2)
     
     beachtest:::check_logical_slice(rFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8), chunk.ncol=2)
+
+    beachtest:::check_logical_const_mat(rFUN, chunk.ncols=2)
+    beachtest:::check_logical_const_slice(rFUN, chunk.ncols=2, by.row=list(1:5, 6:8))
     
+    beachtest:::check_logical_nonzero_mat(rFUN, chunk.ncols=2)
+    beachtest:::check_logical_nonzero_slice(rFUN, chunk.ncols=2, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     # Checking type.
     beachtest:::check_type(rFUN, expected="logical")
     beachtest:::check_type(rFUN, chunk.ncol=2, expected="logical")
@@ -138,7 +182,14 @@ test_that("HDF5 logical matrix input is okay", {
     beachtest:::check_logical_mat(hFUN, nr=30, nc=5)
     
     beachtest:::check_logical_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
+   # Checking const and non-zero options.
+    beachtest:::check_logical_const_mat(hFUN)
+    beachtest:::check_logical_const_slice(hFUN, by.row=list(1:5, 6:8))
     
+    beachtest:::check_logical_nonzero_mat(hFUN)
+    beachtest:::check_logical_nonzero_slice(hFUN, by.row=list(1:5, 6:8), by.col=list(1:5, 6:8))
+
     beachtest:::check_type(hFUN, expected="logical")
 })
 
