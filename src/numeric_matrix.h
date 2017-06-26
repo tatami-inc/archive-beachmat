@@ -8,7 +8,7 @@ namespace beachmat {
 
 /* Virtual base class for numeric matrices. */
 
-typedef lin_matrix<double> numeric_matrix;
+typedef lin_matrix<double, Rcpp::NumericVector> numeric_matrix;
 
 /* Simple numeric matrix */
 
@@ -32,7 +32,7 @@ typedef Rle_lin_matrix<double, Rcpp::NumericVector> Rle_numeric_matrix;
 
 /* HDF5Matrix */
 
-typedef HDF5_lin_matrix<double, REALSXP> HDF5_numeric_matrix;
+typedef HDF5_lin_matrix<double, Rcpp::NumericVector, REALSXP> HDF5_numeric_matrix;
 
 /* Dispatcher */
 

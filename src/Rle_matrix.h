@@ -14,6 +14,8 @@ public:
 
     template<class Iter>
     void get_col(size_t, Iter, size_t, size_t); 
+
+    typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 private:
     std::deque<V> runvalues;
     std::vector<size_t> chunkdex, coldex;

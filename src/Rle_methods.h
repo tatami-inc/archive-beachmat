@@ -270,4 +270,10 @@ T Rle_matrix<T, V>::get(size_t r, size_t c) {
     return *(runvalues[chunkdex[c]].begin() + coldex[c] + extra);
 }
 
+template <typename T, class V>
+typename V::iterator Rle_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    get_col(c, work, start, end);
+    return work;
+}
+
 #endif

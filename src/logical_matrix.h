@@ -10,7 +10,7 @@ namespace beachmat {
  * Virtual base class for logical matrices. *
  ********************************************/
 
-typedef lin_matrix<int> logical_matrix;
+typedef lin_matrix<int, Rcpp::LogicalVector> logical_matrix;
 
 /* Simple logical matrix */
 
@@ -34,7 +34,7 @@ typedef Rle_lin_matrix<int, Rcpp::LogicalVector> Rle_logical_matrix;
 
 /* HDF5Matrix */
 
-typedef HDF5_lin_matrix<int, LGLSXP> HDF5_logical_matrix;
+typedef HDF5_lin_matrix<int, Rcpp::LogicalVector, LGLSXP> HDF5_logical_matrix;
 
 /* Dispatcher */
 

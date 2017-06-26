@@ -49,6 +49,11 @@ void simple_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) 
     return;
 }
 
+template<typename T, class V>
+typename V::iterator simple_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    return mat.begin() + start + c*(this->nrow);
+}
+
 /* Methods for a dense Matrix. */
 
 template <typename T, class V>
@@ -96,6 +101,11 @@ void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
     auto src=x.begin() + c*(this->nrow);
     std::copy(src+start, src+end, out);
     return;
+}
+
+template<typename T, class V>
+typename V::iterator dense_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    return x.begin() + start + c*(this->nrow);
 }
 
 /* Methods for a Csparse matrix. */
@@ -279,6 +289,12 @@ void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end)
     return;
 }
 
+template <typename T, class V>
+typename V::iterator Csparse_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    get_col(c, work, start, end);
+    return work;
+}
+
 /* Methods for a Psymm matrix. */
 
 template <typename T, class V>
@@ -409,6 +425,12 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
     check_rowargs(r, start, end);
     get_rowcol(r, out, start, end);
     return;
+}
+
+template <typename T, class V>
+typename V::iterator Psymm_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
+    get_rowcol(c, work, start, end);
+    return work;
 }
 
 /* Methods for an Rle-based matrix. */

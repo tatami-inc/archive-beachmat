@@ -22,6 +22,8 @@ public:
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
+
+    typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 private:
     V mat;
 };
@@ -41,6 +43,8 @@ public:
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
+
+    typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 protected:
     V x;
 };
@@ -60,6 +64,8 @@ public:
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
+
+    typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 protected:
     Rcpp::IntegerVector i, p;
     V x;
@@ -86,6 +92,8 @@ public:
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
+
+    typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 protected:
     V x;
     bool upper;
