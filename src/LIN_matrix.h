@@ -75,8 +75,6 @@ public:
 
     T get(size_t, size_t);
 
-    typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t); 
-
     std::unique_ptr<lin_matrix<T, V> > clone() const;
 protected:
     M mat;

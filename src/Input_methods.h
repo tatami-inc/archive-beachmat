@@ -330,8 +330,8 @@ size_t Csparse_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iter
     }
 
     size_t nzero=eIt-iIt;
-    std::copy(xIt, xIt+nzero, index);
-    std::copy(iIt, eIt, val);
+    std::copy(iIt, iIt+nzero, index);
+    std::copy(xIt, xIt+nzero, val);
     return nzero;
 }
 

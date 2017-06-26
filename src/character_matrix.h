@@ -66,8 +66,6 @@ public:
 
     Rcpp::String get(size_t, size_t);
 
-    Rcpp::StringVector::iterator get_const_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
-
     std::unique_ptr<character_matrix> clone() const;
 private:
     Rle_matrix<Rcpp::String, Rcpp::StringVector> mat;
@@ -87,8 +85,6 @@ public:
     void get_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
 
     Rcpp::String get(size_t, size_t);
-
-    Rcpp::StringVector::iterator get_const_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
 
     std::unique_ptr<character_matrix> clone() const;
 protected:

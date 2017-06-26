@@ -67,9 +67,11 @@ size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator
 }
 
 template<class T, class Iter>
-size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end, T zero) {
+size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end) {
     size_t nzero=0;
     Iter src=val;
+    const T zero=0;
+
     for (size_t x=start; x<end; ++x, ++val) {
         if (*val!=zero) {
             ++nzero;
@@ -85,25 +87,25 @@ size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t start, 
 template<typename T, class V>
 size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t start, size_t end) {
     get_row(r, val, start, end);
-    return zero_hunter(index, val, start, end, 0);
+    return zero_hunter<int>(index, val, start, end);
 }
 
 template<typename T, class V>
 size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t start, size_t end) {
     get_row(r, val, start, end);
-    return zero_hunter(index, val, start, end, 0.0);
+    return zero_hunter<double>(index, val, start, end);
 }
 
 template<typename T, class V>
 size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t start, size_t end) {
     get_col(c, val, start, end);
-    return zero_hunter(index, val, start, end, 0);
+    return zero_hunter<int>(index, val, start, end);
 }
 
 template<typename T, class V>
 size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t start, size_t end) {
     get_col(c, val, start, end);
-    return zero_hunter(index, val, start, end, 0.0);
+    return zero_hunter<double>(index, val, start, end);
 }
 
 /* Defining the advanced interface. */
@@ -283,25 +285,25 @@ typename V::const_iterator HDF5_lin_matrix<T, V, RTYPE>::get_const_col(size_t c,
 template<typename T, class V, int RTYPE>
 size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     get_col(c, out, start, end);
-    return zero_hunter(dex, out, start, end, 0);
+    return zero_hunter<int>(dex, out, start, end);
 }
 
 template<typename T, class V, int RTYPE>
 size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
     get_col(c, out, start, end);
-    return zero_hunter(dex, out, start, end, 0.0);
+    return zero_hunter<double>(dex, out, start, end);
 }
 
 template<typename T, class V, int RTYPE>
 size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
     get_row(r, out, start, end);
-    return zero_hunter(dex, out, start, end, 0);
+    return zero_hunter<int>(dex, out, start, end);
 }
 
 template<typename T, class V, int RTYPE>
 size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
     get_row(r, out, start, end);
-    return zero_hunter(dex, out, start, end, 0.0);
+    return zero_hunter<double>(dex, out, start, end);
 }
 
 template<typename T, class V, int RTYPE>
