@@ -98,6 +98,49 @@ O fill_up_slice (M ptr, const Rcpp::IntegerVector& mode, const Rcpp::IntegerVect
     return output;
 }
 
+/* This function tests the get_const_col methods. */
+
+template <class T, class O, class M>  // M is automatically deduced.
+O fill_up_const (M ptr) {
+    const size_t& nrows=ptr->get_nrow();
+    const size_t& ncols=ptr->get_ncol();
+    O output(nrows, ncols);
+
+    // By column.
+    T target(nrows);
+    for (int c=0; c<ncols; ++c) {
+        auto it=ptr->get_const_col(c, target.begin());
+        for (int r=0; r<nrows; ++r, ++it) {
+            output[c * nrows + r]=*it;
+        }
+    }
+    return output;
+}
+
+
+template <class T, class O, class M>  // M is automatically deduced.
+O fill_up_const_slice (M ptr, Rcpp::IntegerVector rows) {
+    const size_t& ncols=ptr->get_ncol();
+
+    if (rows.size()!=2) { 
+        throw std::runtime_error("'rows' should be an integer vector of length 2"); 
+    }
+    const int rstart=rows[0]-1, rend=rows[1];
+    const int nrows=rend-rstart;    
+    
+    O output(nrows, ncols);
+
+    // By column.
+    T target(nrows);
+    for (int c=0; c<ncols; ++c) {
+        auto it=ptr->get_const_col(c, target.begin(), rstart, rend);
+        for (int r=0; r<nrows; ++r, ++it) {
+            output[c * nrows + r]=*it;
+        }
+    }
+    return output;
+}
+
 /* This function tests the edge cases and error triggers. */
 
 template <class T, class M>  

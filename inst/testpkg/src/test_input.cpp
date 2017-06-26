@@ -31,6 +31,36 @@ SEXP test_character_access (SEXP in, SEXP mode) {
     END_RCPP
 }
 
+/* Realized const column access functions. */
+
+SEXP test_numeric_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up_const<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get());
+    END_RCPP
+}
+
+SEXP test_integer_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up_const<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get());
+    END_RCPP
+}
+
+SEXP test_logical_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up_const<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get());
+    END_RCPP
+}
+
+SEXP test_character_const_access (SEXP in) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    return fill_up_const<Rcpp::CharacterVector, Rcpp::CharacterMatrix>(ptr.get());
+    END_RCPP
+}
+
 /* Realized slice-access functions. */
 
 SEXP test_numeric_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
@@ -58,6 +88,36 @@ SEXP test_character_slice (SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     BEGIN_RCPP
     auto ptr=beachmat::create_character_matrix(in);
     return fill_up_slice<Rcpp::StringVector, Rcpp::StringMatrix>(ptr.get(), mode, rx, cx);
+    END_RCPP
+}
+
+/* Const column slice access */
+
+SEXP test_numeric_const_slice (SEXP in, SEXP rx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_numeric_matrix(in);
+    return fill_up_const_slice<Rcpp::NumericVector, Rcpp::NumericMatrix>(ptr.get(), rx);
+    END_RCPP
+}
+
+SEXP test_integer_const_slice (SEXP in, SEXP rx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_integer_matrix(in);
+    return fill_up_const_slice<Rcpp::IntegerVector, Rcpp::IntegerMatrix>(ptr.get(), rx);
+    END_RCPP
+}
+
+SEXP test_logical_const_slice (SEXP in, SEXP rx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in);
+    return fill_up_const_slice<Rcpp::LogicalVector, Rcpp::LogicalMatrix>(ptr.get(), rx);
+    END_RCPP
+}
+
+SEXP test_character_const_slice (SEXP in, SEXP rx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    return fill_up_const_slice<Rcpp::CharacterVector, Rcpp::CharacterMatrix>(ptr.get(), rx);
     END_RCPP
 }
 

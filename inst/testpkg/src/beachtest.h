@@ -19,6 +19,14 @@ SEXP test_logical_access (SEXP, SEXP);
 
 SEXP test_character_access (SEXP, SEXP);
 
+SEXP test_numeric_const_access (SEXP);
+
+SEXP test_integer_const_access (SEXP);
+
+SEXP test_logical_const_access (SEXP);
+
+SEXP test_character_const_access (SEXP);
+
 SEXP test_numeric_slice (SEXP, SEXP, SEXP, SEXP);
 
 SEXP test_integer_slice (SEXP, SEXP, SEXP, SEXP);
@@ -26,6 +34,14 @@ SEXP test_integer_slice (SEXP, SEXP, SEXP, SEXP);
 SEXP test_logical_slice (SEXP, SEXP, SEXP, SEXP);
 
 SEXP test_character_slice (SEXP, SEXP, SEXP, SEXP);
+
+SEXP test_numeric_const_slice (SEXP, SEXP);
+
+SEXP test_integer_const_slice (SEXP, SEXP);
+
+SEXP test_logical_const_slice (SEXP, SEXP);
+
+SEXP test_character_const_slice (SEXP, SEXP);
 
 SEXP test_sparse_numeric(SEXP, SEXP);
 

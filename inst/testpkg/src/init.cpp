@@ -17,6 +17,16 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_logical_slice, 4),
     REGISTER(test_character_slice, 4),
 
+    REGISTER(test_numeric_const_access, 1),
+    REGISTER(test_integer_const_access, 1),
+    REGISTER(test_logical_const_access, 1),
+    REGISTER(test_character_const_access, 1),
+
+    REGISTER(test_numeric_const_slice, 2),
+    REGISTER(test_integer_const_slice, 2),
+    REGISTER(test_logical_const_slice, 2),
+    REGISTER(test_character_const_slice, 2),
+
     REGISTER(test_sparse_numeric, 2),
     REGISTER(test_sparse_numeric_slice, 2),
 
