@@ -114,7 +114,7 @@ Suggests: Matrix, HDF5Array, DelayedArray
 
 # Overview of the API (input)
 
-## An example with a numeric matrix
+## Creating the matrix pointer
 
 We demonstrate the use of the API for numeric matrices.
 First, we include the relevant header file:
@@ -132,24 +132,28 @@ std::unique_ptr<beachmat::numeric_matrix> dptr = beachmat::create_numeric_matrix
 This creates a unique pointer that points to an object of the `numeric_matrix` virtual class.
 The exact class depends on the type of matrix in `dmat`, though the behaviour of the user-level functions are not affected by this detail.
 
+## Methods for input matrices
+
 The available methods for this object are:
 
 - `dptr->get_nrow()` returns the number of rows (`nrow`) as a `size_t`.
 - `dptr->get_ncol()` returns the number of columns (`ncol`) as a `size_t`.
-- `dptr->get_col(c, X)` takes an `iterator`-type object `X` and fills it with values at column `c`.
+- `dptr->get_col(c, X)` takes a `Rcpp::Vector::iterator` object`X` and fills it with values at column `c`.
 There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_col(c, X, rstart, rend)` takes an `iterator`-type object `X` and fills it with values at column `c` from row `rstart` to `rend-1`.
+- `dptr->get_col(c, X, rstart, rend)` takes a `Rcpp::Vector::iterator` object `X` and fills it with values at column `c` from row `rstart` to `rend-1`.
 There should be at least `rend-rstart` accessible elements, i.e., `*X` and `*(X+rend-rstart-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_row(r, X)` takes an `iterator`-type object `X` and fills it with values at row `r`.
+- `dptr->get_row(r, X)` takes an `Rcpp::Vetor::iterator` object `X` and fills it with values at row `r`.
 There should be at least `ncol` accessible elements, i.e., `*X` and `*(X+ncol-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_row(r, X, cstart, cend)` takes an `iterator`-type object `X` and fills it with values at row `r` from column `cstart` to `cend-1`.
+- `dptr->get_row(r, X, cstart, cend)` takes an `Rcpp::Vetor::iterator` object `X` and fills it with values at row `r` from column `cstart` to `cend-1`.
 There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
 No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 - `dptr->clone()` returns a unique pointer to a `numeric_matrix` instance of the same type as that pointed to by `dptr`.
+- `dptr->get_matrix_type()` returns a `matrix_type` value specifying the type of matrix pointed to by `dptr`.
+This is an enumeration type that can be tested against constants like `beachmat::SIMPLE` or `beachmat::SPARSE`.
 
 In all cases, `r` and `c` should be non-negative integers (specificaly `size_t`) in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
@@ -159,6 +163,28 @@ Furthermore, `rend >= rstart` and `cend >= cstart` should be true.
 If the object `X` is a `Rcpp::NumericVector::iterator` instance, matrix entries will be extracted as double-precision values.
 If it is a `Rcpp::IntegerVector::iterator` instance, matrix entries will be extracted as integers with implicit conversion.
 It is also _possible_ to use a `Rcpp::LogicalVector::iterator`, though this will not behave as expected - see notes below.
+
+## Special methods for specific matrix types
+
+There are additional methods that provide some advantages for specific matrix types:
+
+- `dptr->get_const_col(c, work, rstart, rend)` returns a `Rcpp::Vector::const_iterator` pointing to `rstart` row of column `c`.
+The arguments are the same as `dptr->get_col` with `work` being equivalent to `X`.
+(The data type of `work` must correspond to that of the matrix - in this case, it should be a `Rcpp::NumericVector::iterator`.)
+For simple matrices, this function is more efficient than `get_col` as it returns the iterator without needing to copy data into `work`.
+For other matrices, this function simply calls `get_col` and returns an iterator to the start of `work`.
+- `dptr->get_nonzero_col(c, index, values, rstart, rend)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
+For each non-zero entry in column `c` from rows `[rstart, rend)`, its row index is stored in the memory pointed to by `index` and its value is stored in `values`.
+(Both iterators should point to memory with at least `rend-rstart` addressable elements.)
+The return value of the function isThe number of non-zero entries stored in this manner.
+This is quite efficient for sparse matrices; for all other matrices, `get_col` is called and zeros are stripped out afterwards.
+- `dptr->get_nonzero_col(r, index, values, cstart, cend)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
+For each non-zero entry in row `r` from columns `[cstart, cend)`, its column index is stored in the memory pointed to by `index` and its value is stored in `values`.
+(Both iterators should point to memory with at least `cend-cstart` addressable elements.)
+The return value of the function isThe number of non-zero entries stored in this manner.
+This is quite efficient for sparse matrices; for all other matrices, `get_row` is called and zeros are stripped out afterwards.
+
+The `get_nonzero_*` functions are obviously not available for character matrices.
 
 ## Other matrix types
 
