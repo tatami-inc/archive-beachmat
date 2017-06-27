@@ -152,7 +152,7 @@ There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+
 No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 - `dptr->clone()` returns a unique pointer to a `numeric_matrix` instance of the same type as that pointed to by `dptr`.
-- `dptr->get_matrix_type()` returns a `matrix_type` value specifying the type of matrix pointed to by `dptr`.
+- `dptr->get_matrix_type()` returns a `matrix_type` value specifying the specific matrix representation that is pointed to by `dptr`.
 This is an enumeration type that can be tested against constants like `beachmat::SIMPLE` or `beachmat::SPARSE`.
 
 In all cases, `r` and `c` should be non-negative integers (specificaly `size_t`) in `[0, nrow)` and `[0, ncol)` respectively.
@@ -166,7 +166,7 @@ It is also _possible_ to use a `Rcpp::LogicalVector::iterator`, though this will
 
 ## Special methods for specific matrix types
 
-There are additional methods that provide some advantages for specific matrix types:
+There are additional methods that provide some advantages for specific matrix representations:
 
 - `dptr->get_const_col(c, work, rstart, rend)` returns a `Rcpp::Vector::const_iterator` pointing to `rstart` row of column `c`.
 The arguments are the same as `dptr->get_col` with `work` being equivalent to `X`.
@@ -176,13 +176,13 @@ For other matrices, this function simply calls `get_col` and returns an iterator
 - `dptr->get_nonzero_col(c, index, values, rstart, rend)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
 For each non-zero entry in column `c` from rows `[rstart, rend)`, its row index is stored in the memory pointed to by `index` and its value is stored in `values`.
 (Both iterators should point to memory with at least `rend-rstart` addressable elements.)
-The return value of the function isThe number of non-zero entries stored in this manner.
-This is quite efficient for sparse matrices; for all other matrices, `get_col` is called and zeros are stripped out afterwards.
+The return value of the function is the number of non-zero entries stored in this manner.
+This function is quite efficient for sparse matrices; for all other matrices, `get_col` is called and zeros are stripped out afterwards.
 - `dptr->get_nonzero_col(r, index, values, cstart, cend)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
 For each non-zero entry in row `r` from columns `[cstart, cend)`, its column index is stored in the memory pointed to by `index` and its value is stored in `values`.
 (Both iterators should point to memory with at least `cend-cstart` addressable elements.)
-The return value of the function isThe number of non-zero entries stored in this manner.
-This is quite efficient for sparse matrices; for all other matrices, `get_row` is called and zeros are stripped out afterwards.
+The return value of the function is the number of non-zero entries stored in this manner.
+This function is quite efficient for sparse matrices; for all other matrices, `get_row` is called and zeros are stripped out afterwards.
 
 The `get_nonzero_*` functions are obviously not available for character matrices.
 
