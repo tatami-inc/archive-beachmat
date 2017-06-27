@@ -56,7 +56,7 @@ typedef sparse_lin_output<int, Rcpp::LogicalVector> sparse_logical_output;
 
 /* HDF5 output logical matrix */
 
-typedef HDF5_lin_output<int, Rcpp::LogicalVector> HDF5_logical_output;
+typedef HDF5_lin_output<int, LGLSXP> HDF5_logical_output;
 
 /* Output dispatchers */
 

@@ -62,31 +62,31 @@ private:
 };
 
 
-template<typename T, class V>
+template<typename T, int RTYPE>
 class HDF5_output : public any_matrix {
 public:
     HDF5_output(size_t, size_t, size_t=0, size_t=0, int=-1);
     ~HDF5_output();
     
-    void fill_row(size_t, const T*, size_t, size_t);
+    void insert_row(size_t, const T*, size_t, size_t);
     template<typename X>
-    void fill_row(size_t, const X*, const H5::DataType&, size_t, size_t);
+    void insert_row(size_t, const X*, const H5::DataType&, size_t, size_t);
 
-    void fill_col(size_t, const T*, size_t, size_t);
+    void insert_col(size_t, const T*, size_t, size_t);
     template<typename X>
-    void fill_col(size_t, const X*, const H5::DataType&, size_t, size_t);
+    void insert_col(size_t, const X*, const H5::DataType&, size_t, size_t);
 
-    void fill(size_t, size_t, T);
+    void insert_one(size_t, size_t, T);
 
-    void get_col(size_t, T*, size_t, size_t);
+    void extract_col(size_t, T*, size_t, size_t);
     template<typename X>
-    void get_col(size_t, X*, const H5::DataType&, size_t, size_t);
+    void extract_col(size_t, X*, const H5::DataType&, size_t, size_t);
 
-    void get_row(size_t, T*, size_t, size_t);
+    void extract_row(size_t, T*, size_t, size_t);
     template<typename X>
-    void get_row(size_t, X*, const H5::DataType&, size_t, size_t);
+    void extract_row(size_t, X*, const H5::DataType&, size_t, size_t);
 
-    T get(size_t, size_t);
+    T extract_one(size_t, size_t);
 
     Rcpp::RObject yield();
 

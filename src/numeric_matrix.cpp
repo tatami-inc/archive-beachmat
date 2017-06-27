@@ -15,7 +15,7 @@ double sparse_output<double, Rcpp::NumericVector>::get_empty() const { return 0;
 /* HDF5 numeric output methods. */
 
 template<>
-double HDF5_output<double, Rcpp::NumericVector>::get_empty() const { return 0; }
+double HDF5_output<double, REALSXP>::get_empty() const { return 0; }
 
 /* Dispatch definition */
 

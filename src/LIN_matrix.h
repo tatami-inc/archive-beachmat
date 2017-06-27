@@ -275,7 +275,7 @@ private:
 
 /* HDF5 LIN output */
 
-template<typename T, class V>
+template<typename T, int RTYPE>
 class HDF5_lin_output : public lin_output<T> {
 public:
     HDF5_lin_output(size_t, size_t);
@@ -307,7 +307,7 @@ public:
 
     matrix_type get_matrix_type() const;
 protected:
-    HDF5_output<T, V> mat;
+    HDF5_output<T, RTYPE> mat;
 };
 
 #include "LIN_methods.h"

@@ -40,7 +40,7 @@ typedef simple_lin_output<int, Rcpp::IntegerVector> simple_integer_output;
 
 /* HDF5 output integer matrix */
 
-typedef HDF5_lin_output<int, Rcpp::IntegerVector> HDF5_integer_output;
+typedef HDF5_lin_output<int, INTSXP> HDF5_integer_output;
 
 /* Output dispatchers */
 

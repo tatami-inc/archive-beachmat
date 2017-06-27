@@ -15,7 +15,7 @@ int sparse_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
 /* HDF5 logical output methods. */
 
 template<>
-int HDF5_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
+int HDF5_output<int, LGLSXP>::get_empty() const { return 0; }
 
 /* Dispatch definition */
 

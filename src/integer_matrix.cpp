@@ -5,7 +5,7 @@ namespace beachmat {
 /* HDF5 integer output methods. */
 
 template<>
-int HDF5_output<int, Rcpp::IntegerVector>::get_empty() const { return 0; }
+int HDF5_output<int, INTSXP>::get_empty() const { return 0; }
 
 /* Dispatch definition */
 
