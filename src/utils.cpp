@@ -190,7 +190,7 @@ Rcpp::RObject realize_delayed_array(const Rcpp::RObject& in) {
 
 /* Output functions. */
 
-output_param::output_param (output_mode m) : mode(m), chunk_nr(0), chunk_nc(0), compress(-1) {}
+output_param::output_param (matrix_type m) : mode(m), chunk_nr(0), chunk_nc(0), compress(-1) {}
 
 output_param::output_param (const Rcpp::RObject& in, bool simplify, bool preserve_zero) : mode(SIMPLE),
         chunk_nr(0), chunk_nc(0), compress(-1) {
@@ -218,7 +218,7 @@ output_param::output_param (const Rcpp::RObject& in, bool simplify, bool preserv
     return;
 }
 
-output_mode output_param::get_mode() const {
+matrix_type output_param::get_mode() const {
     return mode;
 }
 

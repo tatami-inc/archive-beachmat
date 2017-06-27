@@ -54,6 +54,8 @@ public:
     virtual size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
 
     virtual std::unique_ptr<lin_matrix<T, V> > clone() const=0;
+
+    virtual matrix_type get_matrix_type() const=0;
 };
 
 /* Various flavours of a LIN matrix */
@@ -76,11 +78,11 @@ public:
     T get(size_t, size_t);
 
     std::unique_ptr<lin_matrix<T, V> > clone() const;
+
+    matrix_type get_matrix_type() const;
 protected:
     M mat;
 };
-
-// Good to use for any inner matrix class that depends on T and V and supports get_row/col.
 
 template <typename T, class V>
 class simple_lin_matrix : public advanced_lin_matrix<T, V, simple_matrix<T, V> > {
@@ -144,15 +146,9 @@ public:
 
     T get(size_t, size_t);
 
-    typename V::const_iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
-
-    size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
-    size_t get_nonzero_row(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
-
-    size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::IntegerVector::iterator, size_t, size_t);
-    size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Rcpp::NumericVector::iterator, size_t, size_t);
-
     std::unique_ptr<lin_matrix<T, V> > clone() const;
+
+    matrix_type get_matrix_type() const;
 protected:
     HDF5_matrix<T, RTYPE> mat;
 };
@@ -201,6 +197,8 @@ public:
     virtual Rcpp::RObject yield()=0;
 
     virtual std::unique_ptr<lin_output<T> > clone() const=0;
+
+    virtual matrix_type get_matrix_type() const=0;
 };
 
 /* Simple LIN output */
@@ -233,6 +231,8 @@ public:
     Rcpp::RObject yield();
 
     std::unique_ptr<lin_output<T> > clone() const;
+
+    matrix_type get_matrix_type() const;
 private:
     simple_output<T, V> mat;
 };
@@ -267,6 +267,8 @@ public:
     Rcpp::RObject yield();
 
     std::unique_ptr<lin_output<T> > clone() const;
+
+    matrix_type get_matrix_type() const;
 private:
     sparse_output<T, V> mat;
 };
@@ -302,6 +304,8 @@ public:
     Rcpp::RObject yield();
 
     std::unique_ptr<lin_output<T> > clone() const;
+
+    matrix_type get_matrix_type() const;
 protected:
     HDF5_output<T, V> mat;
 };

@@ -71,6 +71,11 @@ Rcpp::RObject simple_output<T, V>::yield() {
     return out;
 }
 
+template<typename T, class V>
+matrix_type simple_output<T, V>::get_matrix_type() const {
+    return SIMPLE;
+}
+
 /* Methods for the sparse output matrix. */
 
 template<typename T, class V>
@@ -278,6 +283,11 @@ Rcpp::RObject sparse_output<T, V>::yield() {
     mat.slot("x")=x;
 
     return SEXP(mat);
+}
+
+template<typename T, class V>
+matrix_type sparse_output<T, V>::get_matrix_type() const {
+    return SPARSE;
 }
 
 /* Methods for HDF5 output matrix. */
@@ -550,6 +560,11 @@ Rcpp::RObject HDF5_output<T, V>::yield() {
     h5mat.slot("seed") = h5seed;
 
     return SEXP(h5mat);
+}
+
+template<typename T, class V>
+matrix_type HDF5_output<T, V>::get_matrix_type() const {
+    return HDF5;
 }
 
 #endif

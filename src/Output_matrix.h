@@ -25,6 +25,8 @@ public:
     T get(size_t, size_t);
 
     Rcpp::RObject yield();
+
+    matrix_type get_matrix_type() const;
 private:
     V data;    
 };
@@ -48,6 +50,8 @@ public:
     T get(size_t, size_t);
 
     Rcpp::RObject yield();
+
+    matrix_type get_matrix_type() const;
 private:
     typedef std::pair<size_t, T> data_pair;
     std::vector<std::deque<data_pair> > data;
@@ -85,6 +89,8 @@ public:
     T get(size_t, size_t);
 
     Rcpp::RObject yield();
+
+    matrix_type get_matrix_type() const;
 protected:
     std::string fname, dname;
 

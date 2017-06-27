@@ -160,6 +160,11 @@ std::unique_ptr<lin_matrix<T, V> > advanced_lin_matrix<T, V, M>::clone() const {
     return std::unique_ptr<lin_matrix<T, V> >(new advanced_lin_matrix<T, V, M>(*this));
 }
 
+template<typename T, class V, class M> 
+matrix_type advanced_lin_matrix<T, V, M>::get_matrix_type() const {
+    return mat.get_matrix_type();
+}
+
 /* Defining specific interface for simple/dense matrices. */
 
 template <typename T, class V>
@@ -277,38 +282,13 @@ T HDF5_lin_matrix<T, V, RTYPE>::get(size_t r, size_t c) {
 }
 
 template<typename T, class V, int RTYPE>
-typename V::const_iterator HDF5_lin_matrix<T, V, RTYPE>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    get_col(c, work, start, end);
-    return work;
-}
-
-template<typename T, class V, int RTYPE>
-size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    get_col(c, out, start, end);
-    return zero_hunter<int>(dex, out, start, end);
-}
-
-template<typename T, class V, int RTYPE>
-size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    get_col(c, out, start, end);
-    return zero_hunter<double>(dex, out, start, end);
-}
-
-template<typename T, class V, int RTYPE>
-size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    get_row(r, out, start, end);
-    return zero_hunter<int>(dex, out, start, end);
-}
-
-template<typename T, class V, int RTYPE>
-size_t HDF5_lin_matrix<T, V, RTYPE>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    get_row(r, out, start, end);
-    return zero_hunter<double>(dex, out, start, end);
-}
-
-template<typename T, class V, int RTYPE>
 std::unique_ptr<lin_matrix<T, V> > HDF5_lin_matrix<T, V, RTYPE>::clone() const {
     return std::unique_ptr<lin_matrix<T, V> >(new HDF5_lin_matrix<T, V, RTYPE>(*this));
+}
+
+template<typename T, class V, int RTYPE>
+matrix_type HDF5_lin_matrix<T, V, RTYPE>::get_matrix_type() const {
+    return mat.get_matrix_type();
 }
 
 /****************************************
@@ -456,6 +436,12 @@ std::unique_ptr<lin_output<T> > simple_lin_output<T, V>::clone() const {
     return std::unique_ptr<lin_output<T> >(new simple_lin_output<T, V>(*this));
 }
 
+template<typename T, class V>
+matrix_type simple_lin_output<T, V>::get_matrix_type() const {
+    return mat.get_matrix_type();
+}
+
+
 /* Defining the sparse output interface. */ 
 
 template<typename T, class V>
@@ -541,6 +527,11 @@ Rcpp::RObject sparse_lin_output<T, V>::yield() {
 template<typename T, class V>
 std::unique_ptr<lin_output<T> > sparse_lin_output<T, V>::clone() const {
     return std::unique_ptr<lin_output<T> >(new sparse_lin_output<T, V>(*this));
+}
+
+template<typename T, class V>
+matrix_type sparse_lin_output<T, V>::get_matrix_type() const {
+    return mat.get_matrix_type();
 }
 
 /* Defining the HDF5 output interface. */
@@ -632,6 +623,11 @@ Rcpp::RObject HDF5_lin_output<T, V>::yield() {
 template<typename T, class V>
 std::unique_ptr<lin_output<T> > HDF5_lin_output<T, V>::clone() const {
     return std::unique_ptr<lin_output<T> >(new HDF5_lin_output<T, V>(*this));
+}
+
+template<typename T, class V>
+matrix_type HDF5_lin_output<T, V>::get_matrix_type() const {
+    return mat.get_matrix_type();
 }
 
 #endif

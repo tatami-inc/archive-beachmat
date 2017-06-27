@@ -24,6 +24,8 @@ public:
     void get_col(size_t, Iter, size_t, size_t);
 
     typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+
+    matrix_type get_matrix_type () const;
 private:
     V mat;
 };
@@ -45,6 +47,8 @@ public:
     void get_col(size_t, Iter, size_t, size_t);
 
     typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
+
+    matrix_type get_matrix_type () const;
 protected:
     V x;
 };
@@ -70,6 +74,8 @@ public:
 
     template<class Iter>
     size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Iter, size_t, size_t);
+
+    matrix_type get_matrix_type () const;
 protected:
     Rcpp::IntegerVector i, p;
     V x;
@@ -96,6 +102,8 @@ public:
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
+
+    matrix_type get_matrix_type () const;
 protected:
     V x;
     bool upper;
@@ -131,6 +139,8 @@ public:
     void extract_one(size_t, size_t, X*, const H5::DataType&);  
 
     const H5::DataType& get_datatype() const;
+
+    matrix_type get_matrix_type() const;
 protected:
     std::string filename, dataname;
 

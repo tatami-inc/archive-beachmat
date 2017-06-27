@@ -270,4 +270,9 @@ T Rle_matrix<T, V>::get(size_t r, size_t c) {
     return *(runvalues[chunkdex[c]].begin() + coldex[c] + extra);
 }
 
+template<typename T, class V>
+matrix_type Rle_matrix<T, V>::get_matrix_type() const {
+    return RLE;
+}
+
 #endif

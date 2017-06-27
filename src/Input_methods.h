@@ -54,6 +54,11 @@ typename V::iterator simple_matrix<T, V>::get_const_col(size_t c, typename V::it
     return mat.begin() + start + c*(this->nrow);
 }
 
+template<typename T, class V>
+matrix_type simple_matrix<T, V>::get_matrix_type() const {
+    return SIMPLE;
+}
+
 /* Methods for a dense Matrix. */
 
 template <typename T, class V>
@@ -106,6 +111,11 @@ void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
 template<typename T, class V>
 typename V::iterator dense_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
     return x.begin() + start + c*(this->nrow);
+}
+
+template<typename T, class V>
+matrix_type dense_matrix<T, V>::get_matrix_type() const {
+    return DENSE;
 }
 
 /* Methods for a Csparse matrix. */
@@ -335,6 +345,11 @@ size_t Csparse_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iter
     return nzero;
 }
 
+template<typename T, class V>
+matrix_type Csparse_matrix<T, V>::get_matrix_type() const {
+    return SPARSE;
+}
+
 /* Methods for a Psymm matrix. */
 
 template <typename T, class V>
@@ -465,6 +480,11 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) 
     check_rowargs(r, start, end);
     get_rowcol(r, out, start, end);
     return;
+}
+
+template<typename T, class V>
+matrix_type Psymm_matrix<T, V>::get_matrix_type() const {
+    return PSYMM;
 }
 
 /* Methods for an Rle-based matrix. */
@@ -670,6 +690,11 @@ void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
 template<typename T, int RTYPE>
 const H5::DataType& HDF5_matrix<T, RTYPE>::get_datatype() const { 
     return default_type;
+}
+
+template<typename T, int RTYPE>
+matrix_type HDF5_matrix<T, RTYPE>::get_matrix_type() const {
+    return HDF5;
 }
 
 #endif

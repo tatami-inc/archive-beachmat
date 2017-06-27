@@ -14,6 +14,8 @@ public:
 
     template<class Iter>
     void get_col(size_t, Iter, size_t, size_t); 
+
+    matrix_type get_matrix_type () const;
 private:
     std::deque<V> runvalues;
     std::vector<size_t> chunkdex, coldex;
