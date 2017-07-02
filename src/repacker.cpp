@@ -34,6 +34,7 @@ public:
         const size_t num_chunks_per_col=std::ceil(double(nrows())/chunk_nrows()); 
         
         // Specifying the output chunk size.
+        H5::DSetCreatPropList oparms; 
         if (byrow) { 
             if (chunksize > ncols()) { chunksize=ncols(); }
             out_chunk_ncols()=chunksize;
@@ -43,9 +44,9 @@ public:
             out_chunk_ncols()=1;
             out_chunk_nrows()=chunksize;
         }
-        cparms.setLayout(H5D_CHUNKED);
-        cparms.setChunk(2, out_chunk_dims);
-        cparms.setDeflate(compress);
+        oparms.setLayout(H5D_CHUNKED);
+        oparms.setChunk(2, out_chunk_dims);
+        oparms.setDeflate(compress);
 
         /* Setting up the input chunk cache. The idea is to hold N+1 chunks in memory,
          * where N is the smallest multiple of the chunk size along the requested dimension
@@ -66,7 +67,7 @@ public:
 
         // Creating the output data set.
         H5::DataSpace ohspace(2, dims);
-        ohdata=ohfile.createDataSet(output_data, HDT, ohspace, cparms); 
+        ohdata=ohfile.createDataSet(output_data, HDT, ohspace, oparms); 
 
         // Setting up the data space and the storage space.
         mat_space.setExtentSimple(2, dims);

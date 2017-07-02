@@ -1,4 +1,4 @@
-rechunkByMargins <- function(x, guide=5000, outfile=NULL, outname=NULL, outlevel=NULL, byrow=TRUE) 
+rechunkByMargins <- function(x, size=5000, outfile=NULL, outname=NULL, outlevel=NULL, byrow=TRUE) 
 # Creates a new HDF5Matrix with a pure-row or pure-column chunking scheme.
 # 
 # written by Aaron Lun
@@ -29,7 +29,7 @@ rechunkByMargins <- function(x, guide=5000, outfile=NULL, outname=NULL, outlevel
     # Repacking the file.
     data.type <- type(x)
     chunk.dims <- .Call(cxx_rechunk_matrix, x@seed@file, x@seed@name, data.type, 
-                        outfile, outname, outlevel, guide, byrow)
+                        outfile, outname, outlevel, size, byrow)
 
     # Generating output. 
     appendDatasetCreationToHDF5DumpLog(outfile, outname, dim(x), data.type, chunk.dims, outlevel)
