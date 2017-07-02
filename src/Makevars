@@ -2,20 +2,34 @@ RHDF5LIB_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
 	"${R_HOME}/bin/R" --vanilla --slave`
 PKG_LIBS=$(RHDF5LIB_LIBS)
 
-.PHONY: all libbeachmat
+all: $(SHLIB) copying
 
-all: libbeachmat $(SHLIB)
+# Specifying the headers and objects to put into the exported library.
+EXPORT_HEADERS=any_matrix.h character_matrix.h Input_methods.h LIN_matrix.h logical_matrix.h Output_matrix.h Rle_matrix.h utils.h beachmat.h Input_matrix.h integer_matrix.h LIN_methods.h numeric_matrix.h Output_methods.h Rle_methods.h
+EXPORT_OBJECTS=any_matrix.o character_matrix.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o
 
+# Wait for R to build the shared object, and then pick up the object files.
+libbeachmat.a: $(SHLIB)
+	ar rc libbeachmat.a $(EXPORT_OBJECTS)
+
+LDCMD=`${R_HOME}/bin/R CMD config SHLIB_CXXLD`
+LDFLAGS=`${R_HOME}/bin/R CMD config LDFLAGS`
+SHLIB_LDFLAGS=`${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS` 
+CXX_LDFLAGS=`${R_HOME}/bin/R CMD config CXX11PICFLAGS`
+
+libbeachmat.so: $(SHLIB)
+	$(LDCMD) ${CXX_LDFLAGS} ${SHLIB_LDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
+ 
+# Specifying copying locations.  
 BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
-libbeachmat: $(SHLIB)
+copying: libbeachmat.a libbeachmat.so
 	mkdir -p $(BEACHMAT_LIBDIR) $(BEACHMAT_INCLUDEDIR)
-	cp *.h $(BEACHMAT_INCLUDEDIR)
-	ar rc libbeachmat.a *.o
-	mv $< libbeachmat.so
+	cp $(EXPORT_HEADERS) $(BEACHMAT_INCLUDEDIR)
 	mv libbeachmat.* $(BEACHMAT_LIBDIR)
 
+# Cleaning commands.
 shlib-clean: clean
 
 clean: 
