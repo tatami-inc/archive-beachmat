@@ -294,7 +294,6 @@ matrix_type sparse_output<T, V>::get_matrix_type() const {
 
 template<typename T, int RTYPE>
 HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_t chunk_nc, int compress) : any_matrix(nr, nc), 
-        onrow(true), oncol(true), rowokay(false), colokay(false), largerrow(false), largercol(false), // assuming contiguous.
         rowlist(H5::FileAccPropList::DEFAULT.getId()), collist(H5::FileAccPropList::DEFAULT.getId()) {
 
     // Pulling out settings.
@@ -347,8 +346,11 @@ HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_
         std::vector<hsize_t> chunk_dims(2);
         chunk_dims[0]=chunk_nc; // flipping them, as rhdf5 internally transposes it.
         chunk_dims[1]=chunk_nr;
+        plist.setLayout(H5D_CHUNKED);
         plist.setChunk(2, chunk_dims.data());
         plist.setDeflate(compress);
+    } else {
+        plist.setLayout(H5D_CONTIGUOUS);
     }
 
     std::vector<hsize_t> dims(2);

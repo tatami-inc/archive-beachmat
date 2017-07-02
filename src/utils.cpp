@@ -131,11 +131,18 @@ void calc_HDF5_chunk_cache_settings (const size_t total_nrows, const size_t tota
         bool& onrow, bool& oncol, bool& rowokay, bool& colokay, bool& largerrow, bool& largercol,
         H5::FileAccPropList& rowlist, H5::FileAccPropList& collist) {
 
-    /* Setting up the chunk cache specification. */
     if (cparms.getLayout()!=H5D_CHUNKED) {
+        // If contiguous, setting the flags to avoid reopening the file.
+        onrow=true;
+        oncol=true;
+        rowokay=false;
+        colokay=false;
+        largerrow=false;
+        largercol=false;
         return;
     }
-
+    
+    /* Setting up the chunk cache specification. */
     hsize_t chunk_dims[2];
     cparms.getChunk(2, chunk_dims);
     const size_t chunk_nrows=chunk_dims[1];
@@ -143,7 +150,7 @@ void calc_HDF5_chunk_cache_settings (const size_t total_nrows, const size_t tota
     const size_t num_chunks_per_row=std::ceil(double(total_ncols)/chunk_ncols); // per row needs to divide by column dimensions.
     const size_t num_chunks_per_col=std::ceil(double(total_nrows)/chunk_nrows); 
 
-    // Everything is transposed, so hash indices are filled column-major.
+    // Everything is transposed, so hash indices are filled column-major. 
     // Computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
     const size_t nslots = std::ceil(double(num_chunks_per_row)/num_chunks_per_col) * num_chunks_per_col + 1; 
 

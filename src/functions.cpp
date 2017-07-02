@@ -1,4 +1,4 @@
-#include "internals.h"
+#include "functions.h"
 #include "R_ext/Rdynload.h"
 #include "R_ext/Visibility.h"
 

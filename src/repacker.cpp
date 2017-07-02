@@ -1,5 +1,5 @@
 #include "beachmat.h"
-#include "internals.h"
+#include "functions.h"
 
 /********************* A rechunking class ************************/
 
