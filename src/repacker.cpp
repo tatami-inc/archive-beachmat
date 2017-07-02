@@ -8,7 +8,7 @@ class rechunker {
 public: 
     rechunker(const std::string& input_file, const std::string& input_data, 
               const std::string& output_file, const std::string& output_data,
-              size_t cs, bool br) : 
+              int compress, size_t cs, bool br) : 
         ihfile(H5std_string(input_file), H5F_ACC_RDONLY),
         ihdata(ihfile.openDataSet(H5std_string(input_data))),
         HDT(ihdata.getDataType()),
@@ -23,7 +23,13 @@ public:
         ihspace.getSimpleExtentDims(dims);
        
         H5::DSetCreatPropList cparms = ihdata.getCreatePlist();
-        cparms.getChunk(2, chunk_dims);
+        if (cparms.getLayout()==H5D_CONTIGUOUS) {
+            // Contiguous is treated as column-wise chunks.
+            chunk_dims[0]=1;
+            chunk_dims[1]=nrows();
+        } else {
+            cparms.getChunk(2, chunk_dims);
+        }
         const size_t num_chunks_per_row=std::ceil(double(ncols())/chunk_ncols()); // per row needs to divide by column dimensions.
         const size_t num_chunks_per_col=std::ceil(double(nrows())/chunk_nrows()); 
         
@@ -37,7 +43,9 @@ public:
             out_chunk_ncols()=1;
             out_chunk_nrows()=chunksize;
         }
+        cparms.setLayout(H5D_CHUNKED);
         cparms.setChunk(2, out_chunk_dims);
+        cparms.setDeflate(compress);
 
         /* Setting up the input chunk cache. The idea is to hold N+1 chunks in memory,
          * where N is the smallest multiple of the chunk size along the requested dimension
@@ -234,27 +242,31 @@ private:
 template <typename T, bool use_size> 
 SEXP rechunk(Rcpp::StringVector ifile, Rcpp::StringVector idata, 
         Rcpp::StringVector ofile, Rcpp::StringVector odata, 
-        Rcpp::NumericVector nelements, Rcpp::LogicalVector byrow) {
+        Rcpp::IntegerVector olevel, Rcpp::IntegerVector nelements, Rcpp::LogicalVector byrow) {
 
     if (ifile.size()!=1 || idata.size()!=1 || ofile.size()!=1 || odata.size()!=1) {
         throw std::runtime_error("file and dataset names must be strings");
     }
+    if (olevel.size()!=1) {
+        throw std::runtime_error("compression level should be an integer scalar");
+    }
     if (nelements.size()!=1) {
-        throw std::runtime_error("chunk dimensions should be integer vectors of length 2");
+        throw std::runtime_error("chunk size should be an integer scalar");
     }
     if (byrow.size()!=1) {
         throw std::runtime_error("byrow should be a logical scalar");
     }
 
     rechunker<T, use_size> repacker(Rcpp::as<std::string>(ifile[0]), Rcpp::as<std::string>(idata[0]),
-            Rcpp::as<std::string>(ofile[0]), Rcpp::as<std::string>(odata[0]), nelements[0], byrow[0]);
+            Rcpp::as<std::string>(ofile[0]), Rcpp::as<std::string>(odata[0]), 
+            olevel[0], nelements[0], byrow[0]);
     repacker.execute();
     return repacker.get_chunk_dims();
 }
 
 /************************** The actual R-visible functions *********************/
 
-SEXP rechunk_matrix(SEXP inname, SEXP indata, SEXP intype, SEXP outname, SEXP outdata, SEXP longdim, SEXP byrow) {
+SEXP rechunk_matrix(SEXP inname, SEXP indata, SEXP intype, SEXP outname, SEXP outdata, SEXP outlevel, SEXP longdim, SEXP byrow) {
     BEGIN_RCPP
     // Figuring out the type.
     Rcpp::StringVector type(intype);
@@ -265,11 +277,11 @@ SEXP rechunk_matrix(SEXP inname, SEXP indata, SEXP intype, SEXP outname, SEXP ou
 
     // Dispatching.
     if (choice=="double") {
-        return rechunk<double, false>(inname, indata, outname, outdata, longdim, byrow);
+        return rechunk<double, false>(inname, indata, outname, outdata, outlevel, longdim, byrow);
     } else if (choice=="integer" || choice=="logical") { 
-        return rechunk<int, false>(inname, indata, outname, outdata, longdim, byrow);
+        return rechunk<int, false>(inname, indata, outname, outdata, outlevel, longdim, byrow);
     } else if (choice=="character") {
-        return rechunk<char, true>(inname, indata, outname, outdata, longdim, byrow);
+        return rechunk<char, true>(inname, indata, outname, outdata, outlevel, longdim, byrow);
     }
     throw std::runtime_error("unsupported data type");
     END_RCPP

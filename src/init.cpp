@@ -7,7 +7,7 @@
 extern "C" {
 
 static const R_CallMethodDef all_call_entries[] = {
-    REGISTER(rechunk_matrix, 7),
+    REGISTER(rechunk_matrix, 8),
     {NULL, NULL, 0}
 };
 

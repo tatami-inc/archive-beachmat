@@ -1,4 +1,4 @@
-rechunkByMargins <- function(x, guide=5000, outfile=NULL, outname=NULL, byrow=TRUE) 
+rechunkByMargins <- function(x, guide=5000, outfile=NULL, outname=NULL, outlevel=NULL, byrow=TRUE) 
 # Creates a new HDF5Matrix with a pure-row or pure-column chunking scheme.
 # 
 # written by Aaron Lun
@@ -18,12 +18,21 @@ rechunkByMargins <- function(x, guide=5000, outfile=NULL, outname=NULL, byrow=TR
         outname <- getHDF5DumpName(for.use=TRUE)        
     }
 
+    # Checking the compression level
+    if (is.null(outlevel)) {
+        outlevel <- getHDF5DumpCompressionLevel() 
+    }
+    if (outlevel==0) {
+        stop("compression level of 0 implies a contiguous layout")      
+    }
+
     # Repacking the file.
     data.type <- type(x)
-    chunk.dims <- .Call(cxx_rechunk_matrix, x@seed@file, x@seed@name, data.type, outfile, outname, guide, byrow)
+    chunk.dims <- .Call(cxx_rechunk_matrix, x@seed@file, x@seed@name, data.type, 
+                        outfile, outname, outlevel, guide, byrow)
 
     # Generating output. 
-    appendDatasetCreationToHDF5DumpLog(outfile, outname, dim(x), data.type, chunk.dims, getHDF5DumpCompressionLevel())
+    appendDatasetCreationToHDF5DumpLog(outfile, outname, dim(x), data.type, chunk.dims, outlevel)
     HDF5Array(outfile, outname, data.type)
 }
 
