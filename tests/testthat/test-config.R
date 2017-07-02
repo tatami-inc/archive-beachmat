@@ -1,5 +1,7 @@
 # Checks for proper execution of pkgconfig.
 
-expect_output(pkgconfig('PKG_CPPFLAGS'))
-expect_output(pkgconfig('PKG_LIBS'))
+test_that("pkgconfig reports some output", {
+    expect_output(pkgconfig('PKG_CPPFLAGS'))
+    expect_output(pkgconfig('PKG_LIBS'))
+})
 
