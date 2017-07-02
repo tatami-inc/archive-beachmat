@@ -8,161 +8,91 @@ class rechunker {
 public: 
     rechunker(const std::string& input_file, const std::string& input_data, 
               const std::string& output_file, const std::string& output_data,
-              double longdim, bool byrow) : 
+              size_t cs, bool br) : 
         ihfile(H5std_string(input_file), H5F_ACC_RDONLY),
         ihdata(ihfile.openDataSet(H5std_string(input_data))),
-        ihspace(ihdata.getSpace()),
         HDT(ihdata.getDataType()),
-        ohfile(H5std_string(output_file), H5F_ACC_RDWR)
+        ohfile(H5std_string(output_file), H5F_ACC_RDWR),
+        chunksize(cs), byrow(br)
     {
         // Setting up the input structures.
+        H5::DataSpace ihspace=ihdata.getSpace(); 
         if (ihspace.getSimpleExtentNdims()!=2){ 
             throw std::runtime_error("rechunking is not supported for arrays");
         }
         ihspace.getSimpleExtentDims(dims);
-        inspace.setExtentSimple(2, dims);
        
         H5::DSetCreatPropList cparms = ihdata.getCreatePlist();
         cparms.getChunk(2, chunk_dims);
-
-        // Setting up the storage structure. 
-        hsize_t new_chunk_ncols=chunk_ncols(), new_chunk_nrows=chunk_nrows();
-        if (byrow) {
-            N=std::ceil(longdim/chunk_ncols());
-            new_chunk_ncols=N*longdim;
-            if (new_chunk_ncols > ncols()) { new_chunk_ncols=ncols(); }
-        } else {
-            N=std::ceil(longdim/chunk_nrows());
-            new_chunk_nrows=N*longdim;
-            if (new_chunk_nrows > nrows()) { new_chunk_nrows=nrows(); }
-        }
-        if (N <= 0) {
-            throw std::runtime_error("number of chunks to load in per iteration should be positive");
-        }
-        storage_dims[0]=new_chunk_ncols;
-        storage_dims[1]=new_chunk_nrows;
-        storage_offset[0]=0;
-        storage_offset[1]=0;
-        store_space.setExtentSimple(2, storage_dims);
-        const int datasize=(use_size ? HDT.getSize() : 1);
-        cached.resize(storage_dims[0]*storage_dims[1]*datasize);
-    
-        // Setting up the output structures.       
+        const size_t num_chunks_per_row=std::ceil(double(ncols())/chunk_ncols()); // per row needs to divide by column dimensions.
+        const size_t num_chunks_per_col=std::ceil(double(nrows())/chunk_nrows()); 
+        
+        // Specifying the output chunk size.
         if (byrow) { 
-            out_chunk_dims[0]=new_chunk_ncols;
-            out_chunk_dims[1]=1;
+            if (chunksize > ncols()) { chunksize=ncols(); }
+            out_chunk_ncols()=chunksize;
+            out_chunk_nrows()=1;
         } else {
-            out_chunk_dims[0]=1;
-            out_chunk_dims[1]=new_chunk_nrows;
+            if (chunksize > nrows()) { chunksize=nrows(); }
+            out_chunk_ncols()=1;
+            out_chunk_nrows()=chunksize;
         }
         cparms.setChunk(2, out_chunk_dims);
-        
-        ohspace.setExtentSimple(2, dims);
+
+        /* Setting up the input chunk cache. The idea is to hold N+1 chunks in memory,
+         * where N is the smallest multiple of the chunk size along the requested dimension
+         * that is greater than the requested "chunksize". The +1 provides some working
+         * space to hold half-read chunks from the previous iteration. 
+         */
+        H5::FileAccPropList inputlist(ihfile.getAccessPlist().getId());
+        const size_t nslots = std::ceil(double(num_chunks_per_row)/num_chunks_per_col) * num_chunks_per_col + 1; // Same calculation as before.
+        const size_t longdim = (byrow ? chunk_ncols() : chunk_nrows());
+        const size_t N = std::ceil(double(chunksize)/longdim);
+        const size_t cache_size=(N+1)*chunk_ncols()*chunk_nrows()*HDT.getSize();
+        inputlist.setCache(0, nslots, cache_size, 1); // Evicting fully read chunks first.      
+
+        ihdata.close();
+        ihfile.close();
+        ihfile.openFile(H5std_string(input_file), H5F_ACC_RDONLY, inputlist);
+        ihdata=ihfile.openDataSet(H5std_string(input_data));
+
+        // Creating the output data set.
+        H5::DataSpace ohspace(2, dims);
         ohdata=ohfile.createDataSet(output_data, HDT, ohspace, cparms); 
-        return;
-    }
 
-    void set_column_start() {     
-        currentcol=0;
-        out_ncols()=0;
-        out_colpos()=0;
-        storage_colpos()=0;
-        counter=0;
-        return;
-    }
+        // Setting up the data space and the storage space.
+        mat_space.setExtentSimple(2, dims);
 
-    bool advance_by_column (bool inner=true) {
-        bool finished=false;
-        in_colpos()=currentcol;
-        if (currentcol + chunk_ncols() > ncols()) { 
-            in_ncols()=ncols() - currentcol;
-            finished=true;
+        hsize_t store_dims[2];
+        if (byrow) {
+            store_dims[0]=chunksize; // store_dims, NOT store_counts!
+            store_dims[1]=chunk_nrows();
         } else {
-            in_ncols()=chunk_ncols();
+            store_dims[0]=chunk_ncols();
+            store_dims[1]=chunksize;
         }
-        if (inner) { 
-            out_ncols() += in_ncols();
+        store_space.setExtentSimple(2, store_dims);
+        store_rowpos()=0;
+        store_colpos()=0;
+
+        size_t store_size=store_dims[0]*store_dims[1]; // store_dims, NOT store_counts!
+        if (use_size) { store_size *= HDT.getSize(); }
+        storage.resize(store_size);
+        return;
+    }
+
+    void execute() {
+        if (byrow) {
+            fill_by_row();
         } else {
-            out_colpos() = currentcol;
-            out_ncols() = in_ncols();
+            fill_by_col();
         }
-        return finished;
-    }
-   
-    void clean_up_column (bool inner=true) { 
-        currentcol+=chunk_ncols();
-        if (!inner) { return; }
-        
-        storage_colpos()+=chunk_ncols();
-        ++counter;
-        if (counter==N || currentcol>=ncols()) { 
-            write_out_data();
-            out_colpos()+=out_ncols();
-            out_ncols()=0;
-            counter=0;
-        } 
         return;
     }
 
-    void set_row_start() {     
-        currentrow=0;
-        out_nrows()=0;
-        out_rowpos()=0;
-        storage_rowpos()=0;
-        counter=0;
-        return;
+    Rcpp::IntegerVector get_chunk_dims() {
+        return Rcpp::IntegerVector::create(out_chunk_nrows(), out_chunk_ncols());
     }
-
-    bool advance_by_row (bool inner=true) {
-        bool finished=false;
-        in_rowpos()=currentrow;
-        if (currentrow + chunk_nrows() > nrows()) { 
-            in_nrows()=nrows() - currentrow;
-            finished=true;
-        } else {
-            in_nrows()=chunk_nrows();
-        }
-        if (inner) {
-            out_nrows() += in_nrows();
-        } else {
-            out_rowpos() = currentrow;
-            out_nrows() = in_nrows();
-        }
-        return finished;
-    }
-
-    void clean_up_row (bool inner=true) { 
-        currentrow+=chunk_nrows();
-        if (!inner) { return; }
-        
-        storage_rowpos()+=chunk_nrows();
-        ++counter;
-        if (counter==N || currentrow>=nrows()) { 
-            write_out_data();
-            out_rowpos()+=out_nrows();
-            out_nrows()=0;
-            counter=0;
-        } 
-        return;
-    }
-
-    void read_in_data () {
-        inspace.selectHyperslab(H5S_SELECT_SET, in_count, in_offset);
-        store_space.selectHyperslab(H5S_SELECT_SET, in_count, storage_offset);
-        ihdata.read(cached.data(), HDT, store_space, inspace);
-        return;
-    } 
-
-    void write_out_data() {
-        ohspace.selectHyperslab(H5S_SELECT_SET, out_count, out_offset);
-        storage_colpos()=0;
-        storage_rowpos()=0;
-        store_space.selectHyperslab(H5S_SELECT_SET, out_count, storage_offset);
-        ohdata.write(cached.data(), HDT, store_space, ohspace);
-    }
-
-    const hsize_t& chunk_ncols () { return chunk_dims[0]; }
-    const hsize_t& chunk_nrows () { return chunk_dims[1]; }
 private:
     H5::H5File ihfile;
     H5::DataSet ihdata;
@@ -172,105 +102,154 @@ private:
     hsize_t dims[2];    
     hsize_t chunk_dims[2];
     
-    H5::DataSpace inspace;
-    hsize_t in_offset[2];
-    hsize_t in_count[2];
-
-    hsize_t storage_dims[2];
-    hsize_t storage_offset[2];
-    H5::DataSpace store_space;
-    std::vector<T> cached;    
+    H5::DataSpace mat_space;
+    hsize_t mat_offset[2];
+    hsize_t mat_count[2];
 
     H5::H5File ohfile;
-    H5::DataSpace ohspace;
     H5::DataSet ohdata;
-    
     hsize_t out_chunk_dims[2];
-    hsize_t out_offset[2];
-    hsize_t out_count[2];
+    size_t chunksize;
+    
+    H5::DataSpace store_space;
+    hsize_t store_offset[2];
+    hsize_t store_count[2];
+    std::vector<T> storage;
 
-    int N; // Store the number of chunks
-    hsize_t currentcol, currentrow;
-    int counter; 
+    bool byrow;
+
+    // Convenience getters.
+    const hsize_t& chunk_ncols () { return chunk_dims[0]; }
+    const hsize_t& chunk_nrows () { return chunk_dims[1]; }
 
     const hsize_t& ncols () const { return dims[0]; }
     const hsize_t& nrows () const { return dims[1]; }
 
-    hsize_t& in_colpos () { return in_offset[0]; }
-    hsize_t& in_rowpos () { return in_offset[1]; }
-    hsize_t& in_ncols () { return in_count[0]; }
-    hsize_t& in_nrows () { return in_count[1]; }
-
-    const hsize_t& storage_ncol () const { return storage_dims[0]; }
-    const hsize_t& storage_nrow () const { return storage_dims[1]; }
-    hsize_t& storage_colpos () { return storage_offset[0]; }
-    hsize_t& storage_rowpos () { return storage_offset[1]; } 
-
     hsize_t& out_chunk_ncols () { return out_chunk_dims[0]; }
     hsize_t& out_chunk_nrows () { return out_chunk_dims[1]; }
 
-    hsize_t& out_colpos () { return out_offset[0]; }
-    hsize_t& out_rowpos () { return out_offset[1]; }
-    hsize_t& out_ncols () { return out_count[0]; }
-    hsize_t& out_nrows () { return out_count[1]; }
+    hsize_t& query_colpos () { return mat_offset[0]; }
+    hsize_t& query_rowpos () { return mat_offset[1]; }
+    hsize_t& query_ncols () { return mat_count[0]; }
+    hsize_t& query_nrows () { return mat_count[1]; }
+
+    hsize_t& store_colpos () { return store_offset[0]; }
+    hsize_t& store_rowpos () { return store_offset[1]; }
+    hsize_t& store_ncols () { return store_count[0]; }
+    hsize_t& store_nrows () { return store_count[1]; }
+
+    /* Filling for row-based chunks. The idea is to read/write blocks of X*Y, where
+     * X is the number of rows in the input chunks and Y is the size of the output
+     * chunk. This is repeated across the columns of the input matrix, and then
+     * the function jumps to the next "X" rows. This approach ensures that half-read
+     * input chunks in the cache are also written.
+     */
+    void fill_by_row() {
+        size_t currentrow=0, currentcol=0;
+    
+        // Outer loop across rows.
+        while (currentrow < nrows()) { 
+            currentcol=0;
+            query_rowpos()=currentrow;
+            const size_t nextrow=currentrow+chunk_nrows();
+            if (nextrow > nrows()) { 
+                query_nrows()=nrows() - currentrow;
+            } else {
+                query_nrows()=chunk_nrows();
+            }
+            store_nrows()=query_nrows();
+
+            // Middle loop across columns. 
+            while (currentcol < ncols()) {
+                query_colpos()=currentcol; 
+                const size_t nextcol=currentcol+chunksize;
+                if (nextcol > ncols()) { 
+                    query_ncols()=ncols() - currentcol;
+                } else {
+                    query_ncols()=chunksize;
+                }
+                store_ncols()=query_ncols();
+
+                // Actually reading and writing.
+                store_space.selectHyperslab(H5S_SELECT_SET, store_count, store_offset);
+                mat_space.selectHyperslab(H5S_SELECT_SET, mat_count, mat_offset);
+                ihdata.read(storage.data(), HDT, store_space, mat_space);
+                ohdata.write(storage.data(), HDT, store_space, mat_space);
+                
+                currentcol=nextcol;
+            }
+            currentrow=nextrow;
+        }
+        return;
+    }
+
+    /* Filling for column-based chunks. The idea is to read/write blocks of X*Y, where
+     * X is the size of the output chunk and Y is the number of columns in the input 
+     * chunk. This is repeated across the rows of the input matrix, and then
+     * the function jumps to the next "Y" columns. 
+     */
+    void fill_by_col() {
+        size_t currentcol=0, currentrow=0;
+    
+        // Outer loop across columns.
+        while (currentcol < ncols()) { 
+            currentrow=0;
+            query_colpos()=currentcol;
+            const size_t nextcol=currentcol+chunk_ncols();
+            if (nextcol > ncols()) { 
+                query_ncols()=ncols() - currentcol;
+            } else {
+                query_ncols()=chunk_ncols();
+            }
+            store_ncols()=query_ncols();
+
+            // Middle loop across rows.
+            while (currentrow < nrows()) {
+                query_rowpos()=currentrow; 
+                const size_t nextrow=currentrow+chunksize;
+                if (nextrow > nrows()) { 
+                    query_nrows()=nrows() - currentrow;
+                } else {
+                    query_nrows()=chunksize;
+                }
+                store_nrows()=query_nrows();
+
+                // Actually reading and writing.
+                store_space.selectHyperslab(H5S_SELECT_SET, store_count, store_offset);
+                mat_space.selectHyperslab(H5S_SELECT_SET, mat_count, mat_offset);
+                ihdata.read(storage.data(), HDT, store_space, mat_space);
+                ohdata.write(storage.data(), HDT, store_space, mat_space);
+                
+                currentrow=nextrow;
+            }
+            currentcol=nextcol;
+        }
+        return;
+    }
+
 };
 
 /************************** Secondary templated functions *********************/
 
 template <typename T, bool use_size> 
-SEXP rechunk_by_row(Rcpp::StringVector ifile, Rcpp::StringVector idata, 
-        Rcpp::StringVector ofile, Rcpp::StringVector odata, Rcpp::NumericVector nelements) {
+SEXP rechunk(Rcpp::StringVector ifile, Rcpp::StringVector idata, 
+        Rcpp::StringVector ofile, Rcpp::StringVector odata, 
+        Rcpp::NumericVector nelements, Rcpp::LogicalVector byrow) {
 
-    rechunker<T, use_size> repacker(Rcpp::as<std::string>(ifile[0]), Rcpp::as<std::string>(idata[0]),
-            Rcpp::as<std::string>(ofile[0]), Rcpp::as<std::string>(odata[0]), 
-            nelements[0], true);
-    repacker.set_row_start();
-
-    // Reading in entire chunks, and writing them back.
-    while (1) { 
-        bool finished=repacker.advance_by_row(false);
-        repacker.set_column_start();
-
-        while (1) { 
-            bool inner_finished=repacker.advance_by_column(true);
-            repacker.read_in_data();
-            repacker.clean_up_column(true);
-            if (inner_finished) { break; }        
-        }
-
-        repacker.clean_up_row(false);
-        if (finished) { break; }
+    if (ifile.size()!=1 || idata.size()!=1 || ofile.size()!=1 || odata.size()!=1) {
+        throw std::runtime_error("file and dataset names must be strings");
+    }
+    if (nelements.size()!=1) {
+        throw std::runtime_error("chunk dimensions should be integer vectors of length 2");
+    }
+    if (byrow.size()!=1) {
+        throw std::runtime_error("byrow should be a logical scalar");
     }
 
-    return Rcpp::IntegerVector::create(repacker.chunk_nrows(), repacker.chunk_ncols());
-}
-
-template <typename T, bool use_size> 
-SEXP rechunk_by_col(Rcpp::StringVector ifile, Rcpp::StringVector idata, 
-        Rcpp::StringVector ofile, Rcpp::StringVector odata, Rcpp::NumericVector nelements) {
-
     rechunker<T, use_size> repacker(Rcpp::as<std::string>(ifile[0]), Rcpp::as<std::string>(idata[0]),
-            Rcpp::as<std::string>(ofile[0]), Rcpp::as<std::string>(odata[0]), 
-            nelements[0], false);
-    repacker.set_column_start();
-
-    // Reading in entire chunks, and writing them back.
-    while (1) { 
-        bool finished=repacker.advance_by_column(false);
-        repacker.set_row_start();
-
-        while (1) { 
-            bool inner_finished=repacker.advance_by_row(true);
-            repacker.read_in_data();
-            repacker.clean_up_row(true);
-            if (inner_finished) { break; }        
-        }
-
-        repacker.clean_up_column(false);
-        if (finished) { break; }
-    }
-
-    return Rcpp::IntegerVector::create(repacker.chunk_nrows(), repacker.chunk_ncols());
+            Rcpp::as<std::string>(ofile[0]), Rcpp::as<std::string>(odata[0]), nelements[0], byrow[0]);
+    repacker.execute();
+    return repacker.get_chunk_dims();
 }
 
 /************************** The actual R-visible functions *********************/
@@ -284,40 +263,13 @@ SEXP rechunk_matrix(SEXP inname, SEXP indata, SEXP intype, SEXP outname, SEXP ou
     }
     const std::string choice=Rcpp::as<std::string>(type[0]);
 
-    // Figuring out the new chunk pattern.
-    Rcpp::LogicalVector br(byrow);
-    if (br.size()!=1) {
-        throw std::runtime_error("byrow should be a logical scalar");
-    }
-    const bool BR=br[0];
-
-    // Figuring out various other things.
-    Rcpp::StringVector ifile(inname), idata(indata), ofile(outname), odata(outdata);
-    if (ifile.size()!=1 || idata.size()!=1 || ofile.size()!=1 || odata.size()!=1) {
-        throw std::runtime_error("file and dataset names must be strings");
-    }
-    Rcpp::NumericVector nelements(longdim);
-    if (nelements.size()!=1) {
-        throw std::runtime_error("chunk dimensions should be integer vectors of length 2");
-    }
-
     // Dispatching.
-    if (BR) {
-        if (choice=="double") {
-            return rechunk_by_row<double, false>(ifile, idata, outname, odata, nelements);
-        } else if (choice=="integer" || choice=="logical") { 
-            return rechunk_by_row<int, false>(ifile, idata, outname, odata, nelements);
-        } else if (choice=="character") {
-            return rechunk_by_row<char, true>(ifile, idata, outname, odata, nelements);
-        }
-    } else {
-        if (choice=="double") {
-            return rechunk_by_col<double, false>(ifile, idata, outname, odata, nelements);
-        } else if (choice=="integer" || choice=="logical") { 
-            return rechunk_by_col<int, false>(ifile, idata, outname, odata, nelements);
-        } else if (choice=="character") {
-            return rechunk_by_col<char, true>(ifile, idata, ofile, odata, nelements);
-        }
+    if (choice=="double") {
+        return rechunk<double, false>(inname, indata, outname, outdata, longdim, byrow);
+    } else if (choice=="integer" || choice=="logical") { 
+        return rechunk<int, false>(inname, indata, outname, outdata, longdim, byrow);
+    } else if (choice=="character") {
+        return rechunk<char, true>(inname, indata, outname, outdata, longdim, byrow);
     }
     throw std::runtime_error("unsupported data type");
     END_RCPP
