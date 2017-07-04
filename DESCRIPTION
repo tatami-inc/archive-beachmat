@@ -5,7 +5,7 @@ Title: Compiling Bioconductor to Handle Each Matrix Type
 Author: Aaron Lun <alun@wehi.edu.au>
 Maintainer: Aaron Lun <alun@wehi.edu.au>
 Depends: R (>= 3.4)
-Imports: utils, Rhdf5lib, HDF5Array, DelayedArray
+Imports: utils, Rhdf5lib, HDF5Array, DelayedArray, Rcpp, rhdf5
 Suggests: testthat, BiocStyle, knitr, Matrix
 biocViews: DataRepresentation, DataImport, Infrastructure 
 Description: Provides a consistent C++ class interface for a variety of

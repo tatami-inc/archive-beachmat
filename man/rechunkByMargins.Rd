@@ -5,7 +5,8 @@
 \description{Convert an existing HDF5Matrix into a pure column- or row-based chunk layout.}
 
 \usage{
-rechunkByMargins(x, size=5000, outfile=NULL, outname=NULL, byrow=TRUE) 
+rechunkByMargins(x, size=5000, outfile=NULL, outname=NULL, 
+    outlevel=NULL, byrow=TRUE) 
 }
 
 \arguments{
@@ -13,6 +14,7 @@ rechunkByMargins(x, size=5000, outfile=NULL, outname=NULL, byrow=TRUE)
 \item{size}{An integer scalar specifying the number of elements in each chunk.}
 \item{outfile}{A string containing the name for the output HDF5 file, chosen by \code{\link{getHDF5DumpFile}} if not specified.}
 \item{outname}{A string containing the name for the output HDF5 data set, chosen by \code{\link{getHDF5DumpName}} if not specified.}
+\item{outlevel}{An integer scalar specifying the compression level, chosen by \code{\link{getHDF5DumpCompressionLevel}} if not specified.}
 \item{byrow}{A logical scalar indicating if the output file should be row-chunked (default) or column-chunked.}
 }
 
