@@ -10,7 +10,7 @@ int Csparse_matrix<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
 /* Sparse numeric output methods. */
 
 template<>
-int sparse_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
+int Csparse_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
 
 /* HDF5 logical output methods. */
 

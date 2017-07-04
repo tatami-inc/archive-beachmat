@@ -10,7 +10,7 @@ double Csparse_matrix<double, Rcpp::NumericVector>::get_empty() const { return 0
 /* Sparse numeric output methods. */
 
 template<>
-double sparse_output<double, Rcpp::NumericVector>::get_empty() const { return 0; }
+double Csparse_output<double, Rcpp::NumericVector>::get_empty() const { return 0; }
 
 /* HDF5 numeric output methods. */
 

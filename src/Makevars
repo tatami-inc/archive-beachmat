@@ -7,7 +7,7 @@ all: $(SHLIB) copying
 # Specifying the headers and objects to put into the exported library.
 EXPORT_HEADERS=any_matrix.h utils.h beachmat.h \
     Psymm_matrix.h HDF5_matrix.h Csparse_matrix.h dense_matrix.h simple_matrix.h Rle_matrix.h Input_matrix.h \
-    Output_matrix.h Output_methods.h \
+    simple_output.h Csparse_output.h HDF5_output.h Output_matrix.h \
     LIN_matrix.h LIN_methods.h LIN_output.h LIN_outfun.h \
     logical_matrix.h integer_matrix.h character_matrix.h numeric_matrix.h 
 EXPORT_OBJECTS=any_matrix.o character_matrix.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o

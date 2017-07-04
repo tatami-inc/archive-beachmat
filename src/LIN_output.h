@@ -122,7 +122,7 @@ public:
 
     matrix_type get_matrix_type() const;
 private:
-    sparse_output<T, V> mat;
+    Csparse_output<T, V> mat;
 };
 
 /* HDF5 LIN output */
