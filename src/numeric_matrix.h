@@ -2,7 +2,7 @@
 #define BEACHMAT_NUMERIC_MATRIX_H
 
 #include "LIN_matrix.h"
-#include "Output_matrix.h"
+#include "LIN_output.h"
 
 namespace beachmat { 
 
