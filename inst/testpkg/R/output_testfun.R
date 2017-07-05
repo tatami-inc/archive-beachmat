@@ -40,6 +40,10 @@ check_logical_output_mat <- function(FUN, ..., hdf5.out) {
     .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_logical_output)
 } 
 
+check_character_output_mat <- function(FUN, ..., hdf5.out) {
+    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_character_output)
+} 
+
 ###############################
 
 .check_output_slice <- function(FUN, ..., by.row, by.col, class.out, cxxfun, fill) { 
@@ -94,6 +98,12 @@ check_logical_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
     .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, 
                         class.out=ifelse(hdf5.out, "HDF5Matrix", NA_character_),
                         cxxfun=cxx_test_logical_output_slice, fill=FALSE)
+} 
+
+check_character_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
+    .check_output_slice(FUN=FUN, ..., by.row=by.row, by.col=by.col, 
+                        class.out=ifelse(hdf5.out, "HDF5Matrix", NA_character_),
+                        cxxfun=cxx_test_character_output_slice, fill="")
 } 
 
 ###############################
@@ -191,6 +201,10 @@ check_logical_order <- function(FUN, cxxfun) {
     .check_execution_order(FUN, cxxfun=cxx_test_logical_output, type="logical")
 }
 
+check_character_order <- function(FUN, cxxfun) {
+    .check_execution_order(FUN, cxxfun=cxx_test_character_output, type="character")
+}
+
 ###############################
 
 .check_converted_output <- function(FUN, ..., hdf5.out, cxxfun, rfun) { 
@@ -280,5 +294,9 @@ check_logical_edge_output_errors <- function(FUN, ...) {
 
 check_numeric_edge_output_errors <- function(FUN, ...) {
     .check_edge_output_errors(FUN(...), cxxfun=cxx_test_numeric_edge_output)
+}
+
+check_character_edge_output_errors <- function(FUN, ...) {
+    .check_edge_output_errors(FUN(...), cxxfun=cxx_test_character_edge_output)
 }
 

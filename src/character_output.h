@@ -1,6 +1,3 @@
-#ifndef BEACHMAT_CHARACTER_OUTPUT_H
-#define BEACHMAT_CHARACTER_OUTPUT_H
-
 #include "Output_matrix.h"
 
 namespace beachmat { 
@@ -100,15 +97,13 @@ public:
 
     matrix_type get_matrix_type() const;
 protected:
-    HDF5_output<char, STRSXP> mat; 
     size_t bufsize;
+    HDF5_output<char, STRSXP> mat; 
     std::vector<char> row_buf, col_buf, one_buf;
 };
 
 /* Dispatcher */
 
-std::unique_ptr<character_output> create_character_output(const Rcpp::RObject&);
+std::unique_ptr<character_output> create_character_output(int, int, const output_param&);
 
 }
-
-#endif

@@ -1,4 +1,4 @@
-#include "character_output.h"
+#include "character_matrix.h"
 
 namespace beachmat {
 
@@ -81,7 +81,7 @@ template<>
 char HDF5_output<char, STRSXP>::get_empty() const { return '\0'; }
 
 HDF5_character_output::HDF5_character_output(size_t nr, size_t nc, size_t strlen, size_t chunk_nr, size_t chunk_nc, int compress) :
-        mat(nr, nc, chunk_nr, chunk_nc, compress, strlen), bufsize(strlen+1), col_buf(bufsize*nr), row_buf(bufsize*nc), one_buf(bufsize) {}
+        bufsize(strlen+1), mat(nr, nc, chunk_nr, chunk_nc, compress, bufsize), col_buf(bufsize*nr), row_buf(bufsize*nc), one_buf(bufsize) {}
 
 HDF5_character_output::~HDF5_character_output() {}
 
@@ -118,22 +118,26 @@ Rcpp::String HDF5_character_output::get(size_t r, size_t c) {
 }
 
 void HDF5_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t start, size_t end) { 
-    char* ref=row_buf.data();
-    for (size_t c=start; c<end; ++c, ref+=bufsize, ++in) {
-        std::strncpy(ref, CHAR(*in), bufsize-1);
-        ref[bufsize-1]='\0'; // strncpy only pads up to just before the last position.
+    if (mat.get_ncol() + start >= end) { // ensure they can fit in 'row_buf'; if not, it should trigger an error in insert_row().
+        char* ref=row_buf.data();
+        for (size_t c=start; c<end; ++c, ref+=bufsize, ++in) {
+            std::strncpy(ref, Rcpp::String(*in).get_cstring(), bufsize-1);
+            ref[bufsize-1]='\0'; // strncpy only pads up to just before the last position.
+        }
     }
-    mat.insert_row(r, ref, start, end);
+    mat.insert_row(r, row_buf.data(), start, end);
     return;
 } 
 
 void HDF5_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t start, size_t end) { 
-    char* ref=col_buf.data();
-    for (size_t r=start; r<end; ++r, ref+=bufsize, ++in) {
-        std::strncpy(ref, CHAR(*in), bufsize-1);
-        ref[bufsize-1]='\0';
+    if (mat.get_nrow() + start >= end) { // ensure they can fit in 'col_buf'.
+        char* ref=col_buf.data();
+        for (size_t r=start; r<end; ++r, ref+=bufsize, ++in) {
+            std::strncpy(ref, Rcpp::String(*in).get_cstring(), bufsize-1);
+            ref[bufsize-1]='\0';
+        }
     }
-    mat.insert_col(c, ref, start, end);
+    mat.insert_col(c, col_buf.data(), start, end);
     return;
 }
  

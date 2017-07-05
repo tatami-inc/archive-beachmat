@@ -134,9 +134,9 @@ void output_edge (M ptr, const Rcpp::IntegerVector& mode) {
         ptr->fill_row(0, stuff.begin(), 0, 0); 
         ptr->fill_col(0, stuff.begin(), 0, 0); 
     } else if (Mode==1) {
-        ptr->get_row(-1, stuff.begin()); // break!
+        ptr->get_row(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==-1) {
-        ptr->get_col(-1, stuff.begin()); // break!
+        ptr->get_col(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==2) {
         ptr->get_row(0, stuff.begin(), 1, 0); // break!
     } else if (Mode==-2) {
@@ -146,9 +146,9 @@ void output_edge (M ptr, const Rcpp::IntegerVector& mode) {
     } else if (Mode==-3) {
         ptr->get_col(0, stuff.begin(), 0, -1); // break!
     } else if (Mode==4) {
-        ptr->fill_row(-1, stuff.begin()); // break!
+        ptr->fill_row(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==-4) {
-        ptr->fill_col(-1, stuff.begin()); // break!
+        ptr->fill_col(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==5) {
         ptr->fill_row(0, stuff.begin(), 1, 0); // break!
     } else if (Mode==-5) {

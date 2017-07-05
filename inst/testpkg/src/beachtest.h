@@ -105,6 +105,10 @@ SEXP test_logical_output(SEXP, SEXP);
 
 SEXP test_logical_output_slice(SEXP, SEXP, SEXP, SEXP);
 
+SEXP test_character_output(SEXP, SEXP);
+
+SEXP test_character_output_slice(SEXP, SEXP, SEXP, SEXP);
+
 SEXP test_sparse_numeric_output (SEXP, SEXP, SEXP);
 
 SEXP test_sparse_numeric_output_slice (SEXP, SEXP, SEXP, SEXP);
@@ -131,6 +135,7 @@ SEXP test_logical_edge_output (SEXP, SEXP);
 
 SEXP test_numeric_edge_output (SEXP, SEXP);
 
+SEXP test_character_edge_output (SEXP, SEXP);
 
 }
 

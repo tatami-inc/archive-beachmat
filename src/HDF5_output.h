@@ -96,6 +96,7 @@ HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_
             break;
         case STRSXP:
             default_type=H5::StrType(0, len);
+            break;
         default:
             std::stringstream err;
             err << "unsupported sexptype '" << RTYPE << "' for HDF5 output";

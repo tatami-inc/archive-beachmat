@@ -61,10 +61,12 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_integer_output, 2),
     REGISTER(test_numeric_output, 2),
     REGISTER(test_logical_output, 2),
+    REGISTER(test_character_output, 2),
 
     REGISTER(test_integer_output_slice, 4),
     REGISTER(test_numeric_output_slice, 4),
     REGISTER(test_logical_output_slice, 4),
+    REGISTER(test_character_output_slice, 4),
 
     REGISTER(test_sparse_numeric_output, 3),
     REGISTER(test_sparse_numeric_output_slice, 4),
@@ -81,6 +83,7 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_integer_edge_output, 2),
     REGISTER(test_numeric_edge_output, 2),
     REGISTER(test_logical_edge_output, 2),
+    REGISTER(test_character_edge_output, 2),
 
     {NULL, NULL, 0}
 };

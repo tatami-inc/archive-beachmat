@@ -120,3 +120,33 @@ test_that("Character matrix input error generation is okay", {
 
 #######################################################
 
+# Testing simple character output:
+
+set.seed(12345)
+
+test_that("Simple character matrix output is okay", {
+    beachtest:::check_character_output_mat(sFUN, hdf5.out=FALSE)
+
+    beachtest:::check_character_output_slice(sFUN, by.row=2:11, by.col=4:8, hdf5.out=FALSE)
+})
+
+# Testing HDF5 character output:
+
+test_that("HDF5 character matrix output is okay", {
+    beachtest:::check_character_output_mat(hFUN, hdf5.out=TRUE)
+
+    beachtest:::check_character_output_slice(hFUN, by.row=5:15, by.col=8:10, hdf5.out=TRUE)
+
+    beachtest:::check_character_order(hFUN)
+})
+
+# Testing for errors:
+
+test_that("Character matrix output error generation is okay", {
+    beachtest:::check_character_edge_output_errors(sFUN)
+
+    beachtest:::check_character_edge_output_errors(hFUN)
+})
+
+#######################################################
+

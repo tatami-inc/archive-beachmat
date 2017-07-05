@@ -30,6 +30,17 @@ SEXP test_numeric_output(SEXP in, SEXP mode) {
     END_RCPP
 }
 
+SEXP test_character_output(SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    beachmat::output_param op(in);
+    op.set_strlen(10);
+    auto optr=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), op);
+    auto optr2=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
+    return pump_out<Rcpp::StringVector>(ptr.get(), optr.get(), optr2.get(), mode);
+    END_RCPP
+}
+
 /* Realized output slice functions. */
 
 SEXP test_integer_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
@@ -56,6 +67,17 @@ SEXP test_numeric_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in));
     auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
     return pump_out_slice<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
+    END_RCPP
+}
+
+SEXP test_character_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    beachmat::output_param op(in);
+    op.set_strlen(10);
+    auto optr=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), op);
+    auto optr2=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
+    return pump_out_slice<Rcpp::StringVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }
 
@@ -140,6 +162,17 @@ SEXP test_numeric_edge_output (SEXP in, SEXP mode) {
     auto ptr=beachmat::create_numeric_matrix(in);
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in));
     output_edge<Rcpp::NumericVector>(optr.get(), mode);
+    return Rf_ScalarLogical(1);
+    END_RCPP
+}
+
+SEXP test_character_edge_output (SEXP in, SEXP mode) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_character_matrix(in);
+    beachmat::output_param op(in);
+    op.set_strlen(10);
+    auto optr=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), op);
+    output_edge<Rcpp::StringVector>(optr.get(), mode);
     return Rf_ScalarLogical(1);
     END_RCPP
 }

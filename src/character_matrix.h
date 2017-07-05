@@ -107,4 +107,8 @@ std::unique_ptr<character_matrix> create_character_matrix(const Rcpp::RObject&);
 
 }
 
+/* Collected output definitions */
+
+#include "character_output.h"
+
 #endif
