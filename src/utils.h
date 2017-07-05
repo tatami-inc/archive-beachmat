@@ -54,10 +54,18 @@ public:
 
     int get_compression () const;
     void set_compression (int);
+
+    void set_strlen(size_t);
+    size_t get_strlen() const;
+
+    static const size_t DEFAULT_CHUNKDIM=0; // This will trigger use of global chunk settings.
+    static const int DEFAULT_COMPRESS=-1; // This will trigger use of global compression settings.
+    static const size_t DEFAULT_STRLEN=10;
 private:
     matrix_type mode;
     size_t chunk_nr, chunk_nc;
     int compress;
+    size_t strlen;
 };
 
 extern const output_param SIMPLE_PARAM;

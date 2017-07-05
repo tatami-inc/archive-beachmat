@@ -247,9 +247,6 @@ matrix_type sparse_lin_output<T, V>::get_matrix_type() const {
 /* Defining the HDF5 output interface. */
 
 template<typename T, int RTYPE>
-HDF5_lin_output<T, RTYPE>::HDF5_lin_output(size_t nr, size_t nc) : mat(nr, nc) {}
-
-template<typename T, int RTYPE>
 HDF5_lin_output<T, RTYPE>::HDF5_lin_output(size_t nr, size_t nc, size_t chunk_nr, size_t chunk_nc, int compress) : 
     mat(nr, nc, chunk_nr, chunk_nc, compress) {}
 
@@ -268,12 +265,14 @@ size_t HDF5_lin_output<T, RTYPE>::get_ncol() const {
 
 template<typename T, int RTYPE>
 T HDF5_lin_output<T, RTYPE>::get(size_t r, size_t c) {
-    return mat.extract_one(r, c);
+    T out;
+    mat.extract_one(r, c, &out);
+    return out;
 }
 
 template<typename T, int RTYPE>
 void HDF5_lin_output<T, RTYPE>::fill(size_t r, size_t c, T in) {
-    mat.insert_one(r, c, in);
+    mat.insert_one(r, c, &in);
     return;
 }
 

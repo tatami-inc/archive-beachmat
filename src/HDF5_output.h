@@ -3,7 +3,11 @@
 template<typename T, int RTYPE>
 class HDF5_output : public any_matrix {
 public:
-    HDF5_output(size_t, size_t, size_t=0, size_t=0, int=-1);
+    HDF5_output(size_t, size_t, 
+            size_t=output_param::DEFAULT_CHUNKDIM, 
+            size_t=output_param::DEFAULT_CHUNKDIM, 
+            int=output_param::DEFAULT_COMPRESS, 
+            size_t=output_param::DEFAULT_STRLEN);
     ~HDF5_output();
     
     void insert_row(size_t, const T*, size_t, size_t);
@@ -14,7 +18,7 @@ public:
     template<typename X>
     void insert_col(size_t, const X*, const H5::DataType&, size_t, size_t);
 
-    void insert_one(size_t, size_t, T);
+    void insert_one(size_t, size_t, T*);
 
     void extract_col(size_t, T*, size_t, size_t);
     template<typename X>
@@ -24,7 +28,7 @@ public:
     template<typename X>
     void extract_row(size_t, X*, const H5::DataType&, size_t, size_t);
 
-    T extract_one(size_t, size_t);
+    void extract_one(size_t, size_t, T*);
 
     Rcpp::RObject yield();
 
@@ -53,7 +57,7 @@ protected:
 /*** Constructor definition ***/
 
 template<typename T, int RTYPE>
-HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_t chunk_nc, int compress) : any_matrix(nr, nc), 
+HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_t chunk_nc, int compress, size_t len) : any_matrix(nr, nc), 
         rowlist(H5::FileAccPropList::DEFAULT.getId()), collist(H5::FileAccPropList::DEFAULT.getId()) {
 
     // Pulling out settings.
@@ -90,6 +94,8 @@ HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_
         case INTSXP: case LGLSXP:
             default_type=H5::DataType(H5::PredType::NATIVE_INT32);
             break;
+        case STRSXP:
+            default_type=H5::StrType(0, len);
         default:
             std::stringstream err;
             err << "unsupported sexptype '" << RTYPE << "' for HDF5 output";
@@ -243,9 +249,9 @@ void HDF5_output<T, RTYPE>::select_one(size_t r, size_t c) {
 }
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::insert_one(size_t r, size_t c, T in) {
+void HDF5_output<T, RTYPE>::insert_one(size_t r, size_t c, T* in) {
     select_one(r, c);
-    hdata.write(&in, default_type, onespace, hspace);
+    hdata.write(in, default_type, onespace, hspace);
     return;
 }
 
@@ -280,11 +286,10 @@ void HDF5_output<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t e
 }
 
 template<typename T, int RTYPE>
-T HDF5_output<T, RTYPE>::extract_one(size_t r, size_t c) { 
+void HDF5_output<T, RTYPE>::extract_one(size_t r, size_t c, T* out) { 
     select_one(r, c);
-    T out;
-    hdata.read(&out, default_type, onespace, hspace);
-    return out;
+    hdata.read(out, default_type, onespace, hspace);
+    return;
 }
 
 // get_empty() defined for each realized class separately.
@@ -313,7 +318,9 @@ Rcpp::RObject HDF5_output<T, RTYPE>::yield() {
         throw_custom_error("missing 'first_val' slot in ", seedclass, " object");
     }
     if (this->nrow && this->ncol) { 
-        h5seed.slot("first_val") = extract_one(0, 0);
+        T first;
+        extract_one(0, 0, &first);
+        h5seed.slot("first_val") = first;
     } else {
         h5seed.slot("first_val") = Rcpp::Vector<RTYPE>(0); // empty vector.
     }

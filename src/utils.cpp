@@ -200,7 +200,7 @@ Rcpp::RObject realize_delayed_array(const Rcpp::RObject& in) {
 output_param::output_param (matrix_type m) : mode(m), chunk_nr(0), chunk_nc(0), compress(-1) {}
 
 output_param::output_param (const Rcpp::RObject& in, bool simplify, bool preserve_zero) : mode(SIMPLE),
-        chunk_nr(0), chunk_nc(0), compress(-1) {
+        chunk_nr(DEFAULT_CHUNKDIM), chunk_nc(DEFAULT_CHUNKDIM), compress(DEFAULT_COMPRESS), strlen(DEFAULT_STRLEN) {
 
     if (!in.isS4()) {
         return;
@@ -250,6 +250,15 @@ int output_param::get_compression() const {
 void output_param::set_compression(int c) {
     compress=c;
     return;
+}
+
+void output_param::set_strlen(size_t s) {
+    strlen=s;
+    return;
+}
+
+size_t output_param::get_strlen() const {
+    return strlen;
 }
 
 const output_param SIMPLE_PARAM(SIMPLE);

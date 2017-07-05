@@ -3,6 +3,7 @@
 
 #include "beachmat.h"
 #include "utils.h"
+#include "any_matrix.h"
 
 namespace beachmat {
 

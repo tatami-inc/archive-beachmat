@@ -130,8 +130,10 @@ private:
 template<typename T, int RTYPE>
 class HDF5_lin_output : public lin_output<T> {
 public:
-    HDF5_lin_output(size_t, size_t);
-    HDF5_lin_output(size_t, size_t, size_t, size_t, int);
+    HDF5_lin_output(size_t, size_t, 
+            size_t=output_param::DEFAULT_CHUNKDIM, 
+            size_t=output_param::DEFAULT_CHUNKDIM, 
+            int=output_param::DEFAULT_COMPRESS);
     ~HDF5_lin_output();
 
     size_t get_nrow() const;
