@@ -48,17 +48,13 @@ public:
         oparms.setChunk(2, out_chunk_dims);
         oparms.setDeflate(compress);
 
-        /* Setting up the input chunk cache. The idea is to hold N+1 chunks in memory,
-         * where N is the smallest multiple of the chunk size along the requested dimension
-         * that is greater than the requested "chunksize". The +1 provides some working
-         * space to hold half-read chunks from the previous iteration. 
+        /* Holding one chunk in memory (the incompletely read and written one between iterations).
+         * No need for fancy nslots calculations, and we evict fully read chunks first (not that
+         * it really matters, because there's only one chunk being held in memory).
          */
         H5::FileAccPropList inputlist(ihfile.getAccessPlist().getId());
-        const size_t nslots = std::ceil(double(num_chunks_per_row)/num_chunks_per_col) * num_chunks_per_col + 1; // Same calculation as before.
-        const size_t longdim = (byrow ? chunk_ncols() : chunk_nrows());
-        const size_t N = std::ceil(double(chunksize)/longdim);
-        const size_t cache_size=(N+1)*chunk_ncols()*chunk_nrows()*HDT.getSize();
-        inputlist.setCache(0, nslots, cache_size, 1); // Evicting fully read chunks first.      
+        const size_t cache_size=chunk_ncols()*chunk_nrows()*HDT.getSize();
+        inputlist.setCache(0, 1, cache_size, 1); 
 
         ihdata.close();
         ihfile.close();
