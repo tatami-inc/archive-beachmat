@@ -11,8 +11,8 @@ namespace beachmat {
 
 #include "Csparse_output.h"
 
-#include "HDF5_output.h"
-
 }
+
+#include "HDF5_output.h"
 
 #endif

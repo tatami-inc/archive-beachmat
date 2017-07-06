@@ -148,7 +148,7 @@ test_that("Numeric errors thrown", {
     B <- as(test.mat, "HDF5Array")
     expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "'first_val' slot in a HDF5ArraySeed object should be double")
     storage.mode(B@seed@first_val) <- "double"
-    expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "data type in HDF5 file is not floating-point")
+    expect_fixed_error(.Call(beachtest:::cxx_test_numeric_access, B, 1L), "data type in HDF5 file is not double")
 })
 
 # Logical checks
@@ -174,7 +174,7 @@ test_that("Logical errors thrown", {
     B <- as(test.mat, "HDF5Array")
     expect_fixed_error(.Call(beachtest:::cxx_test_logical_access, B, 1L), "'first_val' slot in a HDF5ArraySeed object should be logical")
     storage.mode(B@seed@first_val) <- "logical"
-    expect_fixed_error(.Call(beachtest:::cxx_test_logical_access, B, 1L), "data type in HDF5 file is not integer")
+    expect_fixed_error(.Call(beachtest:::cxx_test_logical_access, B, 1L), "data type in HDF5 file is not logical")
 })
 
 # Integer checks

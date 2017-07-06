@@ -1,3 +1,12 @@
+#ifndef BEACHMAT_HDF5_MATRIX_H
+#define BEACHMAT_HDF5_MATRIX_H
+
+#include "beachmat.h"
+#include "any_matrix.h"
+#include "HDF5_utils.h"
+
+namespace beachmat {
+
 /*** Class definition ***/
 
 template<typename T, int RTYPE>
@@ -27,10 +36,9 @@ protected:
     H5::H5File hfile;
     H5::DataSet hdata;
     H5::DataSpace hspace, rowspace, colspace, onespace;
-    hsize_t h5_start[2], col_count[2], row_count[2], one_count[2], zero_start[1];
+    hsize_t h5_start[2], col_count[2], row_count[2], one_count[2];
 
     H5::DataType default_type;
-    H5T_class_t set_types();
 
     bool onrow, oncol;
     bool rowokay, colokay;
@@ -86,16 +94,7 @@ HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) :
     // Setting up the HDF5 accessors.
     hfile.openFile(filename.c_str(), H5F_ACC_RDONLY);
     hdata = hfile.openDataSet(dataname.c_str());
-    auto expected=set_types();
-    if (hdata.getTypeClass()!=expected) {
-        std::stringstream err;
-        err << "data type in HDF5 file is not ";
-        if (expected==H5T_FLOAT) { err << "floating-point"; }
-        else if (expected==H5T_INTEGER) { err << "integer"; }
-        else if (expected==H5T_STRING) { err << "character"; }
-        else { err << "the specified type"; }
-        throw std::runtime_error(err.str().c_str());
-    }
+    default_type=set_HDF5_data_type(RTYPE, hdata);
 
     hspace = hdata.getSpace();
     if (hspace.getSimpleExtentNdims()!=2) {
@@ -108,18 +107,10 @@ HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) :
         throw_custom_error("dimensions in HDF5 file do not equal dimensions in the ", ctype, " object");
     }
 
-    h5_start[0]=0;
-    h5_start[1]=0;
-    col_count[0]=1;
-    col_count[1]=NR;
-    row_count[0]=NC;
-    row_count[1]=1;
-
-    zero_start[0]=0;
-    one_count[0]=1;
-    one_count[1]=1;
-    onespace.setExtentSimple(1, one_count);
-    onespace.selectAll();
+    // Setting up the hsize_t[2] arrays.
+    initialize_HDF5_size_arrays(NR, NC, 
+            h5_start, col_count, row_count, 
+            one_count, onespace);
 
     // Setting the chunk cache parameters.
     calc_HDF5_chunk_cache_settings(this->nrow, this->ncol, hdata.getCreatePlist(), default_type, 
@@ -128,55 +119,21 @@ HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) :
 }
 
 template<typename T, int RTYPE>
-H5T_class_t HDF5_matrix<T, RTYPE>::set_types () {
-    switch (RTYPE) {
-        case REALSXP:
-            default_type=H5::DataType(H5::PredType::NATIVE_DOUBLE);
-            return H5T_FLOAT;
-        case INTSXP: case LGLSXP:
-            default_type=H5::DataType(H5::PredType::NATIVE_INT32);
-            return H5T_INTEGER;
-        case STRSXP:
-            default_type=H5::DataType(H5::StrType(hdata));
-            return H5T_STRING;
-    }
-    std::stringstream err;
-    err << "unsupported sexptype '" << RTYPE << "'";
-    throw std::runtime_error(err.str().c_str());
-}
-
-template<typename T, int RTYPE>
 HDF5_matrix<T, RTYPE>::~HDF5_matrix() {}
+
+/*** Getter functions ***/
 
 template<typename T, int RTYPE>
 template<typename X>
 void HDF5_matrix<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     check_rowargs(r, start, end);
-    if (onrow || (oncol && largercol)) {
-        ; // Don't do anything, it's okay.
-    } else if (!rowokay) {
-        std::stringstream err;
-        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for row access, repack the file";
-        throw std::runtime_error(err.str().c_str());
-    } else {
-        hdata.close();
-        hfile.close();
-        hfile.openFile(filename.c_str(), H5F_ACC_RDONLY, rowlist);
-        hdata = hfile.openDataSet(dataname.c_str());
-        onrow=true;
-    }
-
-    row_count[0] = end-start;
-    rowspace.setExtentSimple(1, row_count);
-    rowspace.selectAll();
-    h5_start[0] = start;
-    h5_start[1] = r;
-    hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
+    reopen_HDF5_file_by_dim(filename, dataname, 
+            hfile, hdata, H5F_ACC_RDONLY, rowlist, 
+            onrow, oncol, largercol, rowokay);
+    HDF5_select_row(r, start, end, row_count, h5_start, rowspace, hspace);
     hdata.read(out, HDT, rowspace, hspace);
     return;
 }
-
-/*** Getter functions ***/
 
 template<typename T, int RTYPE>
 void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t end) { 
@@ -188,26 +145,10 @@ template<typename T, int RTYPE>
 template<typename X>
 void HDF5_matrix<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
     check_colargs(c, start, end);
-    if (oncol || (onrow && largerrow)) {
-        ; // Don't do anything, it's okay.
-    } else if (!colokay) {
-        std::stringstream err;
-        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for column access, repack the file";
-        throw std::runtime_error(err.str().c_str());
-    } else {
-        hdata.close();
-        hfile.close();
-        hfile.openFile(filename.c_str(), H5F_ACC_RDONLY, collist);
-        hdata = hfile.openDataSet(dataname.c_str());
-        oncol=true;
-    }
-
-    col_count[1] = end-start;
-    colspace.setExtentSimple(1, col_count+1);
-    colspace.selectAll();
-    h5_start[0] = c;
-    h5_start[1] = start;
-    hspace.selectHyperslab(H5S_SELECT_SET, col_count, h5_start);
+    reopen_HDF5_file_by_dim(filename, dataname, 
+            hfile, hdata, H5F_ACC_RDONLY, collist, 
+            oncol, onrow, largerrow, colokay);
+    HDF5_select_col(c, start, end, col_count, h5_start, colspace, hspace);
     hdata.read(out, HDT, colspace, hspace);
     return;
 }
@@ -222,9 +163,7 @@ template<typename T, int RTYPE>
 template<typename X>
 void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, X* out, const H5::DataType& HDT) { 
     check_oneargs(r, c);
-    h5_start[0]=c;
-    h5_start[1]=r;  
-    hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
+    HDF5_select_one(r, c, one_count, h5_start, hspace);
     hdata.read(out, HDT, onespace, hspace);
     return;
 }
@@ -245,3 +184,6 @@ matrix_type HDF5_matrix<T, RTYPE>::get_matrix_type() const {
     return HDF5;
 }
 
+}
+
+#endif

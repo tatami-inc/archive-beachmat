@@ -5,7 +5,7 @@
 #include "any_matrix.h"
 #include "utils.h"
 
-namespace beachmat { 
+namespace beachmat {
 
 #include "simple_matrix.h"
 
@@ -17,9 +17,9 @@ namespace beachmat {
 
 #include "Rle_matrix.h"
 
-#include "HDF5_matrix.h"
-
 }
+
+#include "HDF5_matrix.h"
 
 #endif
 

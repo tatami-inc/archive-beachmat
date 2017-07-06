@@ -1,3 +1,12 @@
+#ifndef BEACHMAT_HDF5_OUTPUT_H
+#define BEACHMAT_HDF5_OUTPUT_H
+
+#include "beachmat.h"
+#include "any_matrix.h"
+#include "HDF5_utils.h"
+
+namespace beachmat {
+
 /*** Class definition ***/
 
 template<typename T, int RTYPE>
@@ -83,27 +92,9 @@ HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_
     }
     compress=r_compress[0];
 
-    // Opening the file.
+    // Opening the file, setting the type and creating the data set.
     hfile.openFile(fname, H5F_ACC_RDWR);
-
-    // Type setting.
-    switch (RTYPE) {
-        case REALSXP:
-            default_type=H5::DataType(H5::PredType::NATIVE_DOUBLE);
-            break;
-        case INTSXP: case LGLSXP:
-            default_type=H5::DataType(H5::PredType::NATIVE_INT32);
-            break;
-        case STRSXP:
-            default_type=H5::StrType(0, len);
-            break;
-        default:
-            std::stringstream err;
-            err << "unsupported sexptype '" << RTYPE << "' for HDF5 output";
-            throw std::runtime_error(err.str().c_str());
-    }
-
-    // Creating the data set.
+    default_type=set_HDF5_data_type(RTYPE, len);
     H5::DSetCreatPropList plist;
     const T empty=get_empty();
     plist.setFillValue(default_type, &empty);
@@ -127,19 +118,10 @@ HDF5_output<T, RTYPE>::HDF5_output (size_t nr, size_t nc, size_t chunk_nr, size_
     hspace.setExtentSimple(2, dims.data());
     hdata=hfile.createDataSet(dname, default_type, hspace, plist); 
 
-    // Setting other values.
-    h5_start[0]=0;
-    h5_start[1]=0;
-    col_count[0]=1;
-    col_count[1]=this->nrow;
-    row_count[0]=this->ncol;
-    row_count[1]=1;
-    
-    zero_start[0]=0;
-    one_count[0]=1;
-    one_count[1]=1;
-    onespace=H5::DataSpace(1, one_count);
-    onespace.selectAll();
+    // Initializing the hsize_t[2] arrays.
+    initialize_HDF5_size_arrays (this->nrow, this->ncol, 
+            h5_start, col_count, row_count, 
+            one_count, onespace);
 
     // Setting logical attributes.
     if (RTYPE==LGLSXP) {
@@ -163,26 +145,10 @@ HDF5_output<T, RTYPE>::~HDF5_output() {}
 template<typename T, int RTYPE>
 void HDF5_output<T, RTYPE>::select_col(size_t c, size_t start, size_t end) {
     check_colargs(c, start, end);
-    if (oncol || (onrow && largerrow)) {
-        ; // Don't do anything, it's okay.
-    } else if (!colokay) {
-        std::stringstream err;
-        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for column access, repack the file";
-        throw std::runtime_error(err.str().c_str());
-    } else {
-        hdata.close();
-        hfile.close();
-        hfile.openFile(fname.c_str(), H5F_ACC_RDWR, collist);
-        hdata = hfile.openDataSet(dname.c_str());
-        oncol=true;
-    }
-
-    col_count[1]=end-start;
-    colspace.setExtentSimple(1, col_count+1);
-    colspace.selectAll();
-    h5_start[0]=c;
-    h5_start[1]=start;
-    hspace.selectHyperslab(H5S_SELECT_SET, col_count, h5_start);
+    reopen_HDF5_file_by_dim(fname, dname,
+            hfile, hdata, H5F_ACC_RDWR, collist, 
+            oncol, onrow, largerrow, colokay);
+    HDF5_select_col(c, start, end, col_count, h5_start, colspace, hspace);
     return;
 }
 
@@ -203,26 +169,10 @@ void HDF5_output<T, RTYPE>::insert_col(size_t c, const T* in, size_t start, size
 template<typename T, int RTYPE>
 void HDF5_output<T, RTYPE>::select_row(size_t r, size_t start, size_t end) {
     check_rowargs(r, start, end);
-    if (onrow || (oncol && largercol)) {
-        ; // Don't do anything, it's okay.
-    } else if (!rowokay) {
-        std::stringstream err;
-        err << "cache size limit (" << get_cache_size_hard_limit() << ") exceeded for row access, repack the file";
-        throw std::runtime_error(err.str().c_str());
-    } else {
-        hdata.close();
-        hfile.close();
-        hfile.openFile(fname.c_str(), H5F_ACC_RDWR, rowlist);
-        hdata = hfile.openDataSet(dname.c_str());
-        onrow=true;
-    }
-
-    row_count[0] = end-start;
-    rowspace.setExtentSimple(1, row_count);
-    rowspace.selectAll();
-    h5_start[0] = start;
-    h5_start[1] = r;
-    hspace.selectHyperslab(H5S_SELECT_SET, row_count, h5_start);
+    reopen_HDF5_file_by_dim(fname, dname, 
+            hfile, hdata, H5F_ACC_RDWR, rowlist, 
+            onrow, oncol, largercol, rowokay);
+    HDF5_select_row(r, start, end, row_count, h5_start, rowspace, hspace);
     return;
 }
 
@@ -243,9 +193,7 @@ void HDF5_output<T, RTYPE>::insert_row(size_t c, const T* in, size_t start, size
 template<typename T, int RTYPE>
 void HDF5_output<T, RTYPE>::select_one(size_t r, size_t c) {
     check_oneargs(r, c);
-    h5_start[0]=c;
-    h5_start[1]=r;
-    hspace.selectHyperslab(H5S_SELECT_SET, one_count, h5_start);
+    HDF5_select_one(r, c, one_count, h5_start, hspace);
     return;
 }
 
@@ -299,42 +247,15 @@ void HDF5_output<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
 
 template<typename T, int RTYPE>
 Rcpp::RObject HDF5_output<T, RTYPE>::yield() {
-    std::string seedclass="HDF5ArraySeed";
-    Rcpp::S4 h5seed(seedclass);
-
-    // Assigning to slots.
-    if (!h5seed.hasSlot("file")) {
-        throw_custom_error("missing 'file' slot in ", seedclass, " object");
-    }
-    h5seed.slot("file") = fname;
-    if (!h5seed.hasSlot("name")) {
-        throw_custom_error("missing 'name' slot in ", seedclass, " object");
-    }
-    h5seed.slot("name") = dname;
-    if (!h5seed.hasSlot("dim")) {
-        throw_custom_error("missing 'dim' slot in ", seedclass, " object");
-    }
-    h5seed.slot("dim") = Rcpp::IntegerVector::create(this->nrow, this->ncol);
-    if (!h5seed.hasSlot("first_val")) {
-        throw_custom_error("missing 'first_val' slot in ", seedclass, " object");
-    }
+    Rcpp::RObject firstval;
     if (this->nrow && this->ncol) { 
         T first;
         extract_one(0, 0, &first);
-        h5seed.slot("first_val") = first;
+        firstval=Rcpp::Vector<RTYPE>::create(first);
     } else {
-        h5seed.slot("first_val") = Rcpp::Vector<RTYPE>(0); // empty vector.
+        firstval = Rcpp::Vector<RTYPE>(0); // empty vector.
     }
-
-    // Assigning the seed to the HDF5Matrix.
-    std::string matclass="HDF5Matrix";
-    Rcpp::S4 h5mat(matclass);
-    if (!h5mat.hasSlot("seed")) {
-        throw_custom_error("missing 'seed' slot in ", matclass, " object");
-    }
-    h5mat.slot("seed") = h5seed;
-
-    return SEXP(h5mat);
+    return yield_HDF5_R_matrix(fname, dname, this->nrow, this->ncol, firstval);
 }
 
 template<typename T, int RTYPE>
@@ -342,3 +263,6 @@ matrix_type HDF5_output<T, RTYPE>::get_matrix_type() const {
     return HDF5;
 }
 
+}
+
+#endif
