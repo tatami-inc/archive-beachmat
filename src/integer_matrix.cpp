@@ -7,6 +7,13 @@ namespace beachmat {
 template<>
 int HDF5_output<int, INTSXP>::get_empty() const { return 0; }
 
+template<>
+Rcpp::RObject HDF5_output<int, INTSXP>::get_firstval() { 
+    int first;
+    extract_one(0, 0, &first);
+    return Rcpp::IntegerVector::create(first);
+}
+
 /* Dispatch definition */
 
 std::unique_ptr<integer_matrix> create_integer_matrix(const Rcpp::RObject& incoming) { 

@@ -17,6 +17,13 @@ int Csparse_output<int, Rcpp::LogicalVector>::get_empty() const { return 0; }
 template<>
 int HDF5_output<int, LGLSXP>::get_empty() const { return 0; }
 
+template<>
+Rcpp::RObject HDF5_output<int, LGLSXP>::get_firstval() { 
+    int first;
+    extract_one(0, 0, &first);
+    return Rcpp::LogicalVector::create(first);
+}
+
 /* Dispatch definition */
 
 std::unique_ptr<logical_matrix> create_logical_matrix(const Rcpp::RObject& incoming) { 

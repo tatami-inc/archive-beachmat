@@ -9,6 +9,8 @@
         out <- .Call(cxxfun, test.mat, i)
         if (hdf5.out) { 
             testthat::expect_s4_class(out[[1]], "HDF5Matrix")
+            testthat::expect_equal(out[[1]]@seed@first_val, as.vector(out[[1]][1,1]))
+            testthat::expect_identical(dim(out[[1]]), dim(test.mat))
             out[[1]] <- as.matrix(out[[1]])
         }      
         ref <- as.matrix(test.mat)

@@ -17,6 +17,13 @@ double Csparse_output<double, Rcpp::NumericVector>::get_empty() const { return 0
 template<>
 double HDF5_output<double, REALSXP>::get_empty() const { return 0; }
 
+template<>
+Rcpp::RObject HDF5_output<double, REALSXP>::get_firstval() { 
+    double first;
+    extract_one(0, 0, &first);
+    return Rcpp::NumericVector::create(first);
+}
+
 /* Dispatch definition */
 
 std::unique_ptr<numeric_matrix> create_numeric_matrix(const Rcpp::RObject& incoming) { 

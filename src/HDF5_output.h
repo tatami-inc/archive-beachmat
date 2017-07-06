@@ -56,6 +56,7 @@ protected:
     void select_one(size_t, size_t);
 
     T get_empty() const;
+    Rcpp::RObject get_firstval();
 
     bool onrow, oncol;
     bool rowokay, colokay;
@@ -243,15 +244,15 @@ void HDF5_output<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
 
 // get_empty() defined for each realized class separately.
 
+// get_firstval() defined for each realized class separately.
+
 /*** Output function ***/
 
 template<typename T, int RTYPE>
 Rcpp::RObject HDF5_output<T, RTYPE>::yield() {
     Rcpp::RObject firstval;
     if (this->nrow && this->ncol) { 
-        T first;
-        extract_one(0, 0, &first);
-        firstval=Rcpp::Vector<RTYPE>::create(first);
+        firstval = get_firstval();
     } else {
         firstval = Rcpp::Vector<RTYPE>(0); // empty vector.
     }

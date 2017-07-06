@@ -75,10 +75,19 @@ matrix_type simple_character_output::get_matrix_type() const {
     return mat.get_matrix_type();
 }
 
-/* Methods for the HDF5 character matrix. */
+/* Methods for the HDF5 output matrix. */
 
 template<>
 char HDF5_output<char, STRSXP>::get_empty() const { return '\0'; }
+
+template<>
+Rcpp::RObject HDF5_output<char, STRSXP>::get_firstval() {
+    std::vector<char> first(default_type.getSize());
+    extract_one(0, 0, first.data());
+    return Rcpp::StringVector::create(Rcpp::String(first.data()));
+}
+
+/* Methods for the HDF5 character matrix. */
 
 HDF5_character_output::HDF5_character_output(size_t nr, size_t nc, size_t strlen, size_t chunk_nr, size_t chunk_nc, int compress) :
         bufsize(strlen+1), mat(nr, nc, chunk_nr, chunk_nc, compress, bufsize), col_buf(bufsize*nr), row_buf(bufsize*nc), one_buf(bufsize) {}
