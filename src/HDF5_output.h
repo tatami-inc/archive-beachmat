@@ -250,13 +250,42 @@ void HDF5_output<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
 
 template<typename T, int RTYPE>
 Rcpp::RObject HDF5_output<T, RTYPE>::yield() {
-    Rcpp::RObject firstval;
-    if (this->nrow && this->ncol) { 
-        firstval = get_firstval();
-    } else {
-        firstval = Rcpp::Vector<RTYPE>(0); // empty vector.
+    std::string seedclass="HDF5ArraySeed";
+    Rcpp::S4 h5seed(seedclass);
+
+    // Assigning to slots.
+    if (!h5seed.hasSlot("file")) {
+        throw_custom_error("missing 'file' slot in ", seedclass, " object");
     }
-    return yield_HDF5_R_matrix(fname, dname, this->nrow, this->ncol, firstval);
+    h5seed.slot("file") = fname;
+
+    if (!h5seed.hasSlot("name")) {
+        throw_custom_error("missing 'name' slot in ", seedclass, " object");
+    }
+    h5seed.slot("name") = dname;
+
+    if (!h5seed.hasSlot("dim")) {
+        throw_custom_error("missing 'dim' slot in ", seedclass, " object");
+    }
+    h5seed.slot("dim") = Rcpp::IntegerVector::create(this->nrow, this->ncol);
+
+    if (!h5seed.hasSlot("first_val")) {
+        throw_custom_error("missing 'first_val' slot in ", seedclass, " object");
+    }
+    if (this->nrow && this->ncol) { 
+        h5seed.slot("first_val") = get_firstval();
+    } else {
+        h5seed.slot("first_val") = Rcpp::Vector<RTYPE>(0); // empty vector.
+    }
+
+    // Assigning the seed to the HDF5Matrix.
+    std::string matclass="HDF5Matrix";
+    Rcpp::S4 h5mat(matclass);
+    if (!h5mat.hasSlot("seed")) {
+        throw_custom_error("missing 'seed' slot in ", matclass, " object");
+    }
+    h5mat.slot("seed") = h5seed;
+    return Rcpp::RObject(h5mat);
 }
 
 template<typename T, int RTYPE>

@@ -36,9 +36,6 @@ void initialize_HDF5_size_arrays (const size_t&, const size_t&,
         hsize_t*, hsize_t*, hsize_t*, 
         hsize_t*, H5::DataSpace&);
 
-Rcpp::RObject yield_HDF5_R_matrix(const std::string&, const std::string&, 
-        const size_t&, const size_t&, const Rcpp::RObject&);
-
 }
 
 #endif

@@ -41,12 +41,15 @@ void calc_HDF5_chunk_cache_settings (const size_t total_nrows, const size_t tota
     const size_t num_chunks_per_row=std::ceil(double(total_ncols)/chunk_ncols); // per row needs to divide by column dimensions.
     const size_t num_chunks_per_col=std::ceil(double(total_nrows)/chunk_nrows); 
 
-    // Everything is transposed, so hash indices are filled column-major. 
-    // Computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
+    /* Everything is transposed, so hash indices are filled column-major. 
+     * Here, we computing the lowest multiple of # row-chunks that is greater than # col-chunks, plus 1.
+     * This ensures that two chunks in the same row/column do not have the same hash index.
+     */
     const size_t nslots = std::ceil(double(num_chunks_per_row)/num_chunks_per_col) * num_chunks_per_col + 1; 
 
-    // Computing the size of the cache required to store all chunks in each row or column.
-    // The approach used below avoids overflow from eachchunk*num_Xchunks.
+    /* Computing the size of the cache required to store all chunks in each row or column.
+     * The approach used below avoids overflow from computing eachchunk*num_Xchunks.
+     */
     const size_t eachchunk=default_type.getSize() * chunk_nrows * chunk_ncols;
     const size_t nchunks_in_cache=get_cache_size_hard_limit()/eachchunk;
     rowokay=nchunks_in_cache >= num_chunks_per_row; 
@@ -57,8 +60,9 @@ void calc_HDF5_chunk_cache_settings (const size_t total_nrows, const size_t tota
     largercol=eachcol >= eachrow;
     largerrow=eachrow >= eachcol;
 
-    // The first argument is ignored, according to https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html.
-    // Setting w0 to 0 to evict the last used chunk; no need to worry about full vs partial reads here.
+    /* The first argument is ignored, according to https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html.
+     * Setting w0 to 0 to evict the last used chunk; no need to worry about full vs partial reads here.
+     */
     rowlist.setCache(10000, nslots, eachrow, 0);
     collist.setCache(10000, nslots, eachcol, 0);
 
@@ -151,54 +155,11 @@ void initialize_HDF5_size_arrays (const size_t& NR, const size_t& NC,
     return;
 }
 
-/*******************************************
- ********* HDF5 input functions ************
- *******************************************/
-
-/* All functions below are, technically, single-use functions,
- * but are stored here to reduce the amount of code in the headers
- * (as this inflates the size of the binary for headers that are
- * used in multiple files, e.g., across template instantiations).
+/* These overloaded functions return an output DataType for a 
+ * given RTYPE. The second one also checks that the dataset is
+ * of an appropriate class. Technically, I could put it in the 
+ * input header, but it lives here with its overloaded sibling.
  */
-
-/* This function checks the input type in the HDF5 file against 
- * the expected type, and returns the type to use for input data.
- */
-
-H5::DataType set_HDF5_data_type (int RTYPE, const H5::DataSet& hdata) {
-    auto curtype=hdata.getTypeClass();
-    switch (RTYPE) {
-        case REALSXP:
-            if (curtype!=H5T_FLOAT) { 
-                throw std::runtime_error("data type in HDF5 file is not double");
-            }
-            return H5::DataType(H5::PredType::NATIVE_DOUBLE);
-        case INTSXP: 
-            if (curtype!=H5T_INTEGER) { 
-                throw std::runtime_error("data type in HDF5 file is not integer");
-            }
-            return H5::DataType(H5::PredType::NATIVE_INT32);
-        case LGLSXP:
-            if (curtype!=H5T_INTEGER) { 
-                throw std::runtime_error("data type in HDF5 file is not logical");
-            }
-            return H5::DataType(H5::PredType::NATIVE_INT32);
-        case STRSXP:
-            if (curtype!=H5T_STRING) { 
-                throw std::runtime_error("data type in HDF5 file is not character");
-            }
-            return H5::DataType(H5::StrType(hdata));
-    }
-    std::stringstream err;
-    err << "unsupported sexptype '" << RTYPE << "'";
-    throw std::runtime_error(err.str().c_str());
-}
-
-/*******************************************
- ********* HDF5 output functions ***********
- *******************************************/
-
-/* This function returns an output DataType for a given RTYPE. */
 
 H5::DataType set_HDF5_data_type (int RTYPE, size_t strlen) { 
     switch (RTYPE) {
@@ -216,41 +177,31 @@ H5::DataType set_HDF5_data_type (int RTYPE, size_t strlen) {
     throw std::runtime_error(err.str().c_str());
 }
 
-/* This function constructs the HDF5 output object, given a string for 
- * the file name, data set name and a RObject for the first value. 
- */
-
-Rcpp::RObject yield_HDF5_R_matrix(const std::string& fname, const std::string& dname, 
-        const size_t& nr, const size_t& nc, const Rcpp::RObject& firstval) {
-    std::string seedclass="HDF5ArraySeed";
-    Rcpp::S4 h5seed(seedclass);
-
-    // Assigning to slots.
-    if (!h5seed.hasSlot("file")) {
-        throw_custom_error("missing 'file' slot in ", seedclass, " object");
+H5::DataType set_HDF5_data_type (int RTYPE, const H5::DataSet& hdata) {
+    auto curtype=hdata.getTypeClass();
+    switch (RTYPE) {
+        case REALSXP:
+            if (curtype!=H5T_FLOAT) { 
+                throw std::runtime_error("data type in HDF5 file is not double");
+            }
+            break;
+        case INTSXP: 
+            if (curtype!=H5T_INTEGER) { 
+                throw std::runtime_error("data type in HDF5 file is not integer");
+            }
+            break;
+        case LGLSXP:
+            if (curtype!=H5T_INTEGER) { 
+                throw std::runtime_error("data type in HDF5 file is not logical");
+            }
+            break;
+        case STRSXP:
+            if (curtype!=H5T_STRING) { 
+                throw std::runtime_error("data type in HDF5 file is not character");
+            }
+            return H5::StrType(hdata);
     }
-    h5seed.slot("file") = fname;
-    if (!h5seed.hasSlot("name")) {
-        throw_custom_error("missing 'name' slot in ", seedclass, " object");
-    }
-    h5seed.slot("name") = dname;
-    if (!h5seed.hasSlot("dim")) {
-        throw_custom_error("missing 'dim' slot in ", seedclass, " object");
-    }
-    h5seed.slot("dim") = Rcpp::IntegerVector::create(nr, nc);
-    if (!h5seed.hasSlot("first_val")) {
-        throw_custom_error("missing 'first_val' slot in ", seedclass, " object");
-    }
-    h5seed.slot("first_val") = firstval;
-
-    // Assigning the seed to the HDF5Matrix.
-    std::string matclass="HDF5Matrix";
-    Rcpp::S4 h5mat(matclass);
-    if (!h5mat.hasSlot("seed")) {
-        throw_custom_error("missing 'seed' slot in ", matclass, " object");
-    }
-    h5mat.slot("seed") = h5seed;
-    return Rcpp::RObject(h5mat);
+    return set_HDF5_data_type(RTYPE, 0);
 }
 
 }
