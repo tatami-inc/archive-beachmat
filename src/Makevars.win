@@ -19,7 +19,7 @@ LDFLAGS=$(shell ${R_HOME}/bin/R CMD config LDFLAGS)
 SHLIB_CXXLDFLAGS=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS) 
 
 libbeachmat.dll: $(SHLIB)
-	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} -LC:/local323/lib/x64 -LC:/local323/lib -LC:/Users/BIOCBU~1/BBS-3~1.6-B/R/bin/x64 -lR 
+	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} -LC:/local323/lib/x64 -LC:/local323/lib -LC:/Users/BIOCBU~1/BBS-3~1.6-B/R/bin/x64 -lR 
  
 # Specifying copying locations.  
 BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"

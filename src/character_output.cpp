@@ -90,7 +90,8 @@ Rcpp::RObject HDF5_output<char, STRSXP>::get_firstval() {
 /* Methods for the HDF5 character matrix. */
 
 HDF5_character_output::HDF5_character_output(size_t nr, size_t nc, size_t strlen, size_t chunk_nr, size_t chunk_nc, int compress) :
-        bufsize(strlen+1), mat(nr, nc, chunk_nr, chunk_nc, compress, bufsize), col_buf(bufsize*nr), row_buf(bufsize*nc), one_buf(bufsize) {}
+        bufsize(strlen+1), mat(nr, nc, chunk_nr, chunk_nc, compress, bufsize), 
+        row_buf(bufsize*nc), col_buf(bufsize*nr), one_buf(bufsize) {}
 
 HDF5_character_output::~HDF5_character_output() {}
 

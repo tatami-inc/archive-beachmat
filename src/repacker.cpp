@@ -30,8 +30,6 @@ public:
         } else {
             cparms.getChunk(2, chunk_dims);
         }
-        const size_t num_chunks_per_row=std::ceil(double(ncols())/chunk_ncols()); // per row needs to divide by column dimensions.
-        const size_t num_chunks_per_col=std::ceil(double(nrows())/chunk_nrows()); 
         
         // Specifying the output chunk size.
         H5::DSetCreatPropList oparms; 
