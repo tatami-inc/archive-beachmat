@@ -16,13 +16,12 @@ EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix
 libbeachmat.a: $(SHLIB)
 	ar rc libbeachmat.a $(EXPORT_OBJECTS)
 
-LDCMD=`${R_HOME}/bin/R CMD config SHLIB_CXXLD`
+SHLIB_CXXLD=`${R_HOME}/bin/R CMD config SHLIB_CXXLD`
 LDFLAGS=`${R_HOME}/bin/R CMD config LDFLAGS`
-SHLIB_LDFLAGS=`${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS` 
-CXX_LDFLAGS=`${R_HOME}/bin/R CMD config CXX11PICFLAGS`
+SHLIB_CXXLDFLAGS=`${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS` 
 
 libbeachmat.so: $(SHLIB)
-	$(LDCMD) ${CXX_LDFLAGS} ${SHLIB_LDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
+	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
  
 # Specifying copying locations.  
 BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
