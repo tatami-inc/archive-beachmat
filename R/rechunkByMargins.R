@@ -26,12 +26,6 @@ rechunkByMargins <- function(x, size=5000, outfile=NULL, outname=NULL, outlevel=
         stop("compression level of 0 implies a contiguous layout")      
     }
     
-    if (Sys.info()['sysname']=="Windows") {
-        rhdf5::H5close()
-        cat(x@seed@file)
-        cat(outfile)
-    }
-
     # Repacking the file.
     data.type <- type(x)
     chunk.dims <- .Call(cxx_rechunk_matrix, x@seed@file, x@seed@name, data.type, 
