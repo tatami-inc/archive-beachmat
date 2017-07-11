@@ -252,12 +252,6 @@ SEXP rechunk(Rcpp::StringVector ifile, Rcpp::StringVector idata,
         throw std::runtime_error("byrow should be a logical scalar");
     }
 
-    Rprintf("Opening as readonly: %s\n", CHAR(ifile[0]));
-    H5::H5File ihfile(H5std_string(Rcpp::as<std::string>(ifile[0])), H5F_ACC_RDONLY);
-    Rprintf("Opening as read-write: %s\n", CHAR(ofile[0]));
-    H5::H5File ohfile(H5std_string(Rcpp::as<std::string>(ofile[0])), H5F_ACC_RDWR);
-    Rprintf("Done!\n");
-
     rechunker<T, use_size> repacker(Rcpp::as<std::string>(ifile[0]), Rcpp::as<std::string>(idata[0]),
             Rcpp::as<std::string>(ofile[0]), Rcpp::as<std::string>(odata[0]), 
             olevel[0], nelements[0], byrow[0]);
