@@ -1,5 +1,7 @@
 # This checks that the rechunking function is working.
 
+if (Sys.info()["sysname"]!="Windows") { 
+
 library(HDF5Array)
 test_that("rechunking is working", {
     set.seed(1000)
@@ -33,3 +35,5 @@ test_that("rechunking is working", {
     expect_identical(ref, as.matrix(bycol))
     expect_error(rechunkByMargins(D, outlevel=0), "compression level of 0 implies a contiguous layout")
 })
+
+}

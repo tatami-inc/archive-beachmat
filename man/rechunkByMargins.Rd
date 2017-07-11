@@ -32,6 +32,6 @@ A HDF5Matrix object pointing to the HDF5 file containing the data from \code{x} 
 
 \examples{
 A <- as(matrix(runif(5000), nrow=100, ncol=50), "HDF5Array")
-byrow <- rechunkByMargins(A, byrow=TRUE)
+byrow <- rechunkByMargins(A, byrow=TRUE, outfile="whee.h5")
 bycol <- rechunkByMargins(A, byrow=FALSE)
 }
