@@ -1,8 +1,6 @@
 RHDF5LIB_LIBS=$(shell echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
 	"${R_HOME}/bin/R" --vanilla --slave)
 PKG_LIBS=$(RHDF5LIB_LIBS)
-
-# Add the location and link flags for R.dll
 PKG_LIBS+=$(shell ${R_HOME}/bin/R CMD config --ldflags)
 
 all: $(SHLIB) copying
@@ -22,7 +20,8 @@ LDFLAGS=$(shell ${R_HOME}/bin/R CMD config LDFLAGS)
 SHLIB_CXXLDFLAGS=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS) 
 
 libbeachmat.dll: $(SHLIB)
-	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS}
+	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
+ 
 # Specifying copying locations.  
 BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
