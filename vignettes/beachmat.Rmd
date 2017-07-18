@@ -301,19 +301,19 @@ Exact zeroes are detected and ignored when filling this matrix.
 
 To put data into the output matrix pointed to by `dptr`, the following methods are available:
 
-- `dptr->fill_col(c, out)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_col(c, out)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `nrow` accessible elements, i.e., `*out` and `*(out+nrow-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_col(c, out, first, last)` fills column `c` from row `first` to `last-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_col(c, out, first, last)` fills column `c` from row `first` to `last-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `last-first` accessible elements, i.e., `*out` and `*(out+last-first-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_row(r, out)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_row(r, out)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `ncol` accessible elements, i.e., `*out` and `*(out+ncol-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_row(r, out, first, last)` fills row `r` from column `first` to `last-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_row(r, out, first, last)` fills row `r` from column `first` to `last-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `last-first` accessible elements, i.e., `*out` and `*(out+last-first-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill(r, c, Y)` fills the matrix entry `(r, c)` with the double `Y`.
+- `dptr->set(r, c, Y)` fills the matrix entry `(r, c)` with the double `Y`.
 No value is returned by this method.
 - `dptr->yield()` returns a `Rcpp::RObject` object containing the matrix data to pass into R.
 
