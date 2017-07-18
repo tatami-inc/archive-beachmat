@@ -31,9 +31,7 @@ A HDF5Matrix object pointing to the HDF5 file containing the data from \code{x} 
 \author{Aaron Lun}
 
 \examples{
-if (Sys.info()["sysname"]!="Windows") { 
 A <- as(matrix(runif(5000), nrow=100, ncol=50), "HDF5Array")
 byrow <- rechunkByMargins(A, byrow=TRUE)
 bycol <- rechunkByMargins(A, byrow=FALSE)
-}
 }
