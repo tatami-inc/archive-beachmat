@@ -138,17 +138,17 @@ The available methods for this object are:
 
 - `dptr->get_nrow()` returns the number of rows (`nrow`) as a `size_t`.
 - `dptr->get_ncol()` returns the number of columns (`ncol`) as a `size_t`.
-- `dptr->get_col(c, X)` takes a `Rcpp::Vector::iterator` object`X` and fills it with values at column `c`.
-There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
+- `dptr->get_col(c, in)` takes a `Rcpp::Vector::iterator` object `in` and fills it with values at column `c`.
+There should be at least `nrow` accessible elements, i.e., `*in` and `*(in+nrow-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_col(c, X, rstart, rend)` takes a `Rcpp::Vector::iterator` object `X` and fills it with values at column `c` from row `rstart` to `rend-1`.
-There should be at least `rend-rstart` accessible elements, i.e., `*X` and `*(X+rend-rstart-1)` should be valid entries.
+- `dptr->get_col(c, in, first, last)` takes a `Rcpp::Vector::iterator` object `in` and fills it with values at column `c` from row `first` to `last-1`.
+There should be at least `last-first` accessible elements, i.e., `*in` and `*(in+last-first-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_row(r, X)` takes an `Rcpp::Vetor::iterator` object `X` and fills it with values at row `r`.
-There should be at least `ncol` accessible elements, i.e., `*X` and `*(X+ncol-1)` should be valid entries.
+- `dptr->get_row(r, in)` takes an `Rcpp::Vetor::iterator` object `in` and fills it with values at row `r`.
+There should be at least `ncol` accessible elements, i.e., `*in` and `*(in+ncol-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->get_row(r, X, cstart, cend)` takes an `Rcpp::Vetor::iterator` object `X` and fills it with values at row `r` from column `cstart` to `cend-1`.
-There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
+- `dptr->get_row(r, in, first, last)` takes an `Rcpp::Vetor::iterator` object `in` and fills it with values at row `r` from column `first` to `last-1`.
+There should be at least `last-first` accessible elements, i.e., `*in` and `*(in+last-first-1)` should be valid entries.
 No value is returned by this method.
 - `dptr->get(r, c)` returns a double at matrix entry `(r, c)`.
 - `dptr->clone()` returns a unique pointer to a `numeric_matrix` instance of the same type as that pointed to by `dptr`.
@@ -157,8 +157,8 @@ This is an enumeration type that can be tested against constants like `beachmat:
 
 In all cases, `r` and `c` should be non-negative integers (specificaly `size_t`) in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
-Similar rules apply to `rstart` and `rend`, which should be in `[0, nrow]`; and to `cstart` and `cend`, which should be in `[0, ncol]`.
-Furthermore, `rend >= rstart` and `cend >= cstart` should be true.
+Similar rules apply to `first` and `last`, which should be in `[0, nrow]` for `get_col` and in `[0, ncol]` for `get_row`.
+Furthermore, `last >= first` should be true.
 
 If the object `X` is a `Rcpp::NumericVector::iterator` instance, matrix entries will be extracted as double-precision values.
 If it is a `Rcpp::IntegerVector::iterator` instance, matrix entries will be extracted as integers with implicit conversion.
@@ -168,19 +168,19 @@ It is also _possible_ to use a `Rcpp::LogicalVector::iterator`, though this will
 
 There are additional methods that provide some advantages for specific matrix representations:
 
-- `dptr->get_const_col(c, work, rstart, rend)` returns a `Rcpp::Vector::const_iterator` pointing to `rstart` row of column `c`.
+- `dptr->get_const_col(c, work, first, last)` returns a `Rcpp::Vector::const_iterator` pointing to `first` row of column `c`.
 The arguments are the same as `dptr->get_col` with `work` being equivalent to `X`.
 (The data type of `work` must correspond to that of the matrix - in this case, it should be a `Rcpp::NumericVector::iterator`.)
 For simple matrices, this function is more efficient than `get_col` as it returns the iterator without needing to copy data into `work`.
 For other matrices, this function simply calls `get_col` and returns an iterator to the start of `work`.
-- `dptr->get_nonzero_col(c, index, values, rstart, rend)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
-For each non-zero entry in column `c` from rows `[rstart, rend)`, its row index is stored in the memory pointed to by `index` and its value is stored in `values`.
-(Both iterators should point to memory with at least `rend-rstart` addressable elements.)
+- `dptr->get_nonzero_col(c, index, values, first, last)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
+For each non-zero entry in column `c` from rows `[first, last)`, its row index is stored in the memory pointed to by `index` and its value is stored in `values`.
+(Both iterators should point to memory with at least `last-first` addressable elements.)
 The return value of the function is the number of non-zero entries stored in this manner.
 This function is quite efficient for sparse matrices; for all other matrices, `get_col` is called and zeros are stripped out afterwards.
-- `dptr->get_nonzero_col(r, index, values, cstart, cend)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
-For each non-zero entry in row `r` from columns `[cstart, cend)`, its column index is stored in the memory pointed to by `index` and its value is stored in `values`.
-(Both iterators should point to memory with at least `cend-cstart` addressable elements.)
+- `dptr->get_nonzero_col(r, index, values, first, last)` takes a `Rcpp::IntegerVector::iterator` object `index` and a `Rcpp::Vector::iterator` object `values`.
+For each non-zero entry in row `r` from columns `[first, last)`, its column index is stored in the memory pointed to by `index` and its value is stored in `values`.
+(Both iterators should point to memory with at least `last-first` addressable elements.)
 The return value of the function is the number of non-zero entries stored in this manner.
 This function is quite efficient for sparse matrices; for all other matrices, `get_row` is called and zeros are stripped out afterwards.
 
@@ -301,23 +301,23 @@ Exact zeroes are detected and ignored when filling this matrix.
 
 To put data into the output matrix pointed to by `dptr`, the following methods are available:
 
-- `dptr->fill_col(c, X)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
-There should be at least `nrow` accessible elements, i.e., `*X` and `*(X+nrow-1)` should be valid entries.
+- `dptr->fill_col(c, out)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+There should be at least `nrow` accessible elements, i.e., `*out` and `*(out+nrow-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_col(c, X, rstart, rend)` fills column `c` from row `rstart` to `rend-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
-There should be at least `rend-rstart` accessible elements, i.e., `*X` and `*(X+rend-rstart-1)` should be valid entries.
+- `dptr->fill_col(c, out, first, last)` fills column `c` from row `first` to `last-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+There should be at least `last-first` accessible elements, i.e., `*out` and `*(out+last-first-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_row(r, X)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
-There should be at least `ncol` accessible elements, i.e., `*X` and `*(X+ncol-1)` should be valid entries.
+- `dptr->fill_row(r, out)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+There should be at least `ncol` accessible elements, i.e., `*out` and `*(out+ncol-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_row(r, X, cstart, cend)` fills row `r` from column `cstart` to `cend-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`X`).
-There should be at least `cend-cstart` accessible elements, i.e., `*X` and `*(X+cend-cstart-1)` should be valid entries.
+- `dptr->fill_row(r, out, first, last)` fills row `r` from column `first` to `last-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+There should be at least `last-first` accessible elements, i.e., `*out` and `*(out+last-first-1)` should be valid entries.
 No value is returned by this method.
 - `dptr->fill(r, c, Y)` fills the matrix entry `(r, c)` with the double `Y`.
 No value is returned by this method.
 - `dptr->yield()` returns a `Rcpp::RObject` object containing the matrix data to pass into R.
 
-The allowable range of `r`, `c`, `rstart`, `rend`, `cstart` and `cend` is the same as previously described.
+The allowable ranges of `r`, `c`, `first` and `last` are the same as previously described.
 The `get_nrow`, `get_ncol`, `get_row`, `get_col`, `get`, `get_matrix_type` and `clone` methods are also available and behave as described for `numeric_matrix` objects.
 
 ## Other matrix types
