@@ -21,23 +21,23 @@ void any_matrix::fill_dims(const Rcpp::RObject& dims) {
     return;
 }
 
-void any_matrix::check_rowargs(size_t r, size_t start, size_t end) const {
+void any_matrix::check_rowargs(size_t r, size_t first, size_t last) const {
     if (r>=nrow) {
         throw std::runtime_error("row index out of range");
-    } else if (end < start) {
+    } else if (last < first) {
         throw std::runtime_error("column start index is greater than column end index");
-    } else if (end > ncol) {
+    } else if (last > ncol) {
         throw std::runtime_error("column end index out of range");
     }
     return;    
 }
 
-void any_matrix::check_colargs(size_t c, size_t start, size_t end) const {
+void any_matrix::check_colargs(size_t c, size_t first, size_t last) const {
     if (c>=ncol) {
         throw std::runtime_error("column index out of range");
-    } else if (end < start) {
+    } else if (last < first) {
         throw std::runtime_error("row start index is greater than row end index");
-    } else if (end > nrow) {
+    } else if (last > nrow) {
         throw std::runtime_error("row end index out of range");
     }
     return;

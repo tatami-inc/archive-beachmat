@@ -42,27 +42,27 @@ Csparse_output<T, V>::~Csparse_output() {}
 
 template<typename T, class V>
 template<class Iter>
-void Csparse_output<T, V>::fill_col(size_t c, Iter in, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void Csparse_output<T, V>::fill_col(size_t c, Iter in, size_t first, size_t last) {
+    check_colargs(c, first, last);
     std::deque<data_pair>& current=data[c];
     std::deque<data_pair> new_set;
 
     // Filling in all elements before start.
     auto cIt=current.begin(); 
-    while (cIt!=current.end() && cIt->first < start) {
+    while (cIt!=current.end() && cIt->first < first) {
         new_set.push_back(*cIt);
         ++cIt;
     }
    
     // Filling in all non-empty elements. 
-    for (size_t index=start; index<end; ++index, ++in) {
+    for (size_t index=first; index<last; ++index, ++in) {
         if ((*in)!=get_empty()) { 
             new_set.push_back(data_pair(index, *in));
         }
     } 
 
     // Jumping to the end.
-    while (cIt!=current.end() && cIt->first < end) {
+    while (cIt!=current.end() && cIt->first < last) {
         ++cIt;
     }
 
@@ -85,9 +85,9 @@ Iter Csparse_output<T, V>::find_matching_row(Iter begin, Iter end, const data_pa
 
 template<typename T, class V>
 template<class Iter>
-void Csparse_output<T, V>::fill_row(size_t r, Iter in, size_t start, size_t end) {
-    check_rowargs(r, start, end);
-    for (size_t c=start; c<end; ++c, ++in) {
+void Csparse_output<T, V>::fill_row(size_t r, Iter in, size_t first, size_t last) {
+    check_rowargs(r, first, last);
+    for (size_t c=first; c<last; ++c, ++in) {
         if ((*in)==get_empty()) { continue; }
 
         std::deque<data_pair>& current=data[c];
@@ -127,11 +127,11 @@ void Csparse_output<T, V>::fill(size_t r, size_t c, T in) {
 
 template<typename T, class V>
 template<class Iter>
-void Csparse_output<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
-    check_rowargs(r, start, end);
-    std::fill(out, out+end-start, get_empty());
+void Csparse_output<T, V>::get_row(size_t r, Iter out, size_t first, size_t last) {
+    check_rowargs(r, first, last);
+    std::fill(out, out+last-first, get_empty());
 
-    for (size_t col=start; col<end; ++col, ++out) {
+    for (size_t col=first; col<last; ++col, ++out) {
         const std::deque<data_pair>& current=data[col];
         if (current.empty() || r>current.back().first || r<current.front().first) {
             continue; 
@@ -152,19 +152,19 @@ void Csparse_output<T, V>::get_row(size_t r, Iter out, size_t start, size_t end)
 
 template<typename T, class V>
 template<class Iter>
-void Csparse_output<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void Csparse_output<T, V>::get_col(size_t c, Iter out, size_t first, size_t last) {
+    check_colargs(c, first, last);
     const std::deque<data_pair>& current=data[c];
 
     // Jumping forwards.
     auto cIt=current.begin();
-    if (start) {
-        cIt=find_matching_row(current.begin(), current.end(), data_pair(start, get_empty()));
+    if (first) {
+        cIt=find_matching_row(current.begin(), current.end(), data_pair(first, get_empty()));
     }
     
-    std::fill(out, out+end-start, get_empty());
-    while (cIt!=current.end() && cIt->first < end) { 
-        *(out + (cIt->first - start)) = cIt->second;
+    std::fill(out, out+last-first, get_empty());
+    while (cIt!=current.end() && cIt->first < last) { 
+        *(out + (cIt->first - first)) = cIt->second;
         ++cIt;
     }
     return;

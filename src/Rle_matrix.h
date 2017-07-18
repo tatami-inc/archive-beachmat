@@ -26,7 +26,7 @@ private:
 
     size_t cache_row, cache_start, cache_end;
     std::vector<size_t> cache_indices;
-    void update_indices(size_t r, size_t start, size_t end);
+    void update_indices(size_t r, size_t first, size_t last);
 };
 
 /*** Constructor definitions ***/
@@ -208,21 +208,21 @@ size_t Rle_matrix<T, V>::parse_rle(const Rcpp::IntegerVector& runlength, size_t 
 
 template<typename T, class V>
 template<class Iter>
-void Rle_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void Rle_matrix<T, V>::get_col(size_t c, Iter out, size_t first, size_t last) {
+    check_colargs(c, first, last);
 
     const auto& curcol=cumrow[c];
     auto rvIt=runvalues[chunkdex[c]].begin() + coldex[c];
     auto ccIt=curcol.begin();
-    if (start) {
-        auto tmp_ccIt=std::upper_bound(ccIt, curcol.end(), start); // jump to start.
+    if (first) {
+        auto tmp_ccIt=std::upper_bound(ccIt, curcol.end(), first); // jump to first.
         rvIt+=tmp_ccIt - ccIt;
         ccIt=tmp_ccIt;
     }
 
-    size_t current_row=start;
-    while (current_row < end) {
-        const size_t n_to_add=std::min(end, *ccIt) - current_row;
+    size_t current_row=first;
+    while (current_row < last) {
+        const size_t n_to_add=std::min(last, *ccIt) - current_row;
         std::fill(out, out+n_to_add, *rvIt);
         current_row=*ccIt;
         ++ccIt;
@@ -234,12 +234,12 @@ void Rle_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
 }
 
 template<typename T, class V>
-void Rle_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
-    if (cache_start!=start || cache_end!=end) {
+void Rle_matrix<T, V>::update_indices(size_t r, size_t first, size_t last) {
+    if (cache_start!=first|| cache_end!=last) {
         // Regenerate if they don't match; too much effort to keep track of which ones are valid.
-        cache_start=start;
-        cache_end=end;
-        std::fill(cache_indices.begin() + start, cache_indices.begin() + end, 0);
+        cache_start=first;
+        cache_end=last;
+        std::fill(cache_indices.begin() + first, cache_indices.begin() + last, 0);
         cache_row=0;
     }
 
@@ -250,14 +250,14 @@ void Rle_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
         return;
     }
     if (r==cache_row+1) {
-        for (size_t c=start; c<end; ++c) {
+        for (size_t c=first; c<last; ++c) {
             size_t& curIndex=cache_indices[c];
             if (cumrow[c][curIndex] <= r) {
                 ++curIndex;
             }            
         }        
     } else if (r+1==cache_row) {
-        for (size_t c=start; c<end; ++c) {
+        for (size_t c=first; c<last; ++c) {
             size_t& curIndex=cache_indices[c];
             if (curIndex) {
                 if (cumrow[c][curIndex-1] > r) {
@@ -266,14 +266,14 @@ void Rle_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
             }        
         }
     } else if (r > cache_row) {
-        for (size_t c=start; c<end; ++c) {
+        for (size_t c=first; c<last; ++c) {
             const auto& curcol=cumrow[c];
             size_t& curIndex=cache_indices[c];
             auto rdIt=std::upper_bound(curcol.begin() + curIndex, curcol.end(), r);
             curIndex=rdIt - curcol.begin();            
         }
     } else if (r < cache_row) {
-        for (size_t c=start; c<end; ++c) {
+        for (size_t c=first; c<last; ++c) {
             const auto& curcol=cumrow[c];
             size_t& curIndex=cache_indices[c];
             auto rdIt=std::upper_bound(curcol.begin(), curcol.begin() + curIndex, r);
@@ -287,10 +287,10 @@ void Rle_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
 
 template<typename T, class V>
 template<class Iter>
-void Rle_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
-    check_rowargs(r, start, end);
-    update_indices(r, start, end);
-    for (size_t c=start; c<end; ++c, ++out) {
+void Rle_matrix<T, V>::get_row(size_t r, Iter out, size_t first, size_t last) {
+    check_rowargs(r, first, last);
+    update_indices(r, first, last);
+    for (size_t c=first; c<last; ++c, ++out) {
         (*out)=*(runvalues[chunkdex[c]].begin() + cache_indices[c] + coldex[c]);
     }
     return;

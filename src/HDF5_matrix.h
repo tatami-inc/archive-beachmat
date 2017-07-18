@@ -125,37 +125,37 @@ HDF5_matrix<T, RTYPE>::~HDF5_matrix() {}
 
 template<typename T, int RTYPE>
 template<typename X>
-void HDF5_matrix<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
-    check_rowargs(r, start, end);
+void HDF5_matrix<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t first, size_t last) { 
+    check_rowargs(r, first, last);
     reopen_HDF5_file_by_dim(filename, dataname, 
             hfile, hdata, H5F_ACC_RDONLY, rowlist, 
             onrow, oncol, largercol, rowokay);
-    HDF5_select_row(r, start, end, row_count, h5_start, rowspace, hspace);
+    HDF5_select_row(r, first, last, row_count, h5_start, rowspace, hspace);
     hdata.read(out, HDT, rowspace, hspace);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t end) { 
-    extract_row(r, out, default_type, start, end);
+void HDF5_matrix<T, RTYPE>::extract_row(size_t r, T* out, size_t first, size_t last) { 
+    extract_row(r, out, default_type, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
 template<typename X>
-void HDF5_matrix<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
-    check_colargs(c, start, end);
+void HDF5_matrix<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t first, size_t last) { 
+    check_colargs(c, first, last);
     reopen_HDF5_file_by_dim(filename, dataname, 
             hfile, hdata, H5F_ACC_RDONLY, collist, 
             oncol, onrow, largerrow, colokay);
-    HDF5_select_col(c, start, end, col_count, h5_start, colspace, hspace);
+    HDF5_select_col(c, first, last, col_count, h5_start, colspace, hspace);
     hdata.read(out, HDT, colspace, hspace);
     return;
 }
     
 template<typename T, int RTYPE>
-void HDF5_matrix<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t end) { 
-    extract_col(c, out, default_type, start, end);
+void HDF5_matrix<T, RTYPE>::extract_col(size_t c, T* out, size_t first, size_t last) { 
+    extract_col(c, out, default_type, first, last);
     return;
 }
 

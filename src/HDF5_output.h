@@ -144,50 +144,50 @@ HDF5_output<T, RTYPE>::~HDF5_output() {}
 /*** Setter methods ***/
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::select_col(size_t c, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void HDF5_output<T, RTYPE>::select_col(size_t c, size_t first, size_t last) {
+    check_colargs(c, first, last);
     reopen_HDF5_file_by_dim(fname, dname,
             hfile, hdata, H5F_ACC_RDWR, collist, 
             oncol, onrow, largerrow, colokay);
-    HDF5_select_col(c, start, end, col_count, h5_start, colspace, hspace);
+    HDF5_select_col(c, first, last, col_count, h5_start, colspace, hspace);
     return;
 }
 
 template<typename T, int RTYPE>
 template<typename X>
-void HDF5_output<T, RTYPE>::insert_col(size_t c, const X* in, const H5::DataType& HDT, size_t start, size_t end) {
-    select_col(c, start, end);
+void HDF5_output<T, RTYPE>::insert_col(size_t c, const X* in, const H5::DataType& HDT, size_t first, size_t last) {
+    select_col(c, first, last);
     hdata.write(in, HDT, colspace, hspace);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::insert_col(size_t c, const T* in, size_t start, size_t end) {
-    insert_col(c, in, default_type, start, end);
+void HDF5_output<T, RTYPE>::insert_col(size_t c, const T* in, size_t first, size_t last) {
+    insert_col(c, in, default_type, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::select_row(size_t r, size_t start, size_t end) {
-    check_rowargs(r, start, end);
+void HDF5_output<T, RTYPE>::select_row(size_t r, size_t first, size_t last) {
+    check_rowargs(r, first, last);
     reopen_HDF5_file_by_dim(fname, dname, 
             hfile, hdata, H5F_ACC_RDWR, rowlist, 
             onrow, oncol, largercol, rowokay);
-    HDF5_select_row(r, start, end, row_count, h5_start, rowspace, hspace);
+    HDF5_select_row(r, first, last, row_count, h5_start, rowspace, hspace);
     return;
 }
 
 template<typename T, int RTYPE>
 template<typename X>
-void HDF5_output<T, RTYPE>::insert_row(size_t c, const X* in, const H5::DataType& HDT, size_t start, size_t end) {
-    select_row(c, start, end);
+void HDF5_output<T, RTYPE>::insert_row(size_t c, const X* in, const H5::DataType& HDT, size_t first, size_t last) {
+    select_row(c, first, last);
     hdata.write(in, HDT, rowspace, hspace);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::insert_row(size_t c, const T* in, size_t start, size_t end) {
-    insert_row(c, in, default_type, start, end);
+void HDF5_output<T, RTYPE>::insert_row(size_t c, const T* in, size_t first, size_t last) {
+    insert_row(c, in, default_type, first, last);
     return;
 }
 
@@ -209,29 +209,29 @@ void HDF5_output<T, RTYPE>::insert_one(size_t r, size_t c, T* in) {
 
 template<typename T, int RTYPE>
 template<typename X>
-void HDF5_output<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
-    select_row(r, start, end);
+void HDF5_output<T, RTYPE>::extract_row(size_t r, X* out, const H5::DataType& HDT, size_t first, size_t last) { 
+    select_row(r, first, last);
     hdata.read(out, HDT, rowspace, hspace);
     return;
 } 
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::extract_row(size_t r, T* out, size_t start, size_t end) { 
-    extract_row(r, out, default_type, start, end);
+void HDF5_output<T, RTYPE>::extract_row(size_t r, T* out, size_t first, size_t last) { 
+    extract_row(r, out, default_type, first, last);
     return;
 } 
 
 template<typename T, int RTYPE>
 template<typename X>
-void HDF5_output<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t start, size_t end) { 
-    select_col(c, start, end);
+void HDF5_output<T, RTYPE>::extract_col(size_t c, X* out, const H5::DataType& HDT, size_t first, size_t last) { 
+    select_col(c, first, last);
     hdata.read(out, HDT, colspace, hspace);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_output<T, RTYPE>::extract_col(size_t c, T* out, size_t start, size_t end) { 
-    extract_col(c, out, default_type, start, end);
+void HDF5_output<T, RTYPE>::extract_col(size_t c, T* out, size_t first, size_t last) { 
+    extract_col(c, out, default_type, first, last);
     return;
 }
 

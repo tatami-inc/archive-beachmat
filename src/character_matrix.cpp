@@ -20,8 +20,8 @@ Rcpp::StringVector::iterator character_matrix::get_const_col(size_t c, Rcpp::Str
     return get_const_col(c, work, 0, get_nrow());
 }
 
-Rcpp::StringVector::iterator character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t start, size_t end) {
-    get_col(c, work, start, end);
+Rcpp::StringVector::iterator character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t first, size_t last) {
+    get_col(c, work, first, last);
     return work;
 }
 
@@ -39,20 +39,20 @@ size_t simple_character_matrix::get_ncol() const {
     return mat.get_ncol();
 }
 
-void simple_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.get_row(r, out, start, end);
+void simple_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
+    mat.get_row(r, out, first, last);
 }
 
-void simple_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.get_col(c, out, start, end);
+void simple_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
+    mat.get_col(c, out, first, last);
 }
 
 Rcpp::String simple_character_matrix::get(size_t r, size_t c) {
     return mat.get(r, c);
 }
 
-Rcpp::StringVector::iterator simple_character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t start, size_t end) {
-    return mat.get_const_col(c, work, start, end);
+Rcpp::StringVector::iterator simple_character_matrix::get_const_col(size_t c, Rcpp::StringVector::iterator work, size_t first, size_t last) {
+    return mat.get_const_col(c, work, first, last);
 }
 
 std::unique_ptr<character_matrix> simple_character_matrix::clone() const {
@@ -77,12 +77,12 @@ size_t Rle_character_matrix::get_ncol() const {
     return mat.get_ncol();
 }
 
-void Rle_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.get_row(r, out, start, end);
+void Rle_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
+    mat.get_row(r, out, first, last);
 }
 
-void Rle_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.get_col(c, out, start, end);
+void Rle_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
+    mat.get_col(c, out, first, last);
 }
 
 Rcpp::String Rle_character_matrix::get(size_t r, size_t c) {
@@ -121,19 +121,19 @@ size_t HDF5_character_matrix::get_ncol() const {
     return mat.get_ncol();
 }
 
-void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
+void HDF5_character_matrix::get_row(size_t r, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
     char* ref=row_buf.data();
-    mat.extract_row(r, ref, start, end);
-    for (size_t c=start; c<end; ++c, ref+=bufsize, ++out) {
+    mat.extract_row(r, ref, first, last);
+    for (size_t c=first; c<last; ++c, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
 } 
 
-void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
+void HDF5_character_matrix::get_col(size_t c, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
     char* ref=col_buf.data();
-    mat.extract_col(c, ref, start, end);
-    for (size_t r=start; r<end; ++r, ref+=bufsize, ++out) {
+    mat.extract_col(c, ref, first, last);
+    for (size_t r=first; r<last; ++r, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;

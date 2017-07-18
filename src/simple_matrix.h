@@ -54,26 +54,26 @@ T simple_matrix<T, V>::get(size_t r, size_t c) {
 
 template<typename T, class V>
 template<class Iter>
-void simple_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
-    check_rowargs(r, start, end);
+void simple_matrix<T, V>::get_row(size_t r, Iter out, size_t first, size_t last) {
+    check_rowargs(r, first, last);
     const size_t& NR=this->nrow;
-    auto src=mat.begin()+start*NR+r;
-    for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=(*src); }
+    auto src=mat.begin()+first*NR+r;
+    for (size_t col=first; col<last; ++col, src+=NR, ++out) { (*out)=(*src); }
     return;
 }
 
 template<typename T, class V>
 template<class Iter>
-void simple_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void simple_matrix<T, V>::get_col(size_t c, Iter out, size_t first, size_t last) {
+    check_colargs(c, first, last);
     auto src=mat.begin() + c*(this->nrow);
-    std::copy(src+start, src+end, out);
+    std::copy(src+first, src+last, out);
     return;
 }
 
 template<typename T, class V>
-typename V::iterator simple_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    return mat.begin() + start + c*(this->nrow);
+typename V::iterator simple_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
+    return mat.begin() + first + c*(this->nrow);
 }
 
 template<typename T, class V>

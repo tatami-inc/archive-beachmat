@@ -96,48 +96,48 @@ T Psymm_matrix<T, V>::get(size_t r, size_t c) {
 
 template <typename T, class V>
 template <class Iter>
-void Psymm_matrix<T, V>::get_rowcol (size_t c, Iter out, size_t start, size_t end) {
+void Psymm_matrix<T, V>::get_rowcol (size_t c, Iter out, size_t first, size_t last) {
     auto xIt=x.begin();
     if (upper) {
         xIt+=(c*(c+1))/2;
-        if (start < c) {
-            if (end <= c) { 
-                std::copy(xIt+start, xIt+end, out);
+        if (first < c) {
+            if (last <= c) { 
+                std::copy(xIt+first, xIt+last, out);
             } else {
-                std::copy(xIt+start, xIt+c, out);
-                out+=c - start;
-                for (size_t i=c; i<end; ++i, ++out) {
+                std::copy(xIt+first, xIt+c, out);
+                out+=c - first;
+                for (size_t i=c; i<last; ++i, ++out) {
                     (*out)=*(xIt+c);
                     xIt+=i+1;
                 }
             }
         } else {
-            size_t diff=start - c;
+            size_t diff=first - c;
             xIt+=c*diff+(diff*(diff+1))/2;
-            for (size_t i=start; i<end; ++i, ++out) {
+            for (size_t i=first; i<last; ++i, ++out) {
                 (*out)=*(xIt+c);
                 xIt+=i+1;
             }
         }
     } else {
         const size_t& NR=this->nrow;
-        if (start < c) { 
-            xIt+=NR*start - (start*(start-1))/2;
-            if (end <= c) {
-                for (size_t i=start; i<end; ++i, ++out) {
+        if (first < c) { 
+            xIt+=NR*first - (first*(first-1))/2;
+            if (last <= c) {
+                for (size_t i=first; i<last; ++i, ++out) {
                     (*out)=*(xIt+c-i);
                     xIt+=NR-i;
                 }
             } else {
-                for (size_t i=start; i<c; ++i, ++out) {
+                for (size_t i=first; i<c; ++i, ++out) {
                     (*out)=*(xIt+c-i);
                     xIt+=NR-i;
                 }
-                std::copy(xIt, xIt+end-c, out);
+                std::copy(xIt, xIt+last-c, out);
             }
         } else {
             xIt+=NR*c - (c*(c-1))/2;
-            std::copy(xIt + start - c, xIt+end - c, out);
+            std::copy(xIt + first - c, xIt+last - c, out);
         }
     }
     return;
@@ -145,17 +145,17 @@ void Psymm_matrix<T, V>::get_rowcol (size_t c, Iter out, size_t start, size_t en
 
 template <typename T, class V>
 template <class Iter>
-void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end); // Split up to ensure we get the right error messages.
-    get_rowcol(c, out, start, end);
+void Psymm_matrix<T, V>::get_col (size_t c, Iter out, size_t first, size_t last) {
+    check_colargs(c, first, last); // Split up to ensure we get the right error messages.
+    get_rowcol(c, out, first, last);
     return;
 }
 
 template <typename T, class V>
 template <class Iter>
-void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t start, size_t end) {
-    check_rowargs(r, start, end);
-    get_rowcol(r, out, start, end);
+void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t first, size_t last) {
+    check_rowargs(r, first, last);
+    get_rowcol(r, out, first, last);
     return;
 }
 

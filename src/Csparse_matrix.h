@@ -113,16 +113,16 @@ T Csparse_matrix<T, V>::get(size_t r, size_t c) {
 }
 
 template <typename T, class V>
-void Csparse_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
+void Csparse_matrix<T, V>::update_indices(size_t r, size_t first, size_t last) {
     /* If left/right slice are not equal to what is stored, we reset the indices,
      * so that the code below will know to recompute them. It's too much effort
      * to try to figure out exactly which columns need recomputing; just do them all.
      */
-    if (start!=curstart || end!=curend) {
-        curstart=start;
-        curend=end;
-        Rcpp::IntegerVector::iterator pIt=p.begin()+start;
-        for (size_t px=start; px<end; ++px, ++pIt) {
+    if (first!=curstart || last!=curend) {
+        curstart=first;
+        curend=last;
+        Rcpp::IntegerVector::iterator pIt=p.begin()+first;
+        for (size_t px=first; px<last; ++px, ++pIt) {
             indices[px]=*pIt; 
         }
         currow=0;
@@ -136,17 +136,17 @@ void Csparse_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
         return; 
     } 
 
-    Rcpp::IntegerVector::iterator pIt=p.begin()+start;
+    Rcpp::IntegerVector::iterator pIt=p.begin()+first;
     if (r==currow+1) {
         ++pIt; // points to the first-past-the-end element, at any given 'c'.
-        for (size_t c=start; c<end; ++c, ++pIt) {
+        for (size_t c=first; c<last; ++c, ++pIt) {
             int& curdex=indices[c];
             if (curdex!=*pIt && i[curdex] < r) { 
                 ++curdex;
             }
         }
     } else if (r+1==currow) {
-        for (size_t c=start; c<end; ++c, ++pIt) {
+        for (size_t c=first; c<last; ++c, ++pIt) {
             int& curdex=indices[c];
             if (curdex!=*pIt && i[curdex-1] >= r) { 
                 --curdex;
@@ -157,13 +157,13 @@ void Csparse_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
         Rcpp::IntegerVector::iterator istart=i.begin(), loc;
         if (r > currow) {
             ++pIt; // points to the first-past-the-end element, at any given 'c'.
-            for (size_t c=start; c<end; ++c, ++pIt) { 
+            for (size_t c=first; c<last; ++c, ++pIt) { 
                 int& curdex=indices[c];
                 loc=std::lower_bound(istart + curdex, istart + *pIt, r);
                 curdex=loc - istart;
             }
         } else { 
-            for (size_t c=start; c<end; ++c, ++pIt) {
+            for (size_t c=first; c<last; ++c, ++pIt) {
                 int& curdex=indices[c];
                 loc=std::lower_bound(istart + *pIt, istart + curdex, r);
                 curdex=loc - istart;
@@ -177,13 +177,13 @@ void Csparse_matrix<T, V>::update_indices(size_t r, size_t start, size_t end) {
 
 template <typename T, class V>
 template <class Iter>
-void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
-    check_rowargs(r, start, end);
-    update_indices(r, start, end);
-    std::fill(out, out+end-start, get_empty());
+void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t first, size_t last) {
+    check_rowargs(r, first, last);
+    update_indices(r, first, last);
+    std::fill(out, out+last-first, get_empty());
 
-    auto pIt=p.begin()+start+1; // Points to first-past-the-end for each 'c'.
-    for (size_t c=start; c<end; ++c, ++pIt, ++out) { 
+    auto pIt=p.begin()+first+1; // Points to first-past-the-end for each 'c'.
+    for (size_t c=first; c<last; ++c, ++pIt, ++out) { 
         const int& idex=indices[c];
         if (idex!=*pIt && i[idex]==r) { (*out)=x[idex]; }
     } 
@@ -192,38 +192,38 @@ void Csparse_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end)
 
 template <typename T, class V>
 template <class Iter>
-void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void Csparse_matrix<T, V>::get_col(size_t c, Iter out, size_t first, size_t last) {
+    check_colargs(c, first, last);
     const int& pstart=p[c]; 
     auto iIt=i.begin()+pstart, 
          eIt=i.begin()+p[c+1]; 
     auto xIt=x.begin()+pstart;
 
-    if (start) { // Jumping ahead if non-zero.
-        auto new_iIt=std::lower_bound(iIt, eIt, start);
+    if (first) { // Jumping ahead if non-zero.
+        auto new_iIt=std::lower_bound(iIt, eIt, first);
         xIt+=(new_iIt-iIt);
         iIt=new_iIt;
     } 
-    if (end!=(this->nrow)) { // Jumping to last element.
-        eIt=std::lower_bound(iIt, eIt, end);
+    if (last!=(this->nrow)) { // Jumping to last element.
+        eIt=std::lower_bound(iIt, eIt, last);
     }
 
-    std::fill(out, out+end-start, get_empty());
+    std::fill(out, out+last-first, get_empty());
     for (; iIt!=eIt; ++iIt, ++xIt) {
-        *(out + (*iIt - int(start)))=*xIt;
+        *(out + (*iIt - int(first)))=*xIt;
     }
     return;
 }
 
 template<typename T, class V>
 template<class Iter>
-size_t Csparse_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end) {
-    check_rowargs(r, start, end);
-    update_indices(r, start, end);
+size_t Csparse_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Iter val, size_t first, size_t last) {
+    check_rowargs(r, first, last);
+    update_indices(r, first, last);
 
-    auto pIt=p.begin()+start+1; // Points to first-past-the-end for each 'c'.
+    auto pIt=p.begin()+first+1; // Points to first-past-the-end for each 'c'.
     size_t nzero=0;
-    for (size_t c=start; c<end; ++c, ++pIt) { 
+    for (size_t c=first; c<last; ++c, ++pIt) { 
         const int& idex=indices[c];
         if (idex!=*pIt && i[idex]==r) { 
             ++nzero;
@@ -239,23 +239,24 @@ size_t Csparse_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iter
 
 template<typename T, class V>
 template<class Iter>
-size_t Csparse_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end) {
-    check_colargs(c, start, end);
+size_t Csparse_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Iter val, size_t first, size_t last) {
+    check_colargs(c, first, last);
     const int& pstart=p[c]; 
     auto iIt=i.begin()+pstart, 
          eIt=i.begin()+p[c+1]; 
     auto xIt=x.begin()+pstart;
 
-    if (start) { // Jumping ahead if non-zero.
-        auto new_iIt=std::lower_bound(iIt, eIt, start);
+    if (first) { // Jumping ahead if non-zero.
+        auto new_iIt=std::lower_bound(iIt, eIt, first);
         xIt+=(new_iIt-iIt);
         iIt=new_iIt;
     } 
-    if (end!=(this->nrow)) { // Jumping to last element.
-        eIt=std::lower_bound(iIt, eIt, end);
+    if (last!=(this->nrow)) { // Jumping to last element.
+        eIt=std::lower_bound(iIt, eIt, last);
     }
 
     size_t nzero=eIt-iIt;
+
     std::copy(iIt, iIt+nzero, index);
     std::copy(xIt, xIt+nzero, val);
     return nzero;

@@ -55,26 +55,26 @@ T dense_matrix<T, V>::get(size_t r, size_t c) {
 
 template <typename T, class V>
 template <class Iter>
-void dense_matrix<T, V>::get_row(size_t r, Iter out, size_t start, size_t end) {
-    check_rowargs(r, start, end);
+void dense_matrix<T, V>::get_row(size_t r, Iter out, size_t first, size_t last) {
+    check_rowargs(r, first, last);
     const size_t& NR=this->nrow;
-    auto src=x.begin()+start*NR+r;
-    for (size_t col=start; col<end; ++col, src+=NR, ++out) { (*out)=*src; }
+    auto src=x.begin()+first*NR+r;
+    for (size_t col=first; col<last; ++col, src+=NR, ++out) { (*out)=*src; }
     return;
 }
 
 template <typename T, class V>
 template <class Iter>
-void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t start, size_t end) {
-    check_colargs(c, start, end);
+void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t first, size_t last) {
+    check_colargs(c, first, last);
     auto src=x.begin() + c*(this->nrow);
-    std::copy(src+start, src+end, out);
+    std::copy(src+first, src+last, out);
     return;
 }
 
 template<typename T, class V>
-typename V::iterator dense_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    return x.begin() + start + c*(this->nrow);
+typename V::iterator dense_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
+    return x.begin() + first + c*(this->nrow);
 }
 
 template<typename T, class V>

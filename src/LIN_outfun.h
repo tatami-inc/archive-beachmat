@@ -78,26 +78,26 @@ size_t simple_lin_output<T, V>::get_ncol() const {
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, out, start, end);
+void simple_lin_output<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.get_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, out, start, end);
+void simple_lin_output<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.get_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, out, start, end);
+void simple_lin_output<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.get_row(r, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, out, start, end);
+void simple_lin_output<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.get_row(r, out, first, last);
     return;
 }
 
@@ -107,26 +107,26 @@ T simple_lin_output<T, V>::get(size_t r, size_t c) {
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, out, start, end);
+void simple_lin_output<T, V>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.fill_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, out, start, end);
+void simple_lin_output<T, V>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.fill_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, out, start, end);
+void simple_lin_output<T, V>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.fill_row(r, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void simple_lin_output<T, V>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, out, start, end);
+void simple_lin_output<T, V>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.fill_row(r, out, first, last);
     return;
 }
 
@@ -171,26 +171,26 @@ size_t sparse_lin_output<T, V>::get_ncol() const {
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, out, start, end);
+void sparse_lin_output<T, V>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.get_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, out, start, end);
+void sparse_lin_output<T, V>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.get_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, out, start, end);
+void sparse_lin_output<T, V>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.get_row(r, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, out, start, end);
+void sparse_lin_output<T, V>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.get_row(r, out, first, last);
     return;
 }
 
@@ -200,26 +200,26 @@ T sparse_lin_output<T, V>::get(size_t r, size_t c) {
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, out, start, end);
+void sparse_lin_output<T, V>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.fill_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_col(c, out, start, end);
+void sparse_lin_output<T, V>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.fill_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, out, start, end);
+void sparse_lin_output<T, V>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.fill_row(r, out, first, last);
     return;
 }
 
 template<typename T, class V>
-void sparse_lin_output<T, V>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.fill_row(r, out, start, end);
+void sparse_lin_output<T, V>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.fill_row(r, out, first, last);
     return;
 }
 
@@ -277,50 +277,50 @@ void HDF5_lin_output<T, RTYPE>::fill(size_t r, size_t c, T in) {
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), H5::PredType::NATIVE_INT32, start, end);
+void HDF5_lin_output<T, RTYPE>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.extract_row(r, &(*out), H5::PredType::NATIVE_INT32, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), H5::PredType::NATIVE_DOUBLE, start, end);
+void HDF5_lin_output<T, RTYPE>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.extract_row(r, &(*out), H5::PredType::NATIVE_DOUBLE, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), H5::PredType::NATIVE_INT32, start, end);
+void HDF5_lin_output<T, RTYPE>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.extract_col(c, &(*out), H5::PredType::NATIVE_INT32, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), H5::PredType::NATIVE_DOUBLE, start, end);
+void HDF5_lin_output<T, RTYPE>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.extract_col(c, &(*out), H5::PredType::NATIVE_DOUBLE, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.insert_row(r, &(*out), H5::PredType::NATIVE_INT32, start, end);
+void HDF5_lin_output<T, RTYPE>::fill_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.insert_row(r, &(*out), H5::PredType::NATIVE_INT32, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.insert_row(r, &(*out), H5::PredType::NATIVE_DOUBLE, start, end);
+void HDF5_lin_output<T, RTYPE>::fill_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.insert_row(r, &(*out), H5::PredType::NATIVE_DOUBLE, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.insert_col(c, &(*out), H5::PredType::NATIVE_INT32, start, end);
+void HDF5_lin_output<T, RTYPE>::fill_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.insert_col(c, &(*out), H5::PredType::NATIVE_INT32, first, last);
     return;
 }
 
 template<typename T, int RTYPE>
-void HDF5_lin_output<T, RTYPE>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.insert_col(c, &(*out), H5::PredType::NATIVE_DOUBLE, start, end);
+void HDF5_lin_output<T, RTYPE>::fill_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.insert_col(c, &(*out), H5::PredType::NATIVE_DOUBLE, first, last);
     return;
 }
 

@@ -41,8 +41,8 @@ typename V::const_iterator lin_matrix<T, V>::get_const_col(size_t c, typename V:
 }
 
 template<typename T, class V>
-typename V::const_iterator lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    get_col(c, work, start, end);
+typename V::const_iterator lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
+    get_col(c, work, first, last);
     return work;
 }
 
@@ -67,12 +67,12 @@ size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator
 }
 
 template<class T, class Iter>
-size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t start, size_t end) {
+size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t first, size_t last) {
     size_t nzero=0;
     Iter src=val;
     const T zero=0;
 
-    for (size_t x=start; x<end; ++x, ++val) {
+    for (size_t x=first; x<last; ++x, ++val) {
         if (*val!=zero) {
             ++nzero;
             (*index)=x;
@@ -85,27 +85,27 @@ size_t zero_hunter(Rcpp::IntegerVector::iterator index, Iter val, size_t start, 
 }
 
 template<typename T, class V>
-size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t start, size_t end) {
-    get_row(r, val, start, end);
-    return zero_hunter<int>(index, val, start, end);
+size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t first, size_t last) {
+    get_row(r, val, first, last);
+    return zero_hunter<int>(index, val, first, last);
 }
 
 template<typename T, class V>
-size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t start, size_t end) {
-    get_row(r, val, start, end);
-    return zero_hunter<double>(index, val, start, end);
+size_t lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t first, size_t last) {
+    get_row(r, val, first, last);
+    return zero_hunter<double>(index, val, first, last);
 }
 
 template<typename T, class V>
-size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t start, size_t end) {
-    get_col(c, val, start, end);
-    return zero_hunter<int>(index, val, start, end);
+size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::IntegerVector::iterator val, size_t first, size_t last) {
+    get_col(c, val, first, last);
+    return zero_hunter<int>(index, val, first, last);
 }
 
 template<typename T, class V>
-size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t start, size_t end) {
-    get_col(c, val, start, end);
-    return zero_hunter<double>(index, val, start, end);
+size_t lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator index, Rcpp::NumericVector::iterator val, size_t first, size_t last) {
+    get_col(c, val, first, last);
+    return zero_hunter<double>(index, val, first, last);
 }
 
 /* Defining the advanced interface. */
@@ -127,26 +127,26 @@ size_t advanced_lin_matrix<T, V, M>::get_ncol() const {
 }
 
 template<typename T, class V, class M>
-void advanced_lin_matrix<T, V, M>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, out, start, end);
+void advanced_lin_matrix<T, V, M>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.get_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V, class M>
-void advanced_lin_matrix<T, V, M>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_col(c, out, start, end);
+void advanced_lin_matrix<T, V, M>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.get_col(c, out, first, last);
     return;
 }
 
 template<typename T, class V, class M>
-void advanced_lin_matrix<T, V, M>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, out, start, end);
+void advanced_lin_matrix<T, V, M>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.get_row(r, out, first, last);
     return;
 }
 
 template<typename T, class V, class M>
-void advanced_lin_matrix<T, V, M>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.get_row(r, out, start, end);
+void advanced_lin_matrix<T, V, M>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.get_row(r, out, first, last);
     return;
 }
 
@@ -174,8 +174,8 @@ template <typename T, class V>
 simple_lin_matrix<T, V>::~simple_lin_matrix() {} 
 
 template <typename T, class V>
-typename V::const_iterator simple_lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    return this->mat.get_const_col(c, work, start, end);
+typename V::const_iterator simple_lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
+    return this->mat.get_const_col(c, work, first, last);
 }
 
 template <typename T, class V>
@@ -190,8 +190,8 @@ template <typename T, class V>
 dense_lin_matrix<T, V>::~dense_lin_matrix() {} 
 
 template <typename T, class V>
-typename V::const_iterator dense_lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t start, size_t end) {
-    return this->mat.get_const_col(c, work, start, end);
+typename V::const_iterator dense_lin_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
+    return this->mat.get_const_col(c, work, first, last);
 }
 
 template <typename T, class V>
@@ -208,23 +208,23 @@ template <typename T, class V>
 Csparse_lin_matrix<T, V>::~Csparse_lin_matrix() {} 
 
 template <typename T, class V>
-size_t Csparse_lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    return this->mat.get_nonzero_col(c, dex, out, start, end);
+size_t Csparse_lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    return this->mat.get_nonzero_col(c, dex, out, first, last);
 }
 
 template <typename T, class V>
-size_t Csparse_lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    return this->mat.get_nonzero_col(c, dex, out, start, end);
+size_t Csparse_lin_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    return this->mat.get_nonzero_col(c, dex, out, first, last);
 }
 
 template <typename T, class V>
-size_t Csparse_lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    return this->mat.get_nonzero_row(r, dex, out, start, end);
+size_t Csparse_lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    return this->mat.get_nonzero_row(r, dex, out, first, last);
 }
 
 template <typename T, class V>
-size_t Csparse_lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    return this->mat.get_nonzero_row(r, dex, out, start, end);
+size_t Csparse_lin_matrix<T, V>::get_nonzero_row(size_t r, Rcpp::IntegerVector::iterator dex, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    return this->mat.get_nonzero_row(r, dex, out, first, last);
 }
 
 template <typename T, class V>
@@ -251,26 +251,26 @@ size_t HDF5_lin_matrix<T, V, RTYPE>::get_ncol() const {
 }
 
 template<typename T, class V, int RTYPE>
-void HDF5_lin_matrix<T, V, RTYPE>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), H5::PredType::NATIVE_INT32, start, end);
+void HDF5_lin_matrix<T, V, RTYPE>::get_col(size_t c, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.extract_col(c, &(*out), H5::PredType::NATIVE_INT32, first, last);
     return;
 }
 
 template<typename T, class V, int RTYPE>
-void HDF5_lin_matrix<T, V, RTYPE>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_col(c, &(*out), H5::PredType::NATIVE_DOUBLE, start, end);
+void HDF5_lin_matrix<T, V, RTYPE>::get_col(size_t c, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.extract_col(c, &(*out), H5::PredType::NATIVE_DOUBLE, first, last);
     return;
 }
 
 template<typename T, class V, int RTYPE>
-void HDF5_lin_matrix<T, V, RTYPE>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), H5::PredType::NATIVE_INT32, start, end);
+void HDF5_lin_matrix<T, V, RTYPE>::get_row(size_t r, Rcpp::IntegerVector::iterator out, size_t first, size_t last) {
+    mat.extract_row(r, &(*out), H5::PredType::NATIVE_INT32, first, last);
     return;
 }
 
 template<typename T, class V, int RTYPE>
-void HDF5_lin_matrix<T, V, RTYPE>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t start, size_t end) {
-    mat.extract_row(r, &(*out), H5::PredType::NATIVE_DOUBLE, start, end);
+void HDF5_lin_matrix<T, V, RTYPE>::get_row(size_t r, Rcpp::NumericVector::iterator out, size_t first, size_t last) {
+    mat.extract_row(r, &(*out), H5::PredType::NATIVE_DOUBLE, first, last);
     return;
 }
 

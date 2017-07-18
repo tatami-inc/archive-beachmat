@@ -38,24 +38,24 @@ size_t simple_character_output::get_ncol() const {
     return mat.get_ncol();
 }
 
-void simple_character_output::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.get_row(r, out, start, end);
+void simple_character_output::get_row(size_t r, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
+    mat.get_row(r, out, first, last);
 }
 
-void simple_character_output::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
-    mat.get_col(c, out, start, end);
+void simple_character_output::get_col(size_t c, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
+    mat.get_col(c, out, first, last);
 }
 
 Rcpp::String simple_character_output::get(size_t r, size_t c) {
     return mat.get(r, c);
 }
 
-void simple_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t start, size_t end) { 
-    mat.fill_row(r, in, start, end);
+void simple_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+    mat.fill_row(r, in, first, last);
 }
 
-void simple_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t start, size_t end) { 
-    mat.fill_col(c, in, start, end);
+void simple_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+    mat.fill_col(c, in, first, last);
 }
 
 void simple_character_output::fill(size_t r, size_t c, Rcpp::String in) {
@@ -103,19 +103,19 @@ size_t HDF5_character_output::get_ncol() const {
     return mat.get_ncol();
 }
 
-void HDF5_character_output::get_row(size_t r, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
+void HDF5_character_output::get_row(size_t r, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
     char* ref=row_buf.data();
-    mat.extract_row(r, ref, start, end);
-    for (size_t c=start; c<end; ++c, ref+=bufsize, ++out) {
+    mat.extract_row(r, ref, first, last);
+    for (size_t c=first; c<last; ++c, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
 } 
 
-void HDF5_character_output::get_col(size_t c, Rcpp::StringVector::iterator out, size_t start, size_t end) { 
+void HDF5_character_output::get_col(size_t c, Rcpp::StringVector::iterator out, size_t first, size_t last) { 
     char* ref=col_buf.data();
-    mat.extract_col(c, ref, start, end);
-    for (size_t r=start; r<end; ++r, ref+=bufsize, ++out) {
+    mat.extract_col(c, ref, first, last);
+    for (size_t r=first; r<last; ++r, ref+=bufsize, ++out) {
         (*out)=ref; 
     }
     return;
@@ -127,27 +127,27 @@ Rcpp::String HDF5_character_output::get(size_t r, size_t c) {
     return ref;
 }
 
-void HDF5_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t start, size_t end) { 
-    if (mat.get_ncol() + start >= end) { // ensure they can fit in 'row_buf'; if not, it should trigger an error in insert_row().
+void HDF5_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+    if (mat.get_ncol() + first >= last) { // ensure they can fit in 'row_buf'; if not, it should trigger an error in insert_row().
         char* ref=row_buf.data();
-        for (size_t c=start; c<end; ++c, ref+=bufsize, ++in) {
+        for (size_t c=first; c<last; ++c, ref+=bufsize, ++in) {
             std::strncpy(ref, Rcpp::String(*in).get_cstring(), bufsize-1);
             ref[bufsize-1]='\0'; // strncpy only pads up to just before the last position.
         }
     }
-    mat.insert_row(r, row_buf.data(), start, end);
+    mat.insert_row(r, row_buf.data(), first, last);
     return;
 } 
 
-void HDF5_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t start, size_t end) { 
-    if (mat.get_nrow() + start >= end) { // ensure they can fit in 'col_buf'.
+void HDF5_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+    if (mat.get_nrow() + first >= last) { // ensure they can fit in 'col_buf'.
         char* ref=col_buf.data();
-        for (size_t r=start; r<end; ++r, ref+=bufsize, ++in) {
+        for (size_t r=first; r<last; ++r, ref+=bufsize, ++in) {
             std::strncpy(ref, Rcpp::String(*in).get_cstring(), bufsize-1);
             ref[bufsize-1]='\0';
         }
     }
-    mat.insert_col(c, col_buf.data(), start, end);
+    mat.insert_col(c, col_buf.data(), first, last);
     return;
 }
  
