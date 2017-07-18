@@ -32,19 +32,19 @@ public:
 
     virtual T get(size_t, size_t)=0;
 
-    void fill_row(size_t, Rcpp::IntegerVector::iterator);
-    void fill_row(size_t, Rcpp::NumericVector::iterator);
+    void set_row(size_t, Rcpp::IntegerVector::iterator);
+    void set_row(size_t, Rcpp::NumericVector::iterator);
 
-    virtual void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t)=0;
-    virtual void fill_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t)=0;
+    virtual void set_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t)=0;
+    virtual void set_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t)=0;
 
-    void fill_col(size_t, Rcpp::IntegerVector::iterator);
-    void fill_col(size_t, Rcpp::NumericVector::iterator);
+    void set_col(size_t, Rcpp::IntegerVector::iterator);
+    void set_col(size_t, Rcpp::NumericVector::iterator);
 
-    virtual void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t)=0;
-    virtual void fill_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t)=0;
+    virtual void set_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t)=0;
+    virtual void set_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t)=0;
 
-    virtual void fill(size_t, size_t, T)=0;
+    virtual void set(size_t, size_t, T)=0;
 
     virtual Rcpp::RObject yield()=0;
 
@@ -72,13 +72,13 @@ public:
 
     T get(size_t, size_t);
 
-    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void fill(size_t, size_t, T);
+    void set(size_t, size_t, T);
 
     Rcpp::RObject yield();
 
@@ -108,13 +108,13 @@ public:
 
     T get(size_t, size_t);
 
-    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void fill(size_t, size_t, T);
+    void set(size_t, size_t, T);
 
     Rcpp::RObject yield();
 
@@ -147,13 +147,13 @@ public:
 
     T get(size_t, size_t);
 
-    void fill_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void fill_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::IntegerVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::NumericVector::iterator, size_t, size_t);
 
-    void fill(size_t, size_t, T);
+    void set(size_t, size_t, T);
 
     Rcpp::RObject yield();
 

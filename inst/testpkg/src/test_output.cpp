@@ -201,13 +201,13 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
         auto oIt=order.begin();
         for (size_t c=0; c<ncols; ++c, ++oIt) {
             ptr->get_col(c, target.begin());
-            optr->fill_col(*oIt, target.begin());
+            optr->set_col(*oIt, target.begin());
    
             // Wiping, reversing and refilling. 
             std::fill(target.begin(), target.end(), 0); 
             optr->get_col(*oIt, target.begin());
             std::reverse(target.begin(), target.end()); 
-            optr2->fill_col(*oIt, target.begin());
+            optr2->set_col(*oIt, target.begin());
         }
     } else if (M[0]==2) {
         if (order.size()!=nrows){ 
@@ -217,20 +217,20 @@ SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
         auto oIt=order.begin();
         for (size_t r=0; r<nrows; ++r, ++oIt) {
             ptr->get_row(r, target.begin());
-            optr->fill_row(*oIt, target.begin());
+            optr->set_row(*oIt, target.begin());
             
             // Wiping, reversing and refilling. 
             std::fill(target.begin(), target.end(), 0); 
             optr->get_row(*oIt, target.begin());
             std::reverse(target.begin(), target.end()); 
-            optr2->fill_row(*oIt, target.begin());
+            optr2->set_row(*oIt, target.begin());
         }
     } else {
         // By cell.
         for (size_t c=0; c<ncols; ++c){ 
             for (size_t r=0; r<nrows; ++r) {
-                optr->fill(r, c, ptr->get(r, c));
-                optr2->fill(nrows-r-1, ncols-c-1, optr->get(r, c));
+                optr->set(r, c, ptr->get(r, c));
+                optr2->set(nrows-r-1, ncols-c-1, optr->get(r, c));
             }
         }
     }

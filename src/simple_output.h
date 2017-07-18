@@ -5,10 +5,10 @@ public:
     ~simple_output();
 
     template <class Iter>
-    void fill_row(size_t, Iter, size_t, size_t);
+    void set_row(size_t, Iter, size_t, size_t);
     template <class Iter>
-    void fill_col(size_t, Iter, size_t, size_t);
-    void fill(size_t, size_t, T);
+    void set_col(size_t, Iter, size_t, size_t);
+    void set(size_t, size_t, T);
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
@@ -38,7 +38,7 @@ simple_output<T, V>::~simple_output() {}
 
 template<typename T, class V>
 template<class Iter>
-void simple_output<T, V>::fill_col(size_t c, Iter in, size_t start, size_t end) {
+void simple_output<T, V>::set_col(size_t c, Iter in, size_t start, size_t end) {
     check_colargs(c, start, end);
     std::copy(in, in + end - start, data.begin()+c*(this->nrow)+start); 
     return;
@@ -46,7 +46,7 @@ void simple_output<T, V>::fill_col(size_t c, Iter in, size_t start, size_t end) 
 
 template<typename T, class V>
 template<class Iter>
-void simple_output<T, V>::fill_row(size_t r, Iter in, size_t start, size_t end) {
+void simple_output<T, V>::set_row(size_t r, Iter in, size_t start, size_t end) {
     check_rowargs(r, start, end);
     const size_t& NR=this->nrow;
     auto mIt=data.begin() + r + start * NR;
@@ -57,7 +57,7 @@ void simple_output<T, V>::fill_row(size_t r, Iter in, size_t start, size_t end) 
 }
 
 template<typename T, class V>
-void simple_output<T, V>::fill(size_t r, size_t c, T in) {
+void simple_output<T, V>::set(size_t r, size_t c, T in) {
     check_oneargs(r, c);
     data[r + (this->nrow)*c]=in;
     return;

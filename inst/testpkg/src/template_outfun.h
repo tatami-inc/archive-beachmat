@@ -22,31 +22,31 @@ Rcpp::RObject pump_out(M ptr, OX optr, OY optr2, const Rcpp::IntegerVector& mode
         T target(nrows);
         for (int c=0; c<ncols; ++c) {
             ptr->get_col(c, target.begin());
-            optr->fill_col(c, target.begin());
+            optr->set_col(c, target.begin());
                 
             std::fill(target.begin(), target.end(), 0); // Wiping, to test that target is actually re-filled properly.
             optr->get_col(c, target.begin());
             std::reverse(target.begin(), target.end()); // Reversing the order, to keep it interesting.
-            optr2->fill_col(c, target.begin());
+            optr2->set_col(c, target.begin());
         }
     } else if (Mode==2) { 
         // By row.
         T target(ncols);
         for (int r=0; r<nrows; ++r) {
             ptr->get_row(r, target.begin());
-            optr->fill_row(r, target.begin());                
+            optr->set_row(r, target.begin());                
                 
             std::fill(target.begin(), target.end(), 0);  // Wiping.
             optr->get_row(r, target.begin());
             std::reverse(target.begin(), target.end()); // Reversing.
-            optr2->fill_row(r, target.begin());
+            optr2->set_row(r, target.begin());
         }
     } else if (Mode==3) {
         // By cell.
         for (int c=0; c<ncols; ++c){ 
             for (int r=0; r<nrows; ++r) {
-                optr->fill(r, c, ptr->get(r, c));
-                optr2->fill(nrows-r-1, ncols-c-1, optr->get(r, c));
+                optr->set(r, c, ptr->get(r, c));
+                optr2->set(nrows-r-1, ncols-c-1, optr->get(r, c));
             }
         }
     } else { 
@@ -89,24 +89,24 @@ Rcpp::RObject pump_out_slice (M ptr, OX optr, OY optr2, const Rcpp::IntegerVecto
         T target(nrows);
         for (int c=0; c<ncols; ++c) {
             ptr->get_col(c+cstart, target.begin(), rstart, rend);
-            optr->fill_col(c+cstart, target.begin(), rstart, rend);
+            optr->set_col(c+cstart, target.begin(), rstart, rend);
                 
             std::fill(target.begin(), target.end(), 0); // Wiping, to test that target is actually re-filled properly.
             optr->get_col(c+cstart, target.begin(), rstart, rend);
             std::reverse(target.begin(), target.end()); // Reversing the order, to keep it interesting.
-            optr2->fill_col(c+cstart, target.begin(), rstart, rend);
+            optr2->set_col(c+cstart, target.begin(), rstart, rend);
         }
     } else if (Mode==2) { 
         // By row.
         T target(ncols);
         for (int r=0; r<nrows; ++r) {
             ptr->get_row(r+rstart, target.begin(), cstart, cend);
-            optr->fill_row(r+rstart, target.begin(), cstart, cend);
+            optr->set_row(r+rstart, target.begin(), cstart, cend);
                 
             std::fill(target.begin(), target.end(), 0); // Wiping.
             optr->get_row(r+rstart, target.begin(), cstart, cend);
             std::reverse(target.begin(), target.end()); // Reversing.
-            optr2->fill_row(r+rstart, target.begin(), cstart, cend);
+            optr2->set_row(r+rstart, target.begin(), cstart, cend);
         }
     } else { 
         throw std::runtime_error("'mode' should be in [1,2]"); 
@@ -131,8 +131,8 @@ void output_edge (M ptr, const Rcpp::IntegerVector& mode) {
     if (Mode==0) {
         ptr->get_row(0, stuff.begin(), 0, 0); // Should not break.
         ptr->get_col(0, stuff.begin(), 0, 0); 
-        ptr->fill_row(0, stuff.begin(), 0, 0); 
-        ptr->fill_col(0, stuff.begin(), 0, 0); 
+        ptr->set_row(0, stuff.begin(), 0, 0); 
+        ptr->set_col(0, stuff.begin(), 0, 0); 
     } else if (Mode==1) {
         ptr->get_row(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==-1) {
@@ -146,17 +146,17 @@ void output_edge (M ptr, const Rcpp::IntegerVector& mode) {
     } else if (Mode==-3) {
         ptr->get_col(0, stuff.begin(), 0, -1); // break!
     } else if (Mode==4) {
-        ptr->fill_row(-1, stuff.begin(), 0, 0); // break!
+        ptr->set_row(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==-4) {
-        ptr->fill_col(-1, stuff.begin(), 0, 0); // break!
+        ptr->set_col(-1, stuff.begin(), 0, 0); // break!
     } else if (Mode==5) {
-        ptr->fill_row(0, stuff.begin(), 1, 0); // break!
+        ptr->set_row(0, stuff.begin(), 1, 0); // break!
     } else if (Mode==-5) {
-        ptr->fill_col(0, stuff.begin(), 1, 0); // break!
+        ptr->set_col(0, stuff.begin(), 1, 0); // break!
     } else if (Mode==6) {
-        ptr->fill_row(0, stuff.begin(), 0, -1); // break!
+        ptr->set_row(0, stuff.begin(), 0, -1); // break!
     } else if (Mode==-6) {
-        ptr->fill_col(0, stuff.begin(), 0, -1); // break!
+        ptr->set_col(0, stuff.begin(), 0, -1); // break!
     }
    
     return;

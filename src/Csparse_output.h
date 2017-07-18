@@ -7,10 +7,10 @@ class Csparse_output : public any_matrix {
     ~Csparse_output();
 
     template <class Iter>
-    void fill_row(size_t, Iter, size_t, size_t);
+    void set_row(size_t, Iter, size_t, size_t);
     template <class Iter>
-    void fill_col(size_t, Iter, size_t, size_t);
-    void fill(size_t, size_t, T);
+    void set_col(size_t, Iter, size_t, size_t);
+    void set(size_t, size_t, T);
 
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
@@ -42,7 +42,7 @@ Csparse_output<T, V>::~Csparse_output() {}
 
 template<typename T, class V>
 template<class Iter>
-void Csparse_output<T, V>::fill_col(size_t c, Iter in, size_t first, size_t last) {
+void Csparse_output<T, V>::set_col(size_t c, Iter in, size_t first, size_t last) {
     check_colargs(c, first, last);
     std::deque<data_pair>& current=data[c];
     std::deque<data_pair> new_set;
@@ -85,7 +85,7 @@ Iter Csparse_output<T, V>::find_matching_row(Iter begin, Iter end, const data_pa
 
 template<typename T, class V>
 template<class Iter>
-void Csparse_output<T, V>::fill_row(size_t r, Iter in, size_t first, size_t last) {
+void Csparse_output<T, V>::set_row(size_t r, Iter in, size_t first, size_t last) {
     check_rowargs(r, first, last);
     for (size_t c=first; c<last; ++c, ++in) {
         if ((*in)==get_empty()) { continue; }
@@ -117,9 +117,9 @@ void Csparse_output<T, V>::fill_row(size_t r, Iter in, size_t first, size_t last
 }
 
 template<typename T, class V>
-void Csparse_output<T, V>::fill(size_t r, size_t c, T in) {
+void Csparse_output<T, V>::set(size_t r, size_t c, T in) {
     check_oneargs(r, c);
-    fill_row(r, &in, c, c+1);
+    set_row(r, &in, c, c+1);
     return;
 }
 

@@ -16,12 +16,12 @@ void character_output::get_row(size_t r, Rcpp::StringVector::iterator out) {
     get_row(r, out, 0, get_ncol());
 }
 
-void character_output::fill_col(size_t c, Rcpp::StringVector::iterator out) { 
-    fill_col(c, out, 0, get_nrow());
+void character_output::set_col(size_t c, Rcpp::StringVector::iterator out) { 
+    set_col(c, out, 0, get_nrow());
 }
 
-void character_output::fill_row(size_t r, Rcpp::StringVector::iterator out) { 
-    fill_row(r, out, 0, get_ncol());
+void character_output::set_row(size_t r, Rcpp::StringVector::iterator out) { 
+    set_row(r, out, 0, get_ncol());
 }
 
 /* Methods for the simple character matrix. */
@@ -50,16 +50,16 @@ Rcpp::String simple_character_output::get(size_t r, size_t c) {
     return mat.get(r, c);
 }
 
-void simple_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
-    mat.fill_row(r, in, first, last);
+void simple_character_output::set_row(size_t r, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+    mat.set_row(r, in, first, last);
 }
 
-void simple_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
-    mat.fill_col(c, in, first, last);
+void simple_character_output::set_col(size_t c, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+    mat.set_col(c, in, first, last);
 }
 
-void simple_character_output::fill(size_t r, size_t c, Rcpp::String in) {
-    mat.fill(r, c, in);
+void simple_character_output::set(size_t r, size_t c, Rcpp::String in) {
+    mat.set(r, c, in);
     return;
 }
 
@@ -127,7 +127,7 @@ Rcpp::String HDF5_character_output::get(size_t r, size_t c) {
     return ref;
 }
 
-void HDF5_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+void HDF5_character_output::set_row(size_t r, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
     if (mat.get_ncol() + first >= last) { // ensure they can fit in 'row_buf'; if not, it should trigger an error in insert_row().
         char* ref=row_buf.data();
         for (size_t c=first; c<last; ++c, ref+=bufsize, ++in) {
@@ -139,7 +139,7 @@ void HDF5_character_output::fill_row(size_t r, Rcpp::StringVector::iterator in, 
     return;
 } 
 
-void HDF5_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
+void HDF5_character_output::set_col(size_t c, Rcpp::StringVector::iterator in, size_t first, size_t last) { 
     if (mat.get_nrow() + first >= last) { // ensure they can fit in 'col_buf'.
         char* ref=col_buf.data();
         for (size_t r=first; r<last; ++r, ref+=bufsize, ++in) {
@@ -151,7 +151,7 @@ void HDF5_character_output::fill_col(size_t c, Rcpp::StringVector::iterator in, 
     return;
 }
  
-void HDF5_character_output::fill(size_t r, size_t c, Rcpp::String in) { 
+void HDF5_character_output::set(size_t r, size_t c, Rcpp::String in) { 
     char* ref=one_buf.data();
     std::strncpy(ref, in.get_cstring(), bufsize-1);
     ref[bufsize-1]='\0';

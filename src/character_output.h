@@ -22,13 +22,13 @@ public:
     virtual Rcpp::String get(size_t, size_t)=0;
 
     // Setters
-    void fill_row(size_t, Rcpp::StringVector::iterator); 
-    virtual void fill_row(size_t, Rcpp::StringVector::iterator, size_t, size_t)=0;
+    void set_row(size_t, Rcpp::StringVector::iterator); 
+    virtual void set_row(size_t, Rcpp::StringVector::iterator, size_t, size_t)=0;
 
-    void fill_col(size_t, Rcpp::StringVector::iterator);
-    virtual void fill_col(size_t, Rcpp::StringVector::iterator, size_t, size_t)=0;
+    void set_col(size_t, Rcpp::StringVector::iterator);
+    virtual void set_col(size_t, Rcpp::StringVector::iterator, size_t, size_t)=0;
 
-    virtual void fill(size_t, size_t, Rcpp::String)=0;
+    virtual void set(size_t, size_t, Rcpp::String)=0;
 
     // Other stuff.
     virtual Rcpp::RObject yield()=0;
@@ -53,10 +53,10 @@ public:
 
     Rcpp::String get(size_t, size_t);
 
-    void fill_row(size_t, Rcpp::StringVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
     
-    void fill(size_t, size_t, Rcpp::String);
+    void set(size_t, size_t, Rcpp::String);
 
     Rcpp::RObject yield();
 
@@ -86,10 +86,10 @@ public:
 
     Rcpp::String get(size_t, size_t);
 
-    void fill_row(size_t, Rcpp::StringVector::iterator, size_t, size_t);
-    void fill_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+    void set_row(size_t, Rcpp::StringVector::iterator, size_t, size_t);
+    void set_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
 
-    void fill(size_t, size_t, Rcpp::String);
+    void set(size_t, size_t, Rcpp::String);
 
     Rcpp::RObject yield();
 
