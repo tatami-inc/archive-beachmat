@@ -16,6 +16,7 @@ public:
     void set_chunk_dim(size_t, size_t);
     size_t get_chunk_nrow() const;
     size_t get_chunk_ncol() const;
+    void optimize_chunk_dims(size_t, size_t);
 
     int get_compression () const;
     void set_compression (int);

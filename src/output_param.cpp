@@ -59,6 +59,26 @@ size_t output_param::get_chunk_ncol() const {
     return chunk_nc;
 }
 
+void output_param::optimize_chunk_dims(size_t nr, size_t nc) {
+    // Computes the optimal chunk dimensions given the total number of rows/columns.
+    // This is a heuristic approach assuming that all values are continuous (but
+    // taking the ceiling to err on the side of conservativeness).
+    double dnc=nc, dnr=nr;
+    size_t cachesize;
+    if (nr > nc) {
+        cachesize=std::ceil(dnr*std::sqrt(dnc));
+    } else {
+        cachesize=std::ceil(dnc*std::sqrt(dnr));
+    }
+    chunk_nr=std::ceil(cachesize/dnc); 
+    chunk_nc=std::ceil(cachesize/dnr);
+
+    // Further work to guarantee that it involves fewer reads.
+    chunk_nr=std::max(chunk_nr, size_t(std::ceil(dnc/chunk_nc)));
+    chunk_nc=std::max(chunk_nc, size_t(std::ceil(dnr/chunk_nr)));
+    return;
+}
+
 int output_param::get_compression() const {
     return compress;
 }
