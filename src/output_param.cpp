@@ -60,6 +60,12 @@ size_t output_param::get_chunk_ncol() const {
 }
 
 void output_param::optimize_chunk_dims(size_t nr, size_t nc) {
+    if (!nr || !nc) {
+        chunk_nr=0;
+        chunk_nc=0;
+        return;
+    }
+
     // Computes the optimal chunk dimensions given the total number of rows/columns.
     // This is a heuristic approach assuming that all values are continuous (but
     // taking the ceiling to err on the side of conservativeness).
