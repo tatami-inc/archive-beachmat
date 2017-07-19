@@ -1,5 +1,7 @@
 #include "any_matrix.h"
 
+namespace beachmat { 
+
 any_matrix::any_matrix() : nrow(0), ncol(0) {}
 
 any_matrix::any_matrix(size_t nr, size_t nc) : nrow(nr), ncol(nc) {}
@@ -48,4 +50,6 @@ void any_matrix::check_oneargs(size_t r, size_t c) const {
         throw std::runtime_error("column or row indices out of range");
     }
     return;
+}
+
 }

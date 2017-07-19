@@ -1,3 +1,14 @@
+#ifndef BEACHMAT_SIMPLE_OUTPUT_H
+#define BEACHMAT_SIMPLE_OUTPUT_H
+
+#include "beachmat.h"
+#include "utils.h"
+#include "any_matrix.h"
+
+namespace beachmat {
+
+/*** Class definition ***/
+
 template<typename T, class V>
 class simple_output : public any_matrix {
 public:
@@ -103,3 +114,7 @@ template<typename T, class V>
 matrix_type simple_output<T, V>::get_matrix_type() const {
     return SIMPLE;
 }
+
+}
+
+#endif

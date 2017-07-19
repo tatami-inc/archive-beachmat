@@ -5,6 +5,8 @@
 
 /* Virtual base class for matrices. */
 
+namespace beachmat{
+
 class any_matrix {
 public:
     any_matrix();
@@ -19,5 +21,7 @@ protected:
     void check_colargs(size_t, size_t, size_t) const;
     void check_oneargs(size_t, size_t) const;
 };
+
+}
 
 #endif

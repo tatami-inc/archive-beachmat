@@ -4,6 +4,7 @@
 #include "beachmat.h"
 #include "any_matrix.h"
 #include "HDF5_utils.h"
+#include "output_param.h"
 
 namespace beachmat {
 

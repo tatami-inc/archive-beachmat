@@ -1,4 +1,4 @@
-#include "character_matrix.h"
+#include "character_output.h"
 
 namespace beachmat {
 

@@ -5,14 +5,8 @@
 #include "utils.h"
 #include "any_matrix.h"
 
-namespace beachmat {
-
 #include "simple_output.h"
-
 #include "Csparse_output.h"
-
-}
-
 #include "HDF5_output.h"
 
 #endif
