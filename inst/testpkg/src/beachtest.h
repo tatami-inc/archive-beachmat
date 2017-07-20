@@ -127,6 +127,14 @@ SEXP test_logical_to_integer_output (SEXP, SEXP);
 
 SEXP test_logical_to_numeric_output (SEXP, SEXP);
 
+// Output mode checks.
+
+SEXP select_output_by_sexp (SEXP, SEXP, SEXP);
+
+SEXP select_output_by_mode (SEXP, SEXP, SEXP);
+
+SEXP get_all_modes();
+    
 // Output edge cases.
 
 SEXP test_integer_edge_output (SEXP, SEXP);

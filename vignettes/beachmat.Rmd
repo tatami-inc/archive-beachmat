@@ -300,7 +300,7 @@ beachmat::output_param oparam(dptr->get_matrix_type(), /* simplify = */ true, /*
 
 The `simplify` argument indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
 If `false`, a `HDF5Matrix` output object will be returned instead.
-The `preserve_zero` argument indicates whether a `*gCMatrix` input should result in a `*gCMatrix` output (for logical or double-precision data only).
+The `preserve_zero` argument indicates whether a `*gCMatrix` input should result in a `*gCMatrix` output when `simplify=false` (for logical or double-precision data only).
 Exact zeroes are detected and ignored when filling this matrix.
 
 ## Methods for output matrices

@@ -179,7 +179,7 @@ SEXP test_character_edge_output (SEXP in, SEXP mode) {
 
 /* Sparse output. */
 
-SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
+SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) { // We need to check 'order', so we can't just re-use 'pump_out'.
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in); // should be a sparse matrix.
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in, false, true)); // a sparse matrix as output.
@@ -250,3 +250,43 @@ SEXP test_sparse_numeric_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     return pump_out_slice<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }
+
+/* Checking output type selection. */
+
+SEXP select_output_by_sexp (SEXP incoming, SEXP simplify, SEXP preserve_zero) {
+    beachmat::output_param op(incoming, Rf_asLogical(simplify), Rf_asLogical(preserve_zero));
+    return Rcpp::IntegerVector::create(op.get_mode());
+}
+
+SEXP select_output_by_mode (SEXP incoming, SEXP simplify, SEXP preserve_zero) {
+    beachmat::matrix_type mode;
+    
+    Rcpp::StringVector requested(incoming);
+    std::string thingy=Rcpp::as<std::string>(requested[0]);
+    if (thingy=="simple") {
+        mode=beachmat::SIMPLE;
+    } else if (thingy=="HDF5") {
+        mode=beachmat::HDF5;
+    } else if (thingy=="sparse") {
+        mode=beachmat::SPARSE;
+    } else if (thingy=="RLE") {
+        mode=beachmat::RLE;
+    } else if (thingy=="dense") {
+        mode=beachmat::DENSE;
+    } else if (thingy=="Psymm") {
+        mode=beachmat::PSYMM;
+    }
+
+    beachmat::output_param op(mode, Rf_asLogical(simplify), Rf_asLogical(preserve_zero));
+    return Rcpp::IntegerVector::create(op.get_mode());
+}
+
+SEXP get_all_modes () {
+    return Rcpp::IntegerVector::create(Rcpp::Named("simple")=beachmat::SIMPLE,
+                                       Rcpp::Named("HDF5")=beachmat::HDF5,
+                                       Rcpp::Named("sparse")=beachmat::SPARSE,
+                                       Rcpp::Named("RLE")=beachmat::RLE,
+                                       Rcpp::Named("dense")=beachmat::DENSE,
+                                       Rcpp::Named("Psymm")=beachmat::PSYMM);
+}
+

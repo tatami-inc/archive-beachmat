@@ -79,6 +79,11 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_logical_to_integer_output, 2),
     REGISTER(test_logical_to_numeric_output, 2),
 
+    // Output mode tests.
+    REGISTER(select_output_by_sexp, 3),
+    REGISTER(select_output_by_mode, 3),
+    REGISTER(get_all_modes, 0),
+
     // Output edge cases.
     REGISTER(test_integer_edge_output, 2),
     REGISTER(test_numeric_edge_output, 2),

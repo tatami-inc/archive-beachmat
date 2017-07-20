@@ -298,6 +298,20 @@ test_that("Numeric matrix output conversions are okay", {
     beachtest:::check_numeric_converted_output(hFUN, hdf5.out=TRUE)
 })
 
+# Testing mode choices:
+
+test_that("Numeric matrix mode choices are okay", {
+    expect_identical(beachtest:::check_output_mode(sFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(csFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(spFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(rFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(csFUN, simplify=FALSE, preserve.zero=TRUE), "sparse")
+    expect_identical(beachtest:::check_output_mode(csFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+    expect_identical(beachtest:::check_output_mode(rFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+    expect_identical(beachtest:::check_output_mode(spFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+    expect_identical(beachtest:::check_output_mode(hFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+})
+
 # Testing for errors:
 
 test_that("Numeric matrix output error generation is okay", {

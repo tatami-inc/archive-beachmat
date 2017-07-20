@@ -263,6 +263,17 @@ check_logical_converted_output <- function(FUN, ..., hdf5.out) {
                             })
 }
 
+###############################
+
+check_output_mode <- function(incoming, ..., simplify, preserve.zero) {
+    all.modes <- .Call(cxx_get_all_modes)
+    if (is.character(incoming)) { 
+        out <- .Call(cxx_select_output_by_mode, incoming, simplify, preserve.zero)
+    } else {
+        out <- .Call(cxx_select_output_by_sexp, incoming(...), simplify, preserve.zero)
+    }
+    return(names(all.modes)[all.modes==out])
+}
 
 ###############################
 
