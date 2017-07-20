@@ -292,6 +292,12 @@ beachmat::output_param oparam(dmat, /* simplify = */ true, /* preserve_zero = */
 std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, oparam);
 ```
 
+A similar process can be used for a pointer `dptr` to an existing `*_matrix` instance:
+
+```
+beachmat::output_param oparam(dptr->get_matrix_type(), /* simplify = */ true, /* preserve_zero = */ false);
+```
+
 The `simplify` argument indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
 If `false`, a `HDF5Matrix` output object will be returned instead.
 The `preserve_zero` argument indicates whether a `*gCMatrix` input should result in a `*gCMatrix` output (for logical or double-precision data only).
@@ -346,6 +352,9 @@ An alternative is to directly specify the chunk dimensions using `oparam.set_chu
 where `chunk_nr` and `chunk_nc` are the chunk rows and columns respectively.
 Similarly, the compression level can be set using `oparam.set_compression(compress)`, where `compress` can range from 0 (contiguous) to 9 (most compression).
 If specified, these settings will override the default behaviour, but will have no effect for non-HDF5 output.
+- For consecutive row and column access from a matrix with dimensions `nr`-by-`nc`, the optimal chunk dimensions can be specified with `oparam.optimize_chunk_dims(nr, nc)`.
+_beachmat_ exploits the chunk cache to store all chunks along a row or column, thus avoiding the need to reload data for the next row or column.
+These chunk settings are designed to minimize the chunk cache size while also reducing the number of disk reads.
 - HDF5 character output is stored as fixed-width character arrays.
 As such, the API must know the maximum string length during construction of a `character_output` instance.
 This can be set using `oparam.set_strlen(strlen)` where `strlen` is the length of a C-style string, _not including the null-terminating character_.
