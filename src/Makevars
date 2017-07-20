@@ -1,7 +1,6 @@
-RHDF5LIB_LIBS=$(shell echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
-	"${R_HOME}/bin/R" --vanilla --slave)
+RHDF5LIB_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
+	"${R_HOME}/bin/R" --vanilla --slave`
 PKG_LIBS=$(RHDF5LIB_LIBS)
-PKG_LIBS+=$(shell ${R_HOME}/bin/R CMD config --ldflags)
 
 all: $(SHLIB) copying
 
@@ -14,22 +13,21 @@ EXPORT_HEADERS=any_matrix.h utils.h beachmat.h HDF5_utils.h output_param.h \
 EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o HDF5_utils.o output_param.o
 
 # Wait for R to build the shared object, and then pick up the object files.
+libbeachmat.a: $(SHLIB)
+	ar rc libbeachmat.a $(EXPORT_OBJECTS)
 
-# this is sufficient to build static library with the suitable version of ar
-libbeachmat.a: $(EXPORT_OBJECTS)
+SHLIB_CXXLD=`${R_HOME}/bin/R CMD config SHLIB_CXXLD`
+LDFLAGS=`${R_HOME}/bin/R CMD config LDFLAGS`
+SHLIB_CXXLDFLAGS=`${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS` 
 
-SHLIB_CXXLD=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLD)
-LDFLAGS=$(shell ${R_HOME}/bin/R CMD config LDFLAGS)
-SHLIB_CXXLDFLAGS=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS) 
-
-libbeachmat.dll: $(SHLIB)
-	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
+libbeachmat.so: $(SHLIB)
+	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
  
 # Specifying copying locations.  
 BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib${R_ARCH}"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
-copying: libbeachmat.dll libbeachmat.a
+copying: libbeachmat.a libbeachmat.so
 	mkdir -p $(BEACHMAT_LIBDIR) $(BEACHMAT_INCLUDEDIR)
 	cp $(EXPORT_HEADERS) $(BEACHMAT_INCLUDEDIR)
 	mv libbeachmat.* $(BEACHMAT_LIBDIR)
