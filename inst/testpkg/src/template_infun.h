@@ -31,11 +31,13 @@ O fill_up (M ptr, const Rcpp::IntegerVector& mode, SEXP ordering=R_NilValue) {
             std::copy(tmp.begin(), tmp.end(), order.begin());
         }
 
-        for (const auto& c : order) {
-            ptr->get_col(c, target.begin());
+        size_t c=0;
+        for (const auto& o : order) {
+            ptr->get_col(o, target.begin());
             for (int r=0; r<nrows; ++r) {
                 output[c * nrows + r]=target[r];
             }
+            ++c;
         }
     } else if (Mode==2) { 
         // By row.
@@ -51,11 +53,13 @@ O fill_up (M ptr, const Rcpp::IntegerVector& mode, SEXP ordering=R_NilValue) {
             std::copy(tmp.begin(), tmp.end(), order.begin());
         }
 
-        for (const auto& r : order) {
-            ptr->get_row(r, target.begin());
+        size_t r=0;
+        for (const auto& o : order) {
+            ptr->get_row(o, target.begin());
             for (int c=0; c<ncols; ++c) {
                 output[c * nrows + r]=target[c];
             }
+            ++r;
         }
     } else if (Mode==3) {
         // By cell.

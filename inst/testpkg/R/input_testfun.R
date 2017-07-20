@@ -19,11 +19,18 @@
             ranges <- list(integer(0)) # doesn't matter.
         }
 
-        # We should get the same results, regardless of the order.
+        # Checking that re-ordered requests behave as expected.
         ref <- as.matrix(test.mat)
         dimnames(ref) <- NULL
         for (ordering in ranges) {
-            testthat::expect_identical(ref, .Call(cxxfun, test.mat, it, ordering))
+            if (it==1L) {
+                ref2 <- ref[,ordering+1L,drop=FALSE]
+            } else if(it==2L) {
+                ref2 <- ref[ordering+1L,,drop=FALSE]
+            } else {
+                ref2 <- ref
+            }
+            testthat::expect_identical(ref2, .Call(cxxfun, test.mat, it, ordering))
         }
     }
     return(invisible(NULL))

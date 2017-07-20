@@ -33,20 +33,24 @@
                 }
                 out[[1]] <- as.matrix(out[[1]])
             }      
+
+            # Reordering 'ref' to match the expected output. Also checking the flipped matrix.
+            # Here, we extract values by row/column from the filled output matrix, flip the values and refill the output matrix. 
+            # This checks whether the getters of the output matrix work as expected.
             ref <- as.matrix(test.mat)
-            testthat::expect_identical(ref, out[[1]])
-    
-            # Checking the flipped matrix. Here, we extract values by row/column from the filled output matrix, flip
-            # the values and refill the output matrix. This checks whether the getters of the output matrix work as expected.
             if (i==1L) {
-                ref <- ref[nrow(ref):1,,drop=FALSE]
+                ref[,ordering+1L] <- ref
+                fref <- ref[nrow(ref):1,,drop=FALSE]
             } else if (i==2L) {
-                ref <- ref[,ncol(ref):1,drop=FALSE]
+                ref[ordering+1L,] <- ref
+                fref <- ref[,ncol(ref):1,drop=FALSE]
             } else if (i==3L) {
-                ref <- ref[nrow(ref):1,ncol(ref):1,drop=FALSE]
+                fref <- ref[nrow(ref):1,ncol(ref):1,drop=FALSE]
             }
-            dimnames(ref) <- NULL
-            testthat::expect_identical(ref, out[[2]])
+
+            testthat::expect_identical(ref, out[[1]])
+            dimnames(fref) <- NULL
+            testthat::expect_identical(fref, out[[2]])
         }
     }
     return(invisible(NULL))

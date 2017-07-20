@@ -32,14 +32,17 @@ Rcpp::RObject pump_out(M ptr, OX optr, OY optr2, const Rcpp::IntegerVector& mode
             std::copy(tmp.begin(), tmp.end(), order.begin());
         }
 
-        for (const auto& c : order) { 
+        size_t c=0;
+        for (const auto& o : order) { 
             ptr->get_col(c, target.begin());
-            optr->set_col(c, target.begin());
+            optr->set_col(o, target.begin());
                 
             std::fill(target.begin(), target.end(), 0); // Wiping, to test that target is actually re-filled properly.
-            optr->get_col(c, target.begin());
+            optr->get_col(o, target.begin());
             std::reverse(target.begin(), target.end()); // Reversing the order, to keep it interesting.
-            optr2->set_col(c, target.begin());
+            optr2->set_col(o, target.begin());
+
+            ++c;
         }
     } else if (Mode==2) { 
         // By row.
@@ -54,15 +57,18 @@ Rcpp::RObject pump_out(M ptr, OX optr, OY optr2, const Rcpp::IntegerVector& mode
             }
             std::copy(tmp.begin(), tmp.end(), order.begin());
         }
-        
-        for (const auto& r : order) {
+       
+        size_t r=0; 
+        for (const auto& o : order) {
             ptr->get_row(r, target.begin());
-            optr->set_row(r, target.begin());                
+            optr->set_row(o, target.begin());                
                 
             std::fill(target.begin(), target.end(), 0);  // Wiping.
-            optr->get_row(r, target.begin());
+            optr->get_row(o, target.begin());
             std::reverse(target.begin(), target.end()); // Reversing.
-            optr2->set_row(r, target.begin());
+            optr2->set_row(o, target.begin());
+
+            ++r;
         }
     } else if (Mode==3) {
         // By cell.
