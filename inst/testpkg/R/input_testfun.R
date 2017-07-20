@@ -6,6 +6,7 @@
     for (it in seq_len(3)) {
         test.mat <- FUN(...)
 
+        # Specifying the order of the requests.
         if (it==1L) {
             ranges <- list(forward=seq_len(ncol(test.mat))-1L,
                            random=sample(ncol(test.mat))-1L)
@@ -18,6 +19,7 @@
             ranges <- list(integer(0)) # doesn't matter.
         }
 
+        # We should get the same results, regardless of the order.
         ref <- as.matrix(test.mat)
         dimnames(ref) <- NULL
         for (ordering in ranges) {
