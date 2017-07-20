@@ -15,6 +15,9 @@ EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix
 
 # Wait for R to build the shared object, and then pick up the object files.
 
+# this is sufficient to build static library with the suitable version of ar
+libbeachmat.a: $(EXPORT_OBJECTS)
+
 SHLIB_CXXLD=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLD)
 LDFLAGS=$(shell ${R_HOME}/bin/R CMD config LDFLAGS)
 SHLIB_CXXLDFLAGS=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS) 
@@ -23,10 +26,10 @@ libbeachmat.dll: $(SHLIB)
 	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
  
 # Specifying copying locations.  
-BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
+BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib${R_ARCH}"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
-copying: libbeachmat.dll
+copying: libbeachmat.dll libbeachmat.a
 	mkdir -p $(BEACHMAT_LIBDIR) $(BEACHMAT_INCLUDEDIR)
 	cp $(EXPORT_HEADERS) $(BEACHMAT_INCLUDEDIR)
 	mv libbeachmat.* $(BEACHMAT_LIBDIR)
