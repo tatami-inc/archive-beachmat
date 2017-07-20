@@ -1,3 +1,8 @@
 BEACHMAT_LIBS=$(shell echo 'beachmat::pkgconfig("PKG_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave)
-PKG_LIBS=$(BEACHMAT_LIBS)
+
+## this is also needed when linking against the static libbeachmat library
+RHDF5_LIBS=$(shell echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave)
+    
+PKG_LIBS=${BEACHMAT_LIBS} ${RHDF5_LIBS}
