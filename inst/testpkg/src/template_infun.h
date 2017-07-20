@@ -3,11 +3,12 @@
 
 /* This function tests the get_row/get_col methods, and that they properly
  * call the get_row/get_col methods of the derived classes (along with the
- * correct arguments to the overloaded virtual methods). 
+ * correct arguments to the overloaded virtual methods). It also allows 
+ * for reordered requests to test that extraction is not affected by order.
  */
 
 template <class T, class O, class M>  // M is automatically deduced.
-O fill_up (M ptr, const Rcpp::IntegerVector& mode) {
+O fill_up (M ptr, const Rcpp::IntegerVector& mode, SEXP ordering=R_NilValue) { 
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
@@ -19,7 +20,18 @@ O fill_up (M ptr, const Rcpp::IntegerVector& mode) {
     if (Mode==1) { 
         // By column.
         T target(nrows);
-        for (int c=0; c<ncols; ++c) {
+        Rcpp::IntegerVector order(ncols);
+        if (ordering==R_NilValue) {
+            std::iota(order.begin(), order.end(), 0);            
+        } else {
+            Rcpp::IntegerVector tmp(ordering);
+            if (tmp.size()!=ncols) {
+                throw std::runtime_error("order should be of length equal to the number of columns");
+            }
+            std::copy(tmp.begin(), tmp.end(), order.begin());
+        }
+
+        for (const auto& c : order) {
             ptr->get_col(c, target.begin());
             for (int r=0; r<nrows; ++r) {
                 output[c * nrows + r]=target[r];
@@ -28,7 +40,18 @@ O fill_up (M ptr, const Rcpp::IntegerVector& mode) {
     } else if (Mode==2) { 
         // By row.
         T target(ncols);
-        for (int r=0; r<nrows; ++r) {
+        Rcpp::IntegerVector order(nrows);
+        if (ordering==R_NilValue) {
+            std::iota(order.begin(), order.end(), 0);            
+        } else {
+            Rcpp::IntegerVector tmp(ordering);
+            if (tmp.size()!=nrows) {
+                throw std::runtime_error("order should be of length equal to the number of rows");
+            }
+            std::copy(tmp.begin(), tmp.end(), order.begin());
+        }
+
+        for (const auto& r : order) {
             ptr->get_row(r, target.begin());
             for (int c=0; c<ncols; ++c) {
                 output[c * nrows + r]=target[c];
@@ -98,9 +121,7 @@ O fill_up_slice (M ptr, const Rcpp::IntegerVector& mode, const Rcpp::IntegerVect
     return output;
 }
 
-/* This function tests the get_const_col methods, with or
- * without the use of slices.
- */
+/* This function tests the get_const_col methods, with or without the use of slices.  */
 
 template <class T, class O, class M>  
 O fill_up_const (M ptr) {

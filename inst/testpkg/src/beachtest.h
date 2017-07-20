@@ -11,13 +11,13 @@ extern "C" {
 
 // Standard access.
 
-SEXP test_numeric_access (SEXP, SEXP);
+SEXP test_numeric_access (SEXP, SEXP, SEXP);
 
-SEXP test_integer_access (SEXP, SEXP);
+SEXP test_integer_access (SEXP, SEXP, SEXP);
 
-SEXP test_logical_access (SEXP, SEXP);
+SEXP test_logical_access (SEXP, SEXP, SEXP);
 
-SEXP test_character_access (SEXP, SEXP);
+SEXP test_character_access (SEXP, SEXP, SEXP);
 
 SEXP test_numeric_slice (SEXP, SEXP, SEXP, SEXP);
 
@@ -60,8 +60,6 @@ SEXP test_integer_nonzero_slice (SEXP, SEXP, SEXP,SEXP);
 SEXP test_logical_nonzero_slice (SEXP, SEXP, SEXP,SEXP);
 
 // Sparse access.
-
-SEXP test_sparse_numeric(SEXP, SEXP);
 
 SEXP test_sparse_numeric_slice(SEXP, SEXP);
 
