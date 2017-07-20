@@ -24,7 +24,7 @@ libbeachmat.so: $(SHLIB)
 	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
  
 # Specifying copying locations.  
-BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
+BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib${R_ARCH}"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
 copying: libbeachmat.a libbeachmat.so
