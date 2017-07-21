@@ -16,13 +16,13 @@ pkgconfig <- function(opt = c("PKG_LIBS", "PKG_CPPFLAGS"))
         }, Darwin={
             sprintf('%s/libbeachmat.a %s -pthread', patharch, capture.output(Rhdf5lib::pkgconfig("PKG_CXX_LIBS")))
         }, Windows={
-          ## for some reason double quotes aren't always sufficient
-          ## so we use the 8+3 form of the path
-          patharch <- gsub(x = shortPathName(patharch),
-                           pattern = "\\",
-                           replacement = "/", 
-                           fixed = TRUE)
-          sprintf('-L%s -lbeachmat', patharch)
+            ## for some reason double quotes aren't always sufficient
+            ## so we use the 8+3 form of the path
+            patharch <- gsub(x = utils::shortPathName(patharch),
+                             pattern = "\\",
+                             replacement = "/", 
+                             fixed = TRUE)
+            sprintf('-L%s -lbeachmat', patharch)
         }
     )})
 
