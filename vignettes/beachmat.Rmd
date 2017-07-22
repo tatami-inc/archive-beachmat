@@ -106,12 +106,13 @@ importFrom(Rcpp, sourceCpp)
 (The exact function to be imported doesn't matter, as long as the namespace is loaded.
 Check out the `r CRANpkg("Rcpp")` documentation for more details.)
 
-_beachmat_ itself should be added to the `Suggests` field, which prevents esoteric errors under certain `R CMD check` settings.
-If you intend to accept instances of `r CRANpkg("Matrix")`, `r Biocpkg("HDF5Array")` or `r Biocpkg("DelayedArray")` classes, these packages should also be listed in the `Suggests` field, if they are not already in `Imports` or `Depends`:
+`r Biocpkg("HDF5Array")`, `r Biocpkg("DelayedArray")` and  _beachmat_ itself should be added to the `Suggests` field, as the API will perform some calls to R functions in those packages to query certain parameters. 
+If you intend to accept instances of `r CRANpkg("Matrix")` classes, the package should also be listed in the `Suggests` field, if not already in `Imports` or `Depends`:
 
 ```
-Suggests: beachmat, Matrix, HDF5Array, DelayedArray
+Suggests: beachmat, HDF5Array, DelayedArray, Matrix
 ```
+
 
 # Overview of the API (input)
 
