@@ -22,7 +22,7 @@ pkgconfig <- function(opt = c("PKG_LIBS", "PKG_CPPFLAGS"))
                              pattern = "\\",
                              replacement = "/", 
                              fixed = TRUE)
-            sprintf('-L%s -lbeachmat', patharch)
+            sprintf('-L%s -lbeachmat %s', patharch, capture.output(Rhdf5lib::pkgconfig("PKG_CXX_LIBS")))
         }
     )})
 
