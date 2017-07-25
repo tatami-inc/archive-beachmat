@@ -140,6 +140,13 @@ test_that("HDF5 character matrix output is okay", {
     beachtest:::check_character_order(hFUN)
 })
 
+test_that("Numeric matrix mode choices are okay", {
+    expect_identical(beachtest:::check_output_mode(sFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(rFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(rFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+    expect_identical(beachtest:::check_output_mode(hFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+})
+
 # Testing for errors:
 
 test_that("Character matrix output error generation is okay", {

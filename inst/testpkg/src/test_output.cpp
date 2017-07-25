@@ -3,41 +3,41 @@
 
 /* Realized output functions. */
 
-SEXP test_integer_output(SEXP in, SEXP mode) {
+SEXP test_integer_output(SEXP in, SEXP mode, SEXP order) {
     BEGIN_RCPP
     auto ptr=beachmat::create_integer_matrix(in);
     auto optr=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in));
     auto optr2=beachmat::create_integer_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
-    return pump_out<Rcpp::IntegerVector>(ptr.get(), optr.get(), optr2.get(), mode);
+    return pump_out<Rcpp::IntegerVector>(ptr.get(), optr.get(), optr2.get(), mode, order);
     END_RCPP
 }
 
-SEXP test_logical_output(SEXP in, SEXP mode) {
+SEXP test_logical_output(SEXP in, SEXP mode, SEXP order) {
     BEGIN_RCPP
     auto ptr=beachmat::create_logical_matrix(in);
     auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in));
     auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
-    return pump_out<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode);
+    return pump_out<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode, order);
     END_RCPP
 }
 
-SEXP test_numeric_output(SEXP in, SEXP mode) {
+SEXP test_numeric_output(SEXP in, SEXP mode, SEXP order) {
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in);
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in));
     auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
-    return pump_out<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode);
+    return pump_out<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, order);
     END_RCPP
 }
 
-SEXP test_character_output(SEXP in, SEXP mode) {
+SEXP test_character_output(SEXP in, SEXP mode, SEXP order) {
     BEGIN_RCPP
     auto ptr=beachmat::create_character_matrix(in);
     beachmat::output_param op(in);
     op.set_strlen(10);
     auto optr=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), op);
     auto optr2=beachmat::create_character_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
-    return pump_out<Rcpp::StringVector>(ptr.get(), optr.get(), optr2.get(), mode);
+    return pump_out<Rcpp::StringVector>(ptr.get(), optr.get(), optr2.get(), mode, order);
     END_RCPP
 }
 
@@ -179,66 +179,12 @@ SEXP test_character_edge_output (SEXP in, SEXP mode) {
 
 /* Sparse output. */
 
-SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP rorder) {
+SEXP test_sparse_numeric_output(SEXP in, SEXP mode, SEXP order) { 
     BEGIN_RCPP
     auto ptr=beachmat::create_numeric_matrix(in); // should be a sparse matrix.
     auto optr=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in, false, true)); // a sparse matrix as output.
     auto optr2=beachmat::create_numeric_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
-
-    Rcpp::IntegerVector M(mode);
-    if (M.size()!=1) { 
-        throw std::runtime_error("mode should be an integer scalar");
-    } 
-    Rcpp::IntegerVector order(rorder);
-    const size_t& nrows=ptr->get_nrow();
-    const size_t& ncols=ptr->get_ncol();
-
-    if (M[0]==1) {
-        if (order.size()!=ncols) {
-            throw std::runtime_error("order should be of length equal to the number of columns");
-        }
-        Rcpp::NumericVector target(nrows);
-        auto oIt=order.begin();
-        for (size_t c=0; c<ncols; ++c, ++oIt) {
-            ptr->get_col(c, target.begin());
-            optr->set_col(*oIt, target.begin());
-   
-            // Wiping, reversing and refilling. 
-            std::fill(target.begin(), target.end(), 0); 
-            optr->get_col(*oIt, target.begin());
-            std::reverse(target.begin(), target.end()); 
-            optr2->set_col(*oIt, target.begin());
-        }
-    } else if (M[0]==2) {
-        if (order.size()!=nrows){ 
-            throw std::runtime_error("order should be of length equal to the number of rows");
-        }
-        Rcpp::NumericVector target(ncols);
-        auto oIt=order.begin();
-        for (size_t r=0; r<nrows; ++r, ++oIt) {
-            ptr->get_row(r, target.begin());
-            optr->set_row(*oIt, target.begin());
-            
-            // Wiping, reversing and refilling. 
-            std::fill(target.begin(), target.end(), 0); 
-            optr->get_row(*oIt, target.begin());
-            std::reverse(target.begin(), target.end()); 
-            optr2->set_row(*oIt, target.begin());
-        }
-    } else {
-        // By cell.
-        for (size_t c=0; c<ncols; ++c){ 
-            for (size_t r=0; r<nrows; ++r) {
-                optr->set(r, c, ptr->get(r, c));
-                optr2->set(nrows-r-1, ncols-c-1, optr->get(r, c));
-            }
-        }
-    }
-
-    Rcpp::List output(2);
-    output[0]=optr->yield();
-    output[1]=optr2->yield();
-    return output;
+    return pump_out<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, order);
     END_RCPP
 }
 
@@ -250,3 +196,61 @@ SEXP test_sparse_numeric_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
     return pump_out_slice<Rcpp::NumericVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
     END_RCPP
 }
+
+SEXP test_sparse_logical_output(SEXP in, SEXP mode, SEXP order) { 
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in); // should be a sparse matrix.
+    auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in, false, true)); // a sparse matrix as output.
+    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
+    return pump_out<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode, order);
+    END_RCPP
+}
+
+SEXP test_sparse_logical_output_slice(SEXP in, SEXP mode, SEXP rx, SEXP cx) {
+    BEGIN_RCPP
+    auto ptr=beachmat::create_logical_matrix(in); // should be a sparse matrix.
+    auto optr=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::output_param(in, false, true)); // a sparse matrix as output.
+    auto optr2=beachmat::create_logical_output(ptr->get_nrow(), ptr->get_ncol(), beachmat::SIMPLE_PARAM);
+    return pump_out_slice<Rcpp::LogicalVector>(ptr.get(), optr.get(), optr2.get(), mode, rx, cx);
+    END_RCPP
+}
+
+/* Checking output type selection. */
+
+SEXP select_output_by_sexp (SEXP incoming, SEXP simplify, SEXP preserve_zero) {
+    beachmat::output_param op(incoming, Rf_asLogical(simplify), Rf_asLogical(preserve_zero));
+    return Rcpp::IntegerVector::create(op.get_mode());
+}
+
+SEXP select_output_by_mode (SEXP incoming, SEXP simplify, SEXP preserve_zero) {
+    beachmat::matrix_type mode;
+    
+    Rcpp::StringVector requested(incoming);
+    std::string thingy=Rcpp::as<std::string>(requested[0]);
+    if (thingy=="simple") {
+        mode=beachmat::SIMPLE;
+    } else if (thingy=="HDF5") {
+        mode=beachmat::HDF5;
+    } else if (thingy=="sparse") {
+        mode=beachmat::SPARSE;
+    } else if (thingy=="RLE") {
+        mode=beachmat::RLE;
+    } else if (thingy=="dense") {
+        mode=beachmat::DENSE;
+    } else if (thingy=="Psymm") {
+        mode=beachmat::PSYMM;
+    }
+
+    beachmat::output_param op(mode, Rf_asLogical(simplify), Rf_asLogical(preserve_zero));
+    return Rcpp::IntegerVector::create(op.get_mode());
+}
+
+SEXP get_all_modes () {
+    return Rcpp::IntegerVector::create(Rcpp::Named("simple")=beachmat::SIMPLE,
+                                       Rcpp::Named("HDF5")=beachmat::HDF5,
+                                       Rcpp::Named("sparse")=beachmat::SPARSE,
+                                       Rcpp::Named("RLE")=beachmat::RLE,
+                                       Rcpp::Named("dense")=beachmat::DENSE,
+                                       Rcpp::Named("Psymm")=beachmat::PSYMM);
+}
+

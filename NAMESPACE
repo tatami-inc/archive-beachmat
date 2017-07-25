@@ -9,5 +9,5 @@ importFrom("methods", is)
 importFrom("HDF5Array", getHDF5DumpFile, getHDF5DumpName, getHDF5DumpChunkDim, appendDatasetCreationToHDF5DumpLog, HDF5Array, getHDF5DumpCompressionLevel)
 importFrom("DelayedArray", type)
 
-export(pkgconfig, rechunkByMargins)
+export(pkgconfig, rechunkByMargins, getBestChunkDims)
 

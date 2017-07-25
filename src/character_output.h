@@ -1,4 +1,8 @@
+#ifndef BEACHMAT_CHARACTER_OUTPUT_H
+#define BEACHMAT_CHARACTER_OUTPUT_H
+
 #include "Output_matrix.h"
+#include "output_param.h"
 
 namespace beachmat { 
 
@@ -107,3 +111,5 @@ protected:
 std::unique_ptr<character_output> create_character_output(int, int, const output_param&);
 
 }
+
+#endif

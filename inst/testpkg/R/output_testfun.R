@@ -2,48 +2,78 @@
 
 ###############################
 
-.check_output_mat <- function(FUN, ..., hdf5.out, cxxfun) { 
+.check_output_mat <- function(FUN, ..., class.out, cxxfun) { 
     for (i in 1:3) { 
         test.mat <- FUN(...)
-        
-        out <- .Call(cxxfun, test.mat, i)
-        if (hdf5.out) { 
-            testthat::expect_s4_class(out[[1]], "HDF5Matrix")
-            testthat::expect_equal(out[[1]]@seed@first_val, as.vector(out[[1]][1,1]))
-            testthat::expect_identical(dim(out[[1]]), dim(test.mat))
-            out[[1]] <- as.matrix(out[[1]])
-        }      
-        ref <- as.matrix(test.mat)
-        testthat::expect_identical(ref, out[[1]])
 
-        # Checking the flipped matrix. Here, we extract values by row/column from the filled output matrix, flip
-        # the values and refill the output matrix. This checks whether the getters of the output matrix work as expected.
+        # Specifying order.
         if (i==1L) {
-            ref <- ref[nrow(ref):1,,drop=FALSE]
+            ranges <- list(forward=seq_len(ncol(test.mat))-1L,
+                           random=sample(ncol(test.mat))-1L)
+            ranges$reverse <- rev(ranges$forward)
         } else if (i==2L) {
-            ref <- ref[,ncol(ref):1,drop=FALSE]
-        } else if (i==3L) {
-            ref <- ref[nrow(ref):1,ncol(ref):1,drop=FALSE]
+            ranges <- list(forward=seq_len(nrow(test.mat))-1L,
+                           random=sample(nrow(test.mat))-1L)
+            ranges$reverse <- rev(ranges$forward)
+        } else {
+            ranges <- list(integer(0)) # doesn't matter.
         }
-        testthat::expect_identical(ref, out[[2]])
+
+        # We should get the same results, regardless of the order.
+        for (ordering in ranges) { 
+            out <- .Call(cxxfun, test.mat, i, ordering)
+    
+            if (class.out=="matrix") {
+                testthat::expect_identical(class(out[[1]]), class.out)
+            } else {    
+                testthat::expect_s4_class(out[[1]], class.out)
+                if (class.out=="HDF5Matrix") { 
+                    testthat::expect_equal(out[[1]]@seed@first_val, as.vector(out[[1]][1,1]))
+                    testthat::expect_identical(dim(out[[1]]), dim(test.mat))
+                }
+                out[[1]] <- as.matrix(out[[1]])
+            }      
+
+            # Reordering 'ref' to match the expected output. Also checking the flipped matrix.
+            # Here, we extract values by row/column from the filled output matrix, flip the values and refill the output matrix. 
+            # This checks whether the getters of the output matrix work as expected.
+            ref <- as.matrix(test.mat)
+            if (i==1L) {
+                ref[,ordering+1L] <- ref
+                fref <- ref[nrow(ref):1,,drop=FALSE]
+            } else if (i==2L) {
+                ref[ordering+1L,] <- ref
+                fref <- ref[,ncol(ref):1,drop=FALSE]
+            } else if (i==3L) {
+                fref <- ref[nrow(ref):1,ncol(ref):1,drop=FALSE]
+            }
+
+            testthat::expect_identical(ref, out[[1]])
+            dimnames(fref) <- NULL
+            testthat::expect_identical(fref, out[[2]])
+        }
     }
     return(invisible(NULL))
 }
    
 check_integer_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_integer_output)
+    .check_output_mat(FUN=FUN, ..., class.out=ifelse(hdf5.out, "HDF5Matrix", "matrix"), 
+                      cxxfun=cxx_test_integer_output)
 } 
 
 check_numeric_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_numeric_output)
+    .check_output_mat(FUN=FUN, ..., class.out=ifelse(hdf5.out, "HDF5Matrix", "matrix"), 
+                      cxxfun=cxx_test_numeric_output)
 } 
 
 check_logical_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_logical_output)
+    .check_output_mat(FUN=FUN, ..., class.out=ifelse(hdf5.out, "HDF5Matrix", "matrix"), 
+                      cxxfun=cxx_test_logical_output)
 } 
 
 check_character_output_mat <- function(FUN, ..., hdf5.out) {
-    .check_output_mat(FUN=FUN, ..., hdf5.out=hdf5.out, cxxfun=cxx_test_character_output)
+    .check_output_mat(FUN=FUN, ..., class.out=ifelse(hdf5.out, "HDF5Matrix", "matrix"), 
+                      cxxfun=cxx_test_character_output)
 } 
 
 ###############################
@@ -111,45 +141,21 @@ check_character_output_slice <- function(FUN, ..., by.row, by.col, hdf5.out) {
 ###############################
 
 check_sparse_numeric_output <- function(FUN, ...) {
-    for (mode in 1:3) {
-        current <- FUN(...)
-        if (mode==1L) {
-            dim <- ncol(current)
-        } else {
-            dim <- nrow(current)
-        }
-
-        for (type in 1:2) {
-            if (type==1L) {
-                o <- seq_len(dim)
-            } else {
-                o <- sample(dim)
-            }
-
-            out <- .Call(cxx_test_sparse_numeric_output, current, mode, o-1L)
-            testthat::expect_s4_class(out[[1]], "dgCMatrix")
-            ref <- as.matrix(out[[1]])
-            dimnames(ref) <- NULL
-
-            if (mode==1L) { 
-                testthat::expect_identical(out[[1]][,o], current)
-                testthat::expect_identical(out[[2]][nrow(current):1,,drop=FALSE], ref)
-            } else if (mode==2L) {
-                testthat::expect_identical(out[[1]][o,], current)
-                testthat::expect_identical(out[[2]][,ncol(current):1,drop=FALSE], ref)
-            } else {
-                testthat::expect_identical(out[[1]], current) # no reordering 
-                testthat::expect_identical(out[[2]][nrow(current):1,ncol(current):1,drop=FALSE], ref)
-                break
-            }
-        }
-    }
-    return(invisible(NULL))
+    .check_output_mat(FUN, ..., class.out="dgCMatrix", cxxfun=cxx_test_sparse_numeric_output)
 }
 
 check_sparse_numeric_output_slice <- function(FUN, ..., by.row, by.col) {
    .check_output_slice(FUN, ..., by.row=by.row, by.col=by.col, class.out="dgCMatrix",
                        cxxfun=cxx_test_sparse_numeric_output_slice, fill=0) 
+}
+
+check_sparse_logical_output <- function(FUN, ...) {
+    .check_output_mat(FUN, ..., class.out="dgCMatrix", cxxfun=cxx_test_sparse_logical_output)
+}
+
+check_sparse_logical_output_slice <- function(FUN, ..., by.row, by.col) {
+   .check_output_slice(FUN, ..., by.row=by.row, by.col=by.col, class.out="lgCMatrix",
+                       cxxfun=cxx_test_sparse_logical_output_slice, fill=FALSE) 
 }
 
 
@@ -160,7 +166,7 @@ check_sparse_numeric_output_slice <- function(FUN, ..., by.row, by.col) {
     # underlying HDF5 file and change the values of other HDF5Matrix objects. 
     mats <- list(FUN(), FUN(), FUN())
     ref.mats <- lapply(mats, as.matrix)
-    new.mats <- lapply(mats, function(x) .Call(cxxfun, x, 1L)[[1]]) 
+    new.mats <- lapply(mats, function(x) .Call(cxxfun, x, 1L, NULL)[[1]]) 
 
     for (i in seq_along(mats)) { 
         out <- new.mats[[i]]
@@ -263,6 +269,17 @@ check_logical_converted_output <- function(FUN, ..., hdf5.out) {
                             })
 }
 
+###############################
+
+check_output_mode <- function(incoming, ..., simplify, preserve.zero) {
+    all.modes <- .Call(cxx_get_all_modes)
+    if (is.character(incoming)) { 
+        out <- .Call(cxx_select_output_by_mode, incoming, simplify, preserve.zero)
+    } else {
+        out <- .Call(cxx_select_output_by_sexp, incoming(...), simplify, preserve.zero)
+    }
+    return(names(all.modes)[all.modes==out])
+}
 
 ###############################
 

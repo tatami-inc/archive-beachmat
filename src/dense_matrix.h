@@ -1,3 +1,12 @@
+#ifndef BEACHMAT_DENSE_MATRIX_H
+#define BEACHMAT_DENSE_MATRIX_H
+
+#include "beachmat.h"
+#include "utils.h"
+#include "any_matrix.h"
+
+namespace beachmat { 
+
 /*** Class definition ***/
 
 template<typename T, class V>
@@ -82,3 +91,6 @@ matrix_type dense_matrix<T, V>::get_matrix_type() const {
     return DENSE;
 }
 
+}
+
+#endif

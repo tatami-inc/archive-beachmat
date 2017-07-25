@@ -1,33 +1,35 @@
 RHDF5LIB_LIBS=$(shell echo 'Rhdf5lib::pkgconfig("PKG_CXX_LIBS")'|\
 	"${R_HOME}/bin/R" --vanilla --slave)
 PKG_LIBS=$(RHDF5LIB_LIBS)
-
-# Add the location and link flags for R.dll
 PKG_LIBS+=$(shell ${R_HOME}/bin/R CMD config --ldflags)
 
 all: $(SHLIB) copying
 
 # Specifying the headers and objects to put into the exported library.
-EXPORT_HEADERS=any_matrix.h utils.h beachmat.h HDF5_utils.h \
+EXPORT_HEADERS=any_matrix.h utils.h beachmat.h HDF5_utils.h output_param.h \
     Psymm_matrix.h HDF5_matrix.h Csparse_matrix.h dense_matrix.h simple_matrix.h Rle_matrix.h Input_matrix.h \
     simple_output.h Csparse_output.h HDF5_output.h Output_matrix.h \
     LIN_matrix.h LIN_methods.h LIN_output.h LIN_outfun.h \
     logical_matrix.h integer_matrix.h character_matrix.h numeric_matrix.h character_output.h  
-EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o HDF5_utils.o
+EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o HDF5_utils.o output_param.o
 
 # Wait for R to build the shared object, and then pick up the object files.
+
+# this is sufficient to build static library with the suitable version of ar
+libbeachmat.a: $(EXPORT_OBJECTS)
 
 SHLIB_CXXLD=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLD)
 LDFLAGS=$(shell ${R_HOME}/bin/R CMD config LDFLAGS)
 SHLIB_CXXLDFLAGS=$(shell ${R_HOME}/bin/R CMD config SHLIB_CXXLDFLAGS) 
 
 libbeachmat.dll: $(SHLIB)
-	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS}
+	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -s -static-libgcc -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
+ 
 # Specifying copying locations.  
-BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
+BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib${R_ARCH}"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
-copying: libbeachmat.dll
+copying: libbeachmat.dll libbeachmat.a
 	mkdir -p $(BEACHMAT_LIBDIR) $(BEACHMAT_INCLUDEDIR)
 	cp $(EXPORT_HEADERS) $(BEACHMAT_INCLUDEDIR)
 	mv libbeachmat.* $(BEACHMAT_LIBDIR)

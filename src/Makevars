@@ -5,12 +5,12 @@ PKG_LIBS=$(RHDF5LIB_LIBS)
 all: $(SHLIB) copying
 
 # Specifying the headers and objects to put into the exported library.
-EXPORT_HEADERS=any_matrix.h utils.h beachmat.h HDF5_utils.h \
+EXPORT_HEADERS=any_matrix.h utils.h beachmat.h HDF5_utils.h output_param.h \
     Psymm_matrix.h HDF5_matrix.h Csparse_matrix.h dense_matrix.h simple_matrix.h Rle_matrix.h Input_matrix.h \
     simple_output.h Csparse_output.h HDF5_output.h Output_matrix.h \
     LIN_matrix.h LIN_methods.h LIN_output.h LIN_outfun.h \
     logical_matrix.h integer_matrix.h character_matrix.h numeric_matrix.h character_output.h  
-EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o HDF5_utils.o
+EXPORT_OBJECTS=any_matrix.o character_matrix.o character_output.o integer_matrix.o logical_matrix.o numeric_matrix.o utils.o HDF5_utils.o output_param.o
 
 # Wait for R to build the shared object, and then pick up the object files.
 libbeachmat.a: $(SHLIB)
@@ -24,7 +24,7 @@ libbeachmat.so: $(SHLIB)
 	$(SHLIB_CXXLD) ${SHLIB_CXXLDFLAGS} ${LDFLAGS} -o $@ $(EXPORT_OBJECTS) ${PKG_LIBS} 
  
 # Specifying copying locations.  
-BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib"
+BEACHMAT_LIBDIR="${R_PACKAGE_DIR}/lib${R_ARCH}"
 BEACHMAT_INCLUDEDIR="${R_PACKAGE_DIR}/include/beachmat"
 
 copying: libbeachmat.a libbeachmat.so

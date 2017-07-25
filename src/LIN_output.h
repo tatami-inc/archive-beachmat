@@ -2,6 +2,7 @@
 #define BEACHMAT_LIN_OUTPUT_H
 
 #include "Output_matrix.h"
+#include "output_param.h"
 
 namespace beachmat { 
 
@@ -164,9 +165,9 @@ protected:
     HDF5_output<T, RTYPE> mat;
 };
 
-#include "LIN_outfun.h"
-
 }
+
+#include "LIN_outfun.h"
 
 #endif
 

@@ -152,9 +152,9 @@ protected:
     HDF5_matrix<T, RTYPE> mat;
 };
 
-#include "LIN_methods.h"
-
 }
+
+#include "LIN_methods.h"
 
 #endif
 

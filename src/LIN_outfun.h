@@ -1,6 +1,8 @@
 #ifndef BEACHMAT_LIN_OUTFUN_H
 #define BEACHMAT_LIN_OUTFUN_H
 
+namespace beachmat { 
+
 /****************************************
  * Defining the common output interface. 
  ****************************************/
@@ -337,6 +339,8 @@ std::unique_ptr<lin_output<T> > HDF5_lin_output<T, RTYPE>::clone() const {
 template<typename T, int RTYPE>
 matrix_type HDF5_lin_output<T, RTYPE>::get_matrix_type() const {
     return mat.get_matrix_type();
+}
+
 }
 
 #endif

@@ -8,10 +8,10 @@ extern "C" {
 
 static const R_CallMethodDef all_call_entries[] = {
     // Standard access.
-    REGISTER(test_numeric_access, 2),
-    REGISTER(test_integer_access, 2),
-    REGISTER(test_logical_access, 2),
-    REGISTER(test_character_access, 2),
+    REGISTER(test_numeric_access, 3),
+    REGISTER(test_integer_access, 3),
+    REGISTER(test_logical_access, 3),
+    REGISTER(test_character_access, 3),
 
     REGISTER(test_numeric_slice, 4),
     REGISTER(test_integer_slice, 4),
@@ -39,7 +39,6 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_logical_nonzero_slice, 4),
 
     // Sparse access.
-    REGISTER(test_sparse_numeric, 2),
     REGISTER(test_sparse_numeric_slice, 2),
 
     // Type checks.
@@ -58,10 +57,10 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_character_edge, 2),
 
     // Output tests.
-    REGISTER(test_integer_output, 2),
-    REGISTER(test_numeric_output, 2),
-    REGISTER(test_logical_output, 2),
-    REGISTER(test_character_output, 2),
+    REGISTER(test_integer_output, 3),
+    REGISTER(test_numeric_output, 3),
+    REGISTER(test_logical_output, 3),
+    REGISTER(test_character_output, 3),
 
     REGISTER(test_integer_output_slice, 4),
     REGISTER(test_numeric_output_slice, 4),
@@ -70,6 +69,8 @@ static const R_CallMethodDef all_call_entries[] = {
 
     REGISTER(test_sparse_numeric_output, 3),
     REGISTER(test_sparse_numeric_output_slice, 4),
+    REGISTER(test_sparse_logical_output, 3),
+    REGISTER(test_sparse_logical_output_slice, 4),
 
     // Output type tests.
     REGISTER(test_numeric_to_logical_output, 2), 
@@ -78,6 +79,11 @@ static const R_CallMethodDef all_call_entries[] = {
     REGISTER(test_integer_to_numeric_output, 2),
     REGISTER(test_logical_to_integer_output, 2),
     REGISTER(test_logical_to_numeric_output, 2),
+
+    // Output mode tests.
+    REGISTER(select_output_by_sexp, 3),
+    REGISTER(select_output_by_mode, 3),
+    REGISTER(get_all_modes, 0),
 
     // Output edge cases.
     REGISTER(test_integer_edge_output, 2),

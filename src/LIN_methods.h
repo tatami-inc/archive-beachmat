@@ -1,6 +1,8 @@
 #ifndef BEACHMAT_LIN_METHODS_H
 #define BEACHMAT_LIN_METHODS_H
 
+namespace beachmat { 
+
 /****************************************
  * Defining the common input interface. 
  ****************************************/
@@ -289,6 +291,8 @@ std::unique_ptr<lin_matrix<T, V> > HDF5_lin_matrix<T, V, RTYPE>::clone() const {
 template<typename T, class V, int RTYPE>
 matrix_type HDF5_lin_matrix<T, V, RTYPE>::get_matrix_type() const {
     return mat.get_matrix_type();
+}
+
 }
 
 #endif

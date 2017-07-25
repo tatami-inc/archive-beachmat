@@ -103,14 +103,16 @@ Imports: Rcpp
 importFrom(Rcpp, sourceCpp)
 ```
  
-(The exact function to be imported doesn't matter, as long as the namespace is loaded.)
-Check out the `r CRANpkg("Rcpp")` documentation for more details.
+(The exact function to be imported doesn't matter, as long as the namespace is loaded.
+Check out the `r CRANpkg("Rcpp")` documentation for more details.)
 
-If you intend to accept instances of `r CRANpkg("Matrix")`, `r Biocpkg("HDF5Array")` or `r Biocpkg("DelayedArray")` classes, these packages should be listed in the `Suggests` field, if they are not already in `Imports` or `Depends`:
+`r Biocpkg("HDF5Array")`, `r Biocpkg("DelayedArray")` and  _beachmat_ itself should be added to the `Suggests` field, as the API will perform some calls to R functions in those packages to query certain parameters. 
+If you intend to accept instances of `r CRANpkg("Matrix")` classes, the package should also be listed in the `Suggests` field, if not already in `Imports` or `Depends`:
 
 ```
-Suggests: Matrix, HDF5Array, DelayedArray
+Suggests: beachmat, HDF5Array, DelayedArray, Matrix
 ```
+
 
 # Overview of the API (input)
 
@@ -292,28 +294,34 @@ beachmat::output_param oparam(dmat, /* simplify = */ true, /* preserve_zero = */
 std::unique_ptr<numeric_output> odmat=beachmat::create_numeric_output(nrow, ncol, oparam);
 ```
 
+A similar process can be used for a pointer `dptr` to an existing `*_matrix` instance:
+
+```
+beachmat::output_param oparam(dptr->get_matrix_type(), /* simplify = */ true, /* preserve_zero = */ false);
+```
+
 The `simplify` argument indicates whether non-`matrix` input objects should be "simplified" to a `matrix` output object.
 If `false`, a `HDF5Matrix` output object will be returned instead.
-The `preserve_zero` argument indicates whether a `*gCMatrix` input should result in a `*gCMatrix` output (for logical or double-precision data only).
+The `preserve_zero` argument indicates whether a `*gCMatrix` input should result in a `*gCMatrix` output when `simplify=false` (for logical or double-precision data only).
 Exact zeroes are detected and ignored when filling this matrix.
 
 ## Methods for output matrices
 
 To put data into the output matrix pointed to by `dptr`, the following methods are available:
 
-- `dptr->fill_col(c, out)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_col(c, out)` fills column `c` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `nrow` accessible elements, i.e., `*out` and `*(out+nrow-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_col(c, out, first, last)` fills column `c` from row `first` to `last-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_col(c, out, first, last)` fills column `c` from row `first` to `last-1`, using the elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `last-first` accessible elements, i.e., `*out` and `*(out+last-first-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_row(r, out)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_row(r, out)` fills row `r` with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `ncol` accessible elements, i.e., `*out` and `*(out+ncol-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill_row(r, out, first, last)` fills row `r` from column `first` to `last-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
+- `dptr->set_row(r, out, first, last)` fills row `r` from column `first` to `last-1`, with elements pointed to by a `Rcpp::NumericVector::iterator` object (`out`).
 There should be at least `last-first` accessible elements, i.e., `*out` and `*(out+last-first-1)` should be valid entries.
 No value is returned by this method.
-- `dptr->fill(r, c, Y)` fills the matrix entry `(r, c)` with the double `Y`.
+- `dptr->set(r, c, Y)` fills the matrix entry `(r, c)` with the double `Y`.
 No value is returned by this method.
 - `dptr->yield()` returns a `Rcpp::RObject` object containing the matrix data to pass into R.
 
@@ -346,6 +354,9 @@ An alternative is to directly specify the chunk dimensions using `oparam.set_chu
 where `chunk_nr` and `chunk_nc` are the chunk rows and columns respectively.
 Similarly, the compression level can be set using `oparam.set_compression(compress)`, where `compress` can range from 0 (contiguous) to 9 (most compression).
 If specified, these settings will override the default behaviour, but will have no effect for non-HDF5 output.
+- For consecutive row and column access from a matrix with dimensions `nr`-by-`nc`, the optimal chunk dimensions can be specified with `oparam.optimize_chunk_dims(nr, nc)`.
+_beachmat_ exploits the chunk cache to store all chunks along a row or column, thus avoiding the need to reload data for the next row or column.
+These chunk settings are designed to minimize the chunk cache size while also reducing the number of disk reads.
 - HDF5 character output is stored as fixed-width character arrays.
 As such, the API must know the maximum string length during construction of a `character_output` instance.
 This can be set using `oparam.set_strlen(strlen)` where `strlen` is the length of a C-style string, _not including the null-terminating character_.

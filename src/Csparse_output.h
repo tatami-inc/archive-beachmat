@@ -1,8 +1,17 @@
+#ifndef BEACHMAT_CSPARSE_OUTPUT_H
+#define BEACHMAT_CSPARSE_OUTPUT_H
+
+#include "beachmat.h"
+#include "utils.h"
+#include "any_matrix.h"
+
+namespace beachmat { 
+
 /*** Class definition ***/
 
 template<typename T, class V>
 class Csparse_output : public any_matrix {
-    public:
+public:
     Csparse_output(size_t, size_t);
     ~Csparse_output();
 
@@ -250,3 +259,6 @@ matrix_type Csparse_output<T, V>::get_matrix_type() const {
     return SPARSE;
 }
 
+}
+
+#endif

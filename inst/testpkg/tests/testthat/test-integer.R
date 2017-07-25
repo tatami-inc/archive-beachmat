@@ -185,6 +185,13 @@ test_that("Integer matrix output conversions are okay", {
     beachtest:::check_integer_converted_output(hFUN, hdf5.out=TRUE)
 })
 
+test_that("Integer matrix mode choices are okay", {
+    expect_identical(beachtest:::check_output_mode(sFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(rFUN, simplify=TRUE, preserve.zero=FALSE), "simple")
+    expect_identical(beachtest:::check_output_mode(rFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+    expect_identical(beachtest:::check_output_mode(hFUN, simplify=FALSE, preserve.zero=FALSE), "HDF5")
+})
+
 # Testing for errors:
 
 test_that("Integer matrix output error generation is okay", {
@@ -193,5 +200,5 @@ test_that("Integer matrix output error generation is okay", {
     beachtest:::check_integer_edge_output_errors(hFUN)
 })
 
-#######################################################
+######################################################
 

@@ -5,11 +5,12 @@
  * call the fill_row/fill_col methods of the derived classes (along with the
  * correct arguments to the overloaded virtual methods). It also checks that
  * the get_row/get_col methods of the derived classes are working properly, 
- * by extracting rows/columns and and re-filling the output matrix.
+ * by extracting rows/columns and and re-filling the output matrix. Finally, 
+ * it does reordered requests to test that extraction is not affected by order.
  */
 
 template <class T, class M, class OX, class OY>  // M, O are automatically deduced.
-Rcpp::RObject pump_out(M ptr, OX optr, OY optr2, const Rcpp::IntegerVector& mode) {
+Rcpp::RObject pump_out(M ptr, OX optr, OY optr2, const Rcpp::IntegerVector& mode, SEXP ordering=R_NilValue) { 
     if (mode.size()!=1) { 
         throw std::runtime_error("'mode' should be an integer scalar"); 
     }
@@ -20,26 +21,54 @@ Rcpp::RObject pump_out(M ptr, OX optr, OY optr2, const Rcpp::IntegerVector& mode
     if (Mode==1) { 
         // By column.
         T target(nrows);
-        for (int c=0; c<ncols; ++c) {
+        Rcpp::IntegerVector order(ncols);
+        if (ordering==R_NilValue) {
+            std::iota(order.begin(), order.end(), 0);            
+        } else {
+            Rcpp::IntegerVector tmp(ordering);
+            if (tmp.size()!=ncols) {
+                throw std::runtime_error("order should be of length equal to the number of columns");
+            }
+            std::copy(tmp.begin(), tmp.end(), order.begin());
+        }
+
+        size_t c=0;
+        for (const auto& o : order) { 
             ptr->get_col(c, target.begin());
-            optr->set_col(c, target.begin());
+            optr->set_col(o, target.begin());
                 
             std::fill(target.begin(), target.end(), 0); // Wiping, to test that target is actually re-filled properly.
-            optr->get_col(c, target.begin());
+            optr->get_col(o, target.begin());
             std::reverse(target.begin(), target.end()); // Reversing the order, to keep it interesting.
-            optr2->set_col(c, target.begin());
+            optr2->set_col(o, target.begin());
+
+            ++c;
         }
     } else if (Mode==2) { 
         // By row.
         T target(ncols);
-        for (int r=0; r<nrows; ++r) {
+        Rcpp::IntegerVector order(nrows);
+        if (ordering==R_NilValue) {
+            std::iota(order.begin(), order.end(), 0);            
+        } else {
+            Rcpp::IntegerVector tmp(ordering);
+            if (tmp.size()!=nrows) {
+                throw std::runtime_error("order should be of length equal to the number of rows");
+            }
+            std::copy(tmp.begin(), tmp.end(), order.begin());
+        }
+       
+        size_t r=0; 
+        for (const auto& o : order) {
             ptr->get_row(r, target.begin());
-            optr->set_row(r, target.begin());                
+            optr->set_row(o, target.begin());                
                 
             std::fill(target.begin(), target.end(), 0);  // Wiping.
-            optr->get_row(r, target.begin());
+            optr->get_row(o, target.begin());
             std::reverse(target.begin(), target.end()); // Reversing.
-            optr2->set_row(r, target.begin());
+            optr2->set_row(o, target.begin());
+
+            ++r;
         }
     } else if (Mode==3) {
         // By cell.
