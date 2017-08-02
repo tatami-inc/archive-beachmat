@@ -156,6 +156,7 @@ No value is returned by this method.
 - `dptr->clone()` returns a unique pointer to a `numeric_matrix` instance of the same type as that pointed to by `dptr`.
 - `dptr->get_matrix_type()` returns a `matrix_type` value specifying the specific matrix representation that is pointed to by `dptr`.
 This is an enumeration type that can be tested against constants like `beachmat::SIMPLE` or `beachmat::SPARSE`.
+- `dptr->yield()` returns a `Rcpp::RObject` containing the original R matrix that was used to create `dptr`.
 
 In all cases, `r` and `c` should be non-negative integers (specificaly `size_t`) in `[0, nrow)` and `[0, ncol)` respectively.
 Zero-based indexing is assumed for both `r` and `c`, as is standard for most C/C++ applications.
@@ -186,7 +187,7 @@ For each non-zero entry in row `r` from columns `[first, last)`, its column inde
 The return value of the function is the number of non-zero entries stored in this manner.
 This function is quite efficient for sparse matrices; for all other matrices, `get_row` is called and zeros are stripped out afterwards.
 
-The `get_nonzero_*` functions are obviously not available for character matrices.
+Obviously, the `get_nonzero_*` functions are not available for character matrices.
 
 ## Other matrix types
 
@@ -243,6 +244,9 @@ If the realized matrix is to be reused, it may be more efficient to perform the 
 - The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
 See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
+- _beachmat_ does not support higher-level matrix operations such as addition, multiplication or various factorizations. 
+Rather, the `yield` method can be used to obtain the original `Rcpp::RObject` for input to `r CRANpkg("RcppArmadillo")` or `r CRANpkg("RcppEigen")`.
+This functionality is generally limited to base matrices, though there is also limited support for sparse matrices in these libraries.
 
 <!--
 Advanced comments:
@@ -264,6 +268,7 @@ We could add a template argument to the entire class, but this would only allow 
 However, value extraction is executed by separate classes that are _contained_ within the interface, i.e., are data members of the user-visible `_matrix` object.
 This allows us to re-use extraction methods for different interfaces.
 In particular, the `character_matrix` interface differs from the others, so a single set of inheritance templates is not possible.
+It also allows us to template the internal (non-virtual) methods so that the virtual interface methods need only be trivial wrappers.
 -->
 
 # Overview of the API (output)
