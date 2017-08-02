@@ -29,8 +29,10 @@ public:
     template<class Iter>
     size_t get_nonzero_col(size_t, Rcpp::IntegerVector::iterator, Iter, size_t, size_t);
 
+    Rcpp::RObject yield () const;
     matrix_type get_matrix_type () const;
 protected:
+    Rcpp::RObject original;
     Rcpp::IntegerVector i, p;
     V x;
 
@@ -44,7 +46,7 @@ protected:
 /*** Constructor definition ***/
 
 template <typename T, class V>
-Csparse_matrix<T, V>::Csparse_matrix(const Rcpp::RObject& incoming) : currow(0), curstart(0), curend(this->ncol) {
+Csparse_matrix<T, V>::Csparse_matrix(const Rcpp::RObject& incoming) : original(incoming), currow(0), curstart(0), curend(this->ncol) {
     std::string ctype=check_Matrix_class(incoming, "gCMatrix");  
     this->fill_dims(get_safe_slot(incoming, "Dim"));
     const size_t& NC=this->ncol;
@@ -269,6 +271,11 @@ size_t Csparse_matrix<T, V>::get_nonzero_col(size_t c, Rcpp::IntegerVector::iter
     std::copy(iIt, iIt+nzero, index);
     std::copy(xIt, xIt+nzero, val);
     return nzero;
+}
+
+template<typename T, class V>
+Rcpp::RObject Csparse_matrix<T, V>::yield() const {
+    return original;
 }
 
 template<typename T, class V>

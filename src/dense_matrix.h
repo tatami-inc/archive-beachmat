@@ -25,15 +25,17 @@ public:
 
     typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 
+    Rcpp::RObject yield() const;
     matrix_type get_matrix_type () const;
 protected:
+    Rcpp::RObject original;
     V x;
 };
 
 /*** Constructor definitions ***/
 
 template <typename T, class V>
-dense_matrix<T, V>::dense_matrix(const Rcpp::RObject& incoming) { 
+dense_matrix<T, V>::dense_matrix(const Rcpp::RObject& incoming) : original(incoming) { 
     std::string ctype=check_Matrix_class(incoming, "geMatrix");
     this->fill_dims(incoming.attr("Dim"));
     const size_t& NC=this->ncol;
@@ -84,6 +86,11 @@ void dense_matrix<T, V>::get_col(size_t c, Iter out, size_t first, size_t last) 
 template<typename T, class V>
 typename V::iterator dense_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
     return x.begin() + first + c*(this->nrow);
+}
+
+template<typename T, class V>
+Rcpp::RObject dense_matrix<T, V>::yield() const {
+    return original;
 }
 
 template<typename T, class V>

@@ -23,8 +23,10 @@ public:
     template <class Iter>
     void get_col(size_t, Iter, size_t, size_t);
 
+    Rcpp::RObject yield () const;
     matrix_type get_matrix_type () const;
 protected:
+    Rcpp::RObject original;
     V x;
     bool upper;
 
@@ -37,7 +39,7 @@ protected:
 /*** Constructor definition ***/
 
 template <typename T, class V>
-Psymm_matrix<T, V>::Psymm_matrix(const Rcpp::RObject& incoming) : upper(true) { 
+Psymm_matrix<T, V>::Psymm_matrix(const Rcpp::RObject& incoming) : original(incoming), upper(true) { 
     std::string ctype=check_Matrix_class(incoming, "spMatrix");  
     this->fill_dims(get_safe_slot(incoming, "Dim"));
     const size_t& NR=this->nrow;
@@ -166,6 +168,11 @@ void Psymm_matrix<T, V>::get_row (size_t r, Iter out, size_t first, size_t last)
     check_rowargs(r, first, last);
     get_rowcol(r, out, first, last);
     return;
+}
+
+template<typename T, class V>
+Rcpp::RObject Psymm_matrix<T, V>::yield () const {
+    return original;
 }
 
 template<typename T, class V>

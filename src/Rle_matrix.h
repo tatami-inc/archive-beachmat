@@ -23,8 +23,11 @@ public:
     template<class Iter>
     void get_col(size_t, Iter, size_t, size_t); 
 
+    Rcpp::RObject yield() const;
     matrix_type get_matrix_type () const;
 private:
+    Rcpp::RObject original;
+
     std::deque<V> runvalues;
     std::vector<size_t> chunkdex, coldex;
     std::vector<std::deque<size_t> > cumrow;
@@ -41,7 +44,7 @@ private:
 /*** Constructor definitions ***/
 
 template<typename T, class V>
-Rle_matrix<T, V>::Rle_matrix(const Rcpp::RObject& incoming) {
+Rle_matrix<T, V>::Rle_matrix(const Rcpp::RObject& incoming) : original(incoming) {
     std::string ctype=get_class(incoming);
     if (!incoming.isS4() || ctype!="RleMatrix") { 
         throw std::runtime_error("matrix should be a RleMatrix object");
@@ -311,6 +314,11 @@ T Rle_matrix<T, V>::get(size_t r, size_t c) {
     const auto& curcol=cumrow[c];
     size_t extra=std::upper_bound(curcol.begin(), curcol.end(), r) - curcol.begin();
     return *(runvalues[chunkdex[c]].begin() + coldex[c] + extra);
+}
+
+template<typename T, class V>
+Rcpp::RObject Rle_matrix<T, V>::yield() const {
+    return original;
 }
 
 template<typename T, class V>

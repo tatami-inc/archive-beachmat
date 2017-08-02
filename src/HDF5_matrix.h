@@ -29,8 +29,10 @@ public:
 
     const H5::DataType& get_datatype() const;
 
+    Rcpp::RObject yield() const;
     matrix_type get_matrix_type() const;
 protected:
+    Rcpp::RObject original;
     std::string filename, dataname;
 
     H5::H5File hfile;
@@ -49,7 +51,7 @@ protected:
 /*** Constructor definition ***/
 
 template<typename T, int RTYPE>
-HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : 
+HDF5_matrix<T, RTYPE>::HDF5_matrix(const Rcpp::RObject& incoming) : original(incoming),
         rowlist(H5::FileAccPropList::DEFAULT.getId()), collist(H5::FileAccPropList::DEFAULT.getId()) {
 
     std::string ctype=get_class(incoming);
@@ -177,6 +179,11 @@ void HDF5_matrix<T, RTYPE>::extract_one(size_t r, size_t c, T* out) {
 template<typename T, int RTYPE>
 const H5::DataType& HDF5_matrix<T, RTYPE>::get_datatype() const { 
     return default_type;
+}
+
+template<typename T, int RTYPE>
+Rcpp::RObject HDF5_matrix<T, RTYPE>::yield() const {
+    return original;
 }
 
 template<typename T, int RTYPE>

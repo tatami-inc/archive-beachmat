@@ -25,15 +25,17 @@ public:
 
     typename V::iterator get_const_col(size_t, typename V::iterator, size_t, size_t);
 
+    Rcpp::RObject yield() const;
     matrix_type get_matrix_type () const;
 private:
+    Rcpp::RObject original;
     V mat;
 };
 
 /*** Constructor definitions ***/
 
 template<typename T, class V>
-simple_matrix<T, V>::simple_matrix(const Rcpp::RObject& incoming) { 
+simple_matrix<T, V>::simple_matrix(const Rcpp::RObject& incoming) : original(incoming) { 
     if (!incoming.hasAttribute("dim")) { 
         throw std::runtime_error("matrix object should have 'dim' attribute"); 
     }
@@ -83,6 +85,11 @@ void simple_matrix<T, V>::get_col(size_t c, Iter out, size_t first, size_t last)
 template<typename T, class V>
 typename V::iterator simple_matrix<T, V>::get_const_col(size_t c, typename V::iterator work, size_t first, size_t last) {
     return mat.begin() + first + c*(this->nrow);
+}
+
+template<typename T, class V>
+Rcpp::RObject simple_matrix<T, V>::yield() const {
+    return SIMPLE;
 }
 
 template<typename T, class V>
