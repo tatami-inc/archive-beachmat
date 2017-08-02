@@ -54,6 +54,7 @@ public:
 
     virtual std::unique_ptr<lin_matrix<T, V> > clone() const=0;
 
+    virtual Rcpp::RObject yield() const=0;
     virtual matrix_type get_matrix_type() const=0;
 };
 
@@ -78,6 +79,7 @@ public:
 
     std::unique_ptr<lin_matrix<T, V> > clone() const;
 
+    Rcpp::RObject yield() const;
     matrix_type get_matrix_type() const;
 protected:
     M mat;
@@ -147,6 +149,7 @@ public:
 
     std::unique_ptr<lin_matrix<T, V> > clone() const;
 
+    Rcpp::RObject yield() const;
     matrix_type get_matrix_type() const;
 protected:
     HDF5_matrix<T, RTYPE> mat;

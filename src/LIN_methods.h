@@ -163,6 +163,11 @@ std::unique_ptr<lin_matrix<T, V> > advanced_lin_matrix<T, V, M>::clone() const {
 }
 
 template<typename T, class V, class M> 
+Rcpp::RObject advanced_lin_matrix<T, V, M>::yield() const {
+    return mat.yield();
+}
+
+template<typename T, class V, class M> 
 matrix_type advanced_lin_matrix<T, V, M>::get_matrix_type() const {
     return mat.get_matrix_type();
 }
@@ -286,6 +291,11 @@ T HDF5_lin_matrix<T, V, RTYPE>::get(size_t r, size_t c) {
 template<typename T, class V, int RTYPE>
 std::unique_ptr<lin_matrix<T, V> > HDF5_lin_matrix<T, V, RTYPE>::clone() const {
     return std::unique_ptr<lin_matrix<T, V> >(new HDF5_lin_matrix<T, V, RTYPE>(*this));
+}
+
+template<typename T, class V, int RTYPE> 
+Rcpp::RObject HDF5_lin_matrix<T, V, RTYPE>::yield() const {
+    return mat.yield();
 }
 
 template<typename T, class V, int RTYPE>

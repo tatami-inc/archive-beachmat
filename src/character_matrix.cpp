@@ -59,6 +59,10 @@ std::unique_ptr<character_matrix> simple_character_matrix::clone() const {
     return std::unique_ptr<character_matrix>(new simple_character_matrix(*this));
 }
 
+Rcpp::RObject simple_character_matrix::yield() const {
+    return mat.yield();
+}
+
 matrix_type simple_character_matrix::get_matrix_type() const {
     return mat.get_matrix_type();
 }
@@ -91,6 +95,10 @@ Rcpp::String Rle_character_matrix::get(size_t r, size_t c) {
 
 std::unique_ptr<character_matrix> Rle_character_matrix::clone() const {
     return std::unique_ptr<character_matrix>(new Rle_character_matrix(*this));
+}
+
+Rcpp::RObject Rle_character_matrix::yield() const {
+    return mat.yield();
 }
 
 matrix_type Rle_character_matrix::get_matrix_type() const {
@@ -149,6 +157,10 @@ std::unique_ptr<character_matrix> HDF5_character_matrix::clone() const {
     return std::unique_ptr<character_matrix>(new HDF5_character_matrix(*this));
 }
  
+Rcpp::RObject HDF5_character_matrix::yield() const {
+    return mat.yield();
+}
+
 matrix_type HDF5_character_matrix::get_matrix_type() const {
     return mat.get_matrix_type();
 }

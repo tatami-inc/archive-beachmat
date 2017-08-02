@@ -28,6 +28,7 @@ public:
 
     virtual std::unique_ptr<character_matrix> clone() const=0;
 
+    virtual Rcpp::RObject yield () const=0;
     virtual matrix_type get_matrix_type() const=0;
 };
 
@@ -49,7 +50,8 @@ public:
     Rcpp::StringVector::iterator get_const_col(size_t, Rcpp::StringVector::iterator, size_t, size_t);
 
     std::unique_ptr<character_matrix> clone() const;
-    
+   
+    Rcpp::RObject yield () const;
     matrix_type get_matrix_type() const;
 private:
     simple_matrix<Rcpp::String, Rcpp::StringVector> mat;
@@ -72,6 +74,7 @@ public:
 
     std::unique_ptr<character_matrix> clone() const;
 
+    Rcpp::RObject yield () const;
     matrix_type get_matrix_type() const;
 private:
     Rle_matrix<Rcpp::String, Rcpp::StringVector> mat;
@@ -94,6 +97,7 @@ public:
 
     std::unique_ptr<character_matrix> clone() const;
 
+    Rcpp::RObject yield () const;
     matrix_type get_matrix_type() const;
 protected:
     HDF5_matrix<char, STRSXP> mat; 
