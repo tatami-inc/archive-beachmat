@@ -244,7 +244,7 @@ If the realized matrix is to be reused, it may be more efficient to perform the 
 - The API will happily throw exceptions of the `std::exception` class, containing an informative error message.
 These should be caught and handled gracefully by the end-user code, otherwise a segmentation fault will probably occur.
 See the error-handling mechanism in `r CRANpkg("Rcpp")` for how to deal with these exceptions.
-- _beachmat_ does not support higher-level matrix operations such as addition, multiplication or various factorizations. 
+- For numeric matrices, _beachmat_ does not support higher-level matrix operations such as addition, multiplication or various factorizations. 
 Rather, the `yield` method can be used to obtain the original `Rcpp::RObject` for input to `r CRANpkg("RcppArmadillo")` or `r CRANpkg("RcppEigen")`.
 This functionality is generally limited to base matrices, though there is also limited support for sparse matrices in these libraries.
 

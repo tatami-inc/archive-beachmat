@@ -89,7 +89,7 @@ typename V::iterator simple_matrix<T, V>::get_const_col(size_t c, typename V::it
 
 template<typename T, class V>
 Rcpp::RObject simple_matrix<T, V>::yield() const {
-    return SIMPLE;
+    return original;
 }
 
 template<typename T, class V>
