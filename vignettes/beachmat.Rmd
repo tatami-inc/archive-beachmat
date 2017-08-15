@@ -67,6 +67,12 @@ For example:
 PKG_LIBS=$(BEACHMAT_LIBS) -L/path/to/foolib -lfoo
 ```
 
+The Linux implementation embeds the location of the _beachmat_ library in the package-specific shared object via the compiler flag `-Wl,rpath,path`, where path is determined by `system.file("lib", package="beachmat")`. 
+The path determined by `system.file()` is from `.libPaths()` and will resolve all symbolic links.
+This can cause problems, e.g., when the "head" node of a cluster mimicks the cluster node via a symbolic link to the directory in which _beachmat_ is installed. 
+Use the environment variable `RBEACHMAT_RPATH` to resolve this by setting it to the cluster-node accessible path.
+Similar arguments apply to `r Biocpkg("Rhdf5lib")` with the environment variable `RHDF5LIB_RPATH`.
+
 ## Find headers
 
 In order for the C/C++ compiler to find the _beachmat_ package headers during installation, add the following to the `LinkingTo` field of the `DESCRIPTION` file:

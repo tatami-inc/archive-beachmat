@@ -6,6 +6,7 @@
 This function returns values for \code{PKG_LIBS} and \code{PKG_CPPFLAGS} variables for use in Makevars files. 
 See \code{vignette("beachmat", "beachmat")} for details. 
 Only \code{PKG_LIBS} should be needed in most cases.
+The environment variable \code{RBEACHMAT_RPATH} can be used to over-ride the inferred location of the installed package.
 }
 
 \usage{
